@@ -3,7 +3,7 @@ name = "lune-std-luau"
 version = "0.3.5"
 edition = "2024"
 license = "MPL-2.0"
-repository = "https://github.com/lune-org/lune"
+repository = "https://github.com/XopoIII/LuneBlox"
 description = "Lune standard library - Luau"
 
 [lib]
