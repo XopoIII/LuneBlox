@@ -19,6 +19,8 @@ CI now runs the same gates as the pre-commit hooks.
 - Every CI job has read-only permissions and a timeout, so a hung gate fails with its logs
 - CI installs the prebuilt `cargo-nextest` instead of letting `cargo-binstall` fall back to a source
   build, which failed on the macOS aarch64 runner
+- The process exec test waits up to 120 seconds for a hang on Windows instead of 30, which
+  PowerShell's cold start alone reached on the Windows ARM runners
 
 ## `0.10.7` - September 28th, 2026
 

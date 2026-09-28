@@ -10,8 +10,10 @@ local IS_WINDOWS = process.os == "windows"
 local SLEEP_DURATION = 1 / 4
 local SLEEP_SAMPLES = 2
 
+-- This only catches a hang. PowerShell's cold start alone takes close to 30 seconds
+-- on the Windows ARM CI runners, so Windows gets a generous margin.
 local thread2 = task.delay(
-	if IS_WINDOWS then 30 else (SLEEP_DURATION * SLEEP_SAMPLES * 2),
+	if IS_WINDOWS then 120 else (SLEEP_DURATION * SLEEP_SAMPLES * 2),
 	function()
 		stdio.ewrite("Spawning a sleep process should take a reasonable amount of time\n")
 		task.wait(1)
