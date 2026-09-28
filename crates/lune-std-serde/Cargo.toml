@@ -31,8 +31,8 @@ futures-lite = "2.6"
 lz4 = "1.28"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["preserve_order"] }
-saphyr = "0.0.11"
-jsonc-parser = { version = "0.32", features = ["serde"] }
+saphyr = "0.1"
+jsonc-parser = { version = "0.34", features = ["serde"] }
 toml = { version = "1.1", features = ["preserve_order"] }
 
 digest = "0.10.7"
