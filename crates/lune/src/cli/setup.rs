@@ -1,9 +1,8 @@
 use std::{io::ErrorKind, process::ExitCode};
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use async_fs as fs;
 use clap::Parser;
-use directories::UserDirs;
 use thiserror::Error;
 
 use serde_json::Value as JsonValue;
@@ -107,12 +106,7 @@ async fn generate_typedef_files_from_definitions() -> Result<String> {
     let mut files_to_write = Vec::new();
 
     // Create the typedefs dir in the users cache dir
-    let cache_dir = UserDirs::new()
-        .context("Failed to find user home directory")?
-        .home_dir()
-        .join(".luneblox")
-        .join(".typedefs")
-        .join(version_string);
+    let cache_dir = crate::dirs::typedefs_dir()?.join(version_string);
     dirs_to_write.push(cache_dir.clone());
 
     // Make typedef files

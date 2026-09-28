@@ -172,6 +172,7 @@ create_tests! {
     roblox_datatype_brick_color: "roblox/datatypes/BrickColor",
     roblox_datatype_cframe: "roblox/datatypes/CFrame",
     roblox_datatype_color3: "roblox/datatypes/Color3",
+    roblox_datatype_color3_to_hex: "roblox/datatypes/Color3ToHex",
     roblox_datatype_color_sequence: "roblox/datatypes/ColorSequence",
     roblox_datatype_color_sequence_keypoint: "roblox/datatypes/ColorSequenceKeypoint",
     roblox_datatype_content: "roblox/datatypes/Content",
@@ -251,6 +252,8 @@ create_tests! {
 
 #[cfg(feature = "std-serde")]
 create_tests! {
+    serde_encoding_base64: "serde/encoding/base64",
+    serde_encoding_hex: "serde/encoding/hex",
     serde_compression_files: "serde/compression/files",
     serde_compression_roundtrip: "serde/compression/roundtrip",
     serde_json_decode: "serde/json/decode",
@@ -259,6 +262,8 @@ create_tests! {
     serde_jsonc_encode: "serde/jsonc/encode",
     serde_toml_decode: "serde/toml/decode",
     serde_toml_encode: "serde/toml/encode",
+    serde_yaml_decode: "serde/yaml/decode",
+    serde_yaml_encode: "serde/yaml/encode",
     serde_hashing_hash: "serde/hashing/hash",
     serde_hashing_hmac: "serde/hashing/hmac",
 }

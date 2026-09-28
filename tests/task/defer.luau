@@ -79,7 +79,7 @@ task.defer(f, "NaN", 0 / 0, f)
 -- from inside that coroutine should still resume it once it has yielded
 
 local resumedAfterDefer = false
-local outer
+local outer: thread
 outer = coroutine.create(function()
 	local inner = coroutine.create(function()
 		task.defer(outer)

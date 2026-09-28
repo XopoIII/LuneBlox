@@ -1,9 +1,8 @@
 use std::{path::PathBuf, process::ExitCode};
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use async_fs as fs;
 use clap::Parser;
-use directories::UserDirs;
 use rustyline::{DefaultEditor, error::ReadlineError};
 
 use lune::Runtime;
@@ -24,10 +23,11 @@ impl ReplCommand {
     pub async fn run(self) -> Result<ExitCode> {
         println!("{MESSAGE_WELCOME}");
 
-        let history_file_path: &PathBuf = &UserDirs::new()
-            .context("Failed to find user home directory")?
-            .home_dir()
-            .join(".luneblox_history");
+        let history_file_path: &PathBuf =
+            &crate::dirs::state_dir()?.join(crate::dirs::HISTORY_FILE_NAME);
+        if let Some(parent_dir) = history_file_path.parent() {
+            fs::create_dir_all(parent_dir).await?;
+        }
         if !history_file_path.exists() {
             fs::write(history_file_path, &[]).await?;
         }
