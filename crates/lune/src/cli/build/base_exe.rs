@@ -49,9 +49,11 @@ pub async fn get_or_download_base_executable(target: BuildTarget) -> BuildResult
     let version = env!("CARGO_PKG_VERSION");
     let target_triple = format!("lune-{version}-{target}");
 
+    // Base executables come from this fork's own releases: a standalone binary built for
+    // another target must carry the same Luau and flags as one built for this one
     let release_url = format!(
         "{base_url}/v{version}/{target_triple}.zip",
-        base_url = "https://github.com/lune-org/lune/releases/download",
+        base_url = "https://github.com/XopoIII/LuneBlox/releases/download",
     );
 
     // NOTE: This is not entirely accurate, but it is clearer for a user
