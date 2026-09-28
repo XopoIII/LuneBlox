@@ -147,8 +147,10 @@ local result = process.exec("ping", {
 
 if result.ok then
 	assert(#result.stdout > 0, "Result output was empty")
-	local min, avg, max, stddev =
-		string.match(result.stdout, "min/avg/max/stddev = ([%d%.]+)/([%d%.]+)/([%d%.]+)/([%d%.]+) ms")
+	local min, avg, max, stddev = string.match(
+		result.stdout,
+		"min/avg/max/stddev = ([%d%.]+)/([%d%.]+)/([%d%.]+)/([%d%.]+) ms"
+	)
 	print(string.format("Minimum ping time: %.3fms", assert(tonumber(min))))
 	print(string.format("Maximum ping time: %.3fms", assert(tonumber(max))))
 	print(string.format("Average ping time: %.3fms", assert(tonumber(avg))))

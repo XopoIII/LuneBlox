@@ -85,4 +85,6 @@ end
 contents ..= "];\n"
 
 fs.writeFile(OUTPUT, contents)
-print(`Wrote {#flags} flags ({enabledCount} enabled) for Roblox {clientVersion} and Luau 0.{luauVersion}`)
+print(
+	`Wrote {#flags} flags ({enabledCount} enabled) for Roblox {clientVersion} and Luau 0.{luauVersion}`
+)
