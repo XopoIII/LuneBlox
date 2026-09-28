@@ -29,12 +29,12 @@ game runs.
 
 LuneBlox closes both gaps:
 
-| | Lune 0.10.5 | LuneBlox 0.10.7 |
+| | Lune 0.10.5 | LuneBlox 0.10.8 |
 |---|---|---|
 | Luau | 0.709 | 0.740, the version Roblox runs |
 | Luau's fast flags | Luau's defaults | set as the live Roblox client sets them (`crates/lune/src/rt/roblox_fflags.rs`) |
 | Luau's C++ built with | `-Os` (the workspace's size profile reached it) | `-O3` |
-| `_VERSION` | `Lune 0.10.5+709` | `LuneBlox 0.10.7+740` |
+| `_VERSION` | `Lune 0.10.5+709` | `LuneBlox 0.10.8+740` |
 
 Measured on an Apple M1, median of three runs, on one Luau networking library's generated modules:
 interpreted code -- what most Roblox clients run -- is 39 to 57% faster to encode and decode, and

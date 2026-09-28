@@ -12,10 +12,15 @@ defaults:
 env:
   CARGO_TERM_COLOR: always
 
+permissions:
+  contents: read
+
 jobs:
   fmt:
     name: Check formatting
     runs-on: ubuntu-latest
+    # A gate that hangs is worse than one that fails: cap it so a stall surfaces with its logs
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -35,6 +40,7 @@ jobs:
     needs: ["fmt"]
     name: Analyze and lint Luau files
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -44,6 +50,31 @@ jobs:
 
       - name: Analyze
         run: ./scripts/analyze.sh
+
+      - name: Lint
+        run: selene .lune crates scripts tests
+
+      - name: Type-checking modes
+        run: sh scripts/check-strict.sh
+
+      - name: File sizes
+        run: sh scripts/check-file-size.sh
+
+      - name: English only
+        run: sh scripts/check-english.sh
+
+  deny:
+    name: Check dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check advisories, licenses and sources
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check
 
   ci:
     needs: ["fmt"]
@@ -77,6 +108,7 @@ jobs:
 
     name: CI - ${{ matrix.name }}
     runs-on: ${{ matrix.runner-os }}
+    timeout-minutes: 60
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -89,11 +121,12 @@ jobs:
           components: clippy
           targets: ${{ matrix.cargo-target }}
 
-      - name: Install binstall
-        uses: cargo-bins/cargo-binstall@main
-
+      # cargo-binstall fell back to building nextest from source on macOS aarch64, which
+      # nextest refuses without --locked; install-action always fetches the prebuilt binary
       - name: Install nextest
-        run: cargo binstall cargo-nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
 
       - name: Build
         run: |
@@ -103,9 +136,10 @@ jobs:
 
       - name: Lint
         run: |
-          cargo clippy --workspace \
+          cargo clippy --workspace --all-targets \
           --locked --all-features \
-          --target ${{ matrix.cargo-target }}
+          --target ${{ matrix.cargo-target }} \
+          -- -D warnings
 
       - name: Test
         run: |

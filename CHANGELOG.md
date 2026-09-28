@@ -8,6 +8,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## `0.10.8` - September 28th, 2026
+
+CI now runs the same gates as the pre-commit hooks.
+
+### Changed
+
+- CI runs selene and the type-checking mode, file-size and English checks next to luau-lsp,
+  cargo-deny in a job of its own, and clippy over all targets with `-D warnings`
+- Every CI job has read-only permissions and a timeout, so a hung gate fails with its logs
+- CI installs the prebuilt `cargo-nextest` instead of letting `cargo-binstall` fall back to a source
+  build, which failed on the macOS aarch64 runner
+- The process exec test waits up to 120 seconds for a hang on Windows instead of 30, which
+  PowerShell's cold start alone reached on the Windows ARM runners
+
 ## `0.10.7` - September 28th, 2026
 
 Open Lune pull requests brought over, every dependency on its latest release, and the tree held at
