@@ -29,7 +29,14 @@ pub fn module(lua: Lua) -> LuaResult<LuaTable> {
     TableBuilder::new(lua)?
         .with_function("compile", compile_source)?
         .with_function("load", load_source)?
+        .with_function("collect", collect_garbage)?
         .build_readonly()
+}
+
+// The sandbox leaves `collectgarbage` only "count", as Roblox does; a benchmark
+// still needs every measurement to start from the same heap.
+fn collect_garbage(lua: &Lua, (): ()) -> LuaResult<()> {
+    lua.gc_collect()
 }
 
 fn compile_source(

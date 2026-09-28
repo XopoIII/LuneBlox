@@ -108,6 +108,7 @@ create_tests! {
 
 #[cfg(feature = "std-luau")]
 create_tests! {
+    luau_collect: "luau/collect",
     luau_compile: "luau/compile",
     luau_load: "luau/load",
     luau_options: "luau/options",

@@ -8,6 +8,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## `0.10.9` - September 28th, 2026
+
+A full garbage collection a script can ask for, so a benchmark can start each measurement from the
+same heap.
+
+### Added
+
+- `luau.collect()` in `@lune/luau` runs a full garbage collection cycle. Scripts run sandboxed, where
+  `collectgarbage` accepts only `"count"`, as on Roblox, and that stays so: a benchmark that timed
+  several libraries in one process had each inherit the heap the one before it left, which moved an
+  allocating decode by up to 40% with its place in the order
+
+### Fixed
+
+- The `net.serve` handles test passes on a Windows set to a language other than English: it matched
+  the refused connection's message, which Windows words in the system's language, and now also takes
+  its code, `os error 10061`
+
 ## `0.10.8` - September 28th, 2026
 
 CI now runs the same gates as the pre-commit hooks.
