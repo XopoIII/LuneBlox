@@ -83,7 +83,7 @@ fn add_values_to_luaurc(luaurc: &mut JsonValue) {
     if let JsonValue::Object(luaurc) = luaurc {
         let field = String::from("aliases");
         let alias = String::from("lune");
-        let dir = JsonValue::String(format!("~/.lune/.typedefs/{}/", lune_version()));
+        let dir = JsonValue::String(format!("~/.luneblox/.typedefs/{}/", lune_version()));
 
         if let Some(JsonValue::Object(aliases)) = luaurc.get_mut(&field) {
             if aliases.contains_key(&alias) {
@@ -110,7 +110,7 @@ async fn generate_typedef_files_from_definitions() -> Result<String> {
     let cache_dir = UserDirs::new()
         .context("Failed to find user home directory")?
         .home_dir()
-        .join(".lune")
+        .join(".luneblox")
         .join(".typedefs")
         .join(version_string);
     dirs_to_write.push(cache_dir.clone());

@@ -27,7 +27,7 @@ impl ReplCommand {
         let history_file_path: &PathBuf = &UserDirs::new()
             .context("Failed to find user home directory")?
             .home_dir()
-            .join(".lune_history");
+            .join(".luneblox_history");
         if !history_file_path.exists() {
             fs::write(history_file_path, &[]).await?;
         }

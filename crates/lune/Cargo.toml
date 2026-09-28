@@ -4,13 +4,13 @@ version = "0.10.6"
 edition = "2024"
 license = "MPL-2.0"
 repository = "https://github.com/lune-org/lune"
-description = "A standalone Luau runtime"
+description = "A standalone Luau runtime that runs Luau the way Roblox runs it"
 readme = "../../README.md"
 keywords = ["cli", "lua", "luau", "runtime"]
 categories = ["command-line-interface"]
 
 [[bin]]
-name = "lune"
+name = "luneblox"
 path = "src/main.rs"
 
 [lib]

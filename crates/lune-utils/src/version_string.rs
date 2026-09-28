@@ -21,7 +21,7 @@ pub fn get_version_string(lune_version: impl AsRef<str>) -> String {
 
     assert!(!lune_version.is_empty(), "Lune version string is empty");
     match Version::parse(lune_version) {
-        Ok(semver) => format!("Lune {semver}+{}", *LUAU_VERSION),
+        Ok(semver) => format!("LuneBlox {semver}+{}", *LUAU_VERSION),
         Err(e) => panic!("Lune version string is not valid semver: {e}"),
     }
 }

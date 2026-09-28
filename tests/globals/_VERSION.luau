@@ -2,21 +2,21 @@
 --[[
 	_VERSION global must have the following format:
 
-	Lune LUNE_MAJOR.LUNE_MINOR.LUNE_PATCH+LUAU_VERSION
+	LuneBlox LUNE_MAJOR.LUNE_MINOR.LUNE_PATCH+LUAU_VERSION
 
 	Examples:
 
-	Lune 0.0.0+0
-	Lune 1.0.0+500
-	Lune 0.11.22+9999
+	LuneBlox 0.0.0+0
+	LuneBlox 1.0.0+500
+	LuneBlox 0.11.22+9999
 ]]
 
 assert(_VERSION ~= nil, "_VERSION global is missing")
 assert(type(_VERSION) == "string", "_VERSION global must be a string")
 
-assert(string.sub(_VERSION, 1, 5) == "Lune ", "_VERSION global must start with 'Lune '")
+assert(string.sub(_VERSION, 1, 9) == "LuneBlox ", "_VERSION global must start with 'LuneBlox '")
 
-local withoutPrefix = string.sub(_VERSION, 6)
+local withoutPrefix = string.sub(_VERSION, 10)
 local versions = string.split(withoutPrefix, "+")
 assert(versions[1] ~= nil, "_VERSION global does not contain lune version")
 assert(versions[2] ~= nil, "_VERSION global does not contain luau version")
@@ -37,7 +37,7 @@ assert(tonumber(luneVersion[3]) ~= nil, "_VERSION global lune patch version is n
 assert(tonumber(versions[2]) ~= nil, "_VERSION global luau version is not a number")
 
 local rebuilt = string.format(
-	"Lune %d.%d.%d+%d",
+	"LuneBlox %d.%d.%d+%d",
 	tonumber(luneVersion[1]) :: number,
 	tonumber(luneVersion[2]) :: number,
 	tonumber(luneVersion[3]) :: number,

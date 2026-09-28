@@ -31,7 +31,7 @@ impl Default for CliSubcommand {
 
 /// Lune, a standalone Luau runtime
 #[derive(Parser, Debug, Default, Clone)]
-#[command(version, about, long_about = None)]
+#[command(name = "luneblox", version, about, long_about = None)]
 pub struct Cli {
     #[clap(subcommand)]
     subcommand: Option<CliSubcommand>,

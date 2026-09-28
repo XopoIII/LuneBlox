@@ -47,7 +47,7 @@ pub async fn get_or_download_base_executable(target: BuildTarget) -> BuildResult
     // The target is not cached, we must download it
     println!("Requested target '{target}' does not exist in cache");
     let version = env!("CARGO_PKG_VERSION");
-    let target_triple = format!("lune-{version}-{target}");
+    let target_triple = format!("luneblox-{version}-{target}");
 
     // Base executables come from this fork's own releases: a standalone binary built for
     // another target must carry the same Luau and flags as one built for this one
@@ -96,7 +96,7 @@ pub async fn get_or_download_base_executable(target: BuildTarget) -> BuildResult
     // Look for and extract the binary file from the zip file
     // NOTE: We use spawn_blocking here since reading a zip
     // archive is a somewhat slow / blocking operation
-    let binary_file_name = format!("lune{}", target.exe_suffix());
+    let binary_file_name = format!("luneblox{}", target.exe_suffix());
     let binary_file_handle = unblock(move || {
         let mut archive = zip::ZipArchive::new(zip_file)?;
 
