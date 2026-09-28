@@ -1,3 +1,4 @@
+--!strict
 local net = require("@lune/net")
 local stdio = require("@lune/stdio")
 

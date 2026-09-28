@@ -1,3 +1,4 @@
+--!strict
 local roblox = require("@lune/roblox") :: any
 local NumberSequence = roblox.NumberSequence
 local NumberSequenceKeypoint = roblox.NumberSequenceKeypoint

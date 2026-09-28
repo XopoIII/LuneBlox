@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Generates `crates/lune/src/rt/roblox_fflags.rs`: the Luau fast flags that the live
 	Roblox client sets, limited to the flags the Luau version Lune builds against declares.
@@ -84,4 +85,6 @@ end
 contents ..= "];\n"
 
 fs.writeFile(OUTPUT, contents)
-print(`Wrote {#flags} flags ({enabledCount} enabled) for Roblox {clientVersion} and Luau 0.{luauVersion}`)
+print(
+	`Wrote {#flags} flags ({enabledCount} enabled) for Roblox {clientVersion} and Luau 0.{luauVersion}`
+)

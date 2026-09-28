@@ -1,3 +1,4 @@
+--!strict
 local JSON_STRING = [[{
   "Foo": "Bar", // Baz ?!?
   "Hello": "World",

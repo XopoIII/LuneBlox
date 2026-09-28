@@ -1,3 +1,4 @@
+--!strict
 local regex = require("@lune/regex")
 
 -- Tests taken from the Regex crate
@@ -6,11 +7,11 @@ local function replace(
 	name: string,
 	pattern: string,
 	find: string,
-	replace: string,
+	replacement: string,
 	expected: string
 )
 	local re = regex.new(pattern)
-	local replaced = re:replace(find, replace)
+	local replaced = re:replace(find, replacement)
 	if replaced ~= expected then
 		error(`test '{name}' did not return expected result (expected {expected} got {replaced})`)
 	end
@@ -20,11 +21,11 @@ local function replaceAll(
 	name: string,
 	pattern: string,
 	find: string,
-	replace: string,
+	replacement: string,
 	expected: string
 )
 	local re = regex.new(pattern)
-	local replaced = re:replaceAll(find, replace)
+	local replaced = re:replaceAll(find, replacement)
 	if replaced ~= expected then
 		error(`test '{name}' did not return expected result (expected {expected} got {replaced})`)
 	end

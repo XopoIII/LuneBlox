@@ -1,3 +1,4 @@
+--!strict
 local M = {}
 
 M.state = 10

@@ -1,3 +1,4 @@
+--!strict
 local roblox = require("@lune/roblox") :: any
 local Color3 = roblox.Color3
 local ColorSequenceKeypoint = roblox.ColorSequenceKeypoint

@@ -1,3 +1,4 @@
+--!strict
 local process = require("@lune/process")
 local regex = require("@lune/regex")
 local roblox = require("@lune/roblox")
@@ -49,6 +50,7 @@ assertFormatting(
 
 assertFormatting(
 	"Should still format numeric keys for mixed tables",
+	-- selene: allow(mixed_table)
 	stdio.format({ "Hello", "World", Hello = "World" }),
 	'{\n    [1] = "Hello",\n    [2] = "World",\n    Hello = "World",\n}'
 )

@@ -1,3 +1,4 @@
+--!strict
 --> A basic web socket client that communicates with an echo server
 
 local net = require("@lune/net")

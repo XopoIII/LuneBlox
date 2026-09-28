@@ -1,3 +1,4 @@
+--!strict
 local process = require("@lune/process")
 local stdio = require("@lune/stdio")
 local task = require("@lune/task")
@@ -10,8 +11,6 @@ task.delay(0.2, function()
 	if passed then
 		task.spawn(error, "Prompt must not block other lua threads")
 		process.exit(1)
-	else
-		-- stdio.ewrite("Hello from concurrent task!")
 	end
 end)
 

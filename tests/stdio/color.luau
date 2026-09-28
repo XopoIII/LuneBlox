@@ -1,3 +1,4 @@
+--!strict
 local stdio = require("@lune/stdio")
 
 local COLORS_VALID =

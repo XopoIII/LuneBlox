@@ -1,0 +1,60 @@
+# cargo-deny: advisories, licenses and sources for the dependency graph.
+# https://embarkstudios.github.io/cargo-deny/
+
+[graph]
+# The release targets (see .github/workflows/release.yaml). Scoping the graph to them keeps
+# dependencies that only exist for other platforms, such as wasm, out of the checks.
+targets = [
+	"x86_64-pc-windows-msvc",
+	"aarch64-pc-windows-msvc",
+	"x86_64-unknown-linux-gnu",
+	"aarch64-unknown-linux-gnu",
+	"x86_64-apple-darwin",
+	"aarch64-apple-darwin",
+]
+all-features = true
+
+[advisories]
+# Every advisory fails the check, including unmaintained crates; an exception is listed here
+# with its reason.
+ignore = []
+
+[licenses]
+# The licenses the dependency graph uses today. LuneBlox itself is MPL-2.0; a dependency under a
+# license not listed here fails the check until someone decides it belongs.
+allow = [
+	"0BSD",
+	"Apache-2.0",
+	"Apache-2.0 WITH LLVM-exception",
+	"BSD-2-Clause",
+	"BSD-2-Clause-Patent",
+	"BSD-3-Clause",
+	"BSL-1.0",
+	"bzip2-1.0.6",
+	"CC0-1.0",
+	"CDLA-Permissive-2.0",
+	"ISC",
+	"MIT",
+	"MIT-0",
+	"MPL-2.0",
+	"Unicode-3.0",
+	"Unlicense",
+	"Zlib",
+]
+confidence-threshold = 0.9
+
+[bans]
+# Every duplicate is transitive (zstd, syn, getrandom, ...) and not ours to resolve, like clippy's
+# multiple_crate_versions, which the workspace allows for the same reason. A warning nobody can act
+# on is a warning nobody reads.
+multiple-versions = "allow"
+wildcards = "deny"
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-git = [
+	# mlua-sys is patched to mlua's own "Bump Luau to 0.740" commit (see Cargo.toml).
+	"https://github.com/mlua-rs/mlua",
+]

@@ -1,3 +1,4 @@
+--!strict
 local net = require("@lune/net")
 local process = require("@lune/process")
 local stdio = require("@lune/stdio")
@@ -15,7 +16,7 @@ local thread = task.delay(1, function()
 	process.exit(1)
 end)
 
-local handle = net.serve(PORT, function(request)
+local handle = net.serve(PORT, function(_request)
 	return RESPONSE
 end)
 

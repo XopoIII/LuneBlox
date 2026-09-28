@@ -1,3 +1,4 @@
+--!strict
 local net = require("@lune/net")
 
 -- NOTE: We do not use httpbingo in these TCP tests, since they do not accept

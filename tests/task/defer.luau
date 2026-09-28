@@ -1,3 +1,4 @@
+--!strict
 local task = require("@lune/task")
 
 -- Deferring a task should return the thread that can then be cancelled

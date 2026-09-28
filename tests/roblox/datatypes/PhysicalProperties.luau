@@ -1,3 +1,4 @@
+--!strict
 local roblox = require("@lune/roblox") :: any
 local PhysicalProperties = roblox.PhysicalProperties
 local Enum = roblox.Enum

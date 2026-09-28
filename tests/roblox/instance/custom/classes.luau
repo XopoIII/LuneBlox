@@ -1,3 +1,4 @@
+--!strict
 local roblox = require("@lune/roblox")
 
 -- Custom classes that rbx-dom does not know about should be implementable (#125)

@@ -1,3 +1,4 @@
+--!strict
 local roblox = require("@lune/roblox") :: any
 local BrickColor = roblox.BrickColor
 local Instance = roblox.Instance

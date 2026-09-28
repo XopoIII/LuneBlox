@@ -1,3 +1,4 @@
+--!strict
 local roblox = require("@lune/roblox") :: any
 local UniqueId = roblox.UniqueId
 
@@ -25,11 +26,10 @@ assert(
 )
 
 assert(tostring(UniqueId.null) == "00000000000000000000000000000000")
-assert(
-	tostring(
-		UniqueId.fromString("\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x11\x12\x13\x14\x15\x16")
-	) == "01020304050607080910111213141516"
-)
+-- \x escapes are valid Luau; selene does not recognize them
+-- selene: allow(bad_string_escape)
+local sequentialBytes = "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x10\x11\x12\x13\x14\x15\x16"
+assert(tostring(UniqueId.fromString(sequentialBytes)) == "01020304050607080910111213141516")
 
 -- Check that it reads it correctly from files
 local fs = require("@lune/fs")

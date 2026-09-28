@@ -1,3 +1,4 @@
+--!strict
 local net = require("@lune/net")
 
 local PORT = 8811
@@ -9,7 +10,7 @@ local RESPONSE = "Hello, lune!"
 
 local handle = net.serve(PORT, {
 	address = BROADCAST,
-	handleRequest = function(request)
+	handleRequest = function(_request)
 		return `Response from {BROADCAST}:{PORT}`
 	end,
 })

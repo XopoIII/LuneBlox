@@ -1,3 +1,4 @@
+--!strict
 local net = require("@lune/net")
 
 local stream = net.tcp.connect("httpbingo.org", 80)

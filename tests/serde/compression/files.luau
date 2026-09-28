@@ -1,3 +1,4 @@
+--!strict
 --[[
 	The "compress" tests are currently disabled, and may not ever be enabled again.
 

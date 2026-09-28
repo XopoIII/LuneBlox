@@ -1,3 +1,4 @@
+--!strict
 local serde = require("@lune/serde")
 
 local TEST_INPUT =

@@ -1,3 +1,4 @@
+--!strict
 local roblox = require("@lune/roblox") :: any
 local Enum = roblox.Enum
 local Font = roblox.Font

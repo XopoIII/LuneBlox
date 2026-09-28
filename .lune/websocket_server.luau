@@ -1,3 +1,4 @@
+--!strict
 --> A basic web socket server that echoes given messages
 
 local net = require("@lune/net")

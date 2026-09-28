@@ -1,3 +1,4 @@
+--!strict
 export type HttpMethod = "GET" | "POST" | "PUT" | "DELETE" | "HEAD" | "OPTIONS" | "PATCH"
 
 type HttpQueryOrHeaderMap = { [string]: string | { string } }

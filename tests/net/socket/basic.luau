@@ -1,3 +1,4 @@
+--!strict
 local net = require("@lune/net")
 
 -- We're going to use Discord's WebSocket gateway server for testing

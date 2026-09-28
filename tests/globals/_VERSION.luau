@@ -1,3 +1,4 @@
+--!strict
 -- _VERSION global should follow the following format:
 --[[
 	_VERSION global must have the following format:

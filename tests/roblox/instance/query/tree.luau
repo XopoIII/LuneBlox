@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Shared fixtures for the Instance:QueryDescendants tests.
 

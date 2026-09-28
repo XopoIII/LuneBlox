@@ -1,3 +1,4 @@
+--!strict
 local roblox = require("@lune/roblox")
 
 local db = roblox.getReflectionDatabase()
@@ -8,7 +9,7 @@ for _, className in db:GetClassNames() do
 	local class = db:GetClass(className)
 	assert(class ~= nil)
 
-	for name, prop in class.Properties do
+	for _, prop in class.Properties do
 		assert(type(prop.Name) == "string", "Name property must be a string")
 		assert(type(prop.Datatype) == "string", "Datatype property must be a string")
 		assert(type(prop.Scriptability) == "string", "Scriptability property must be a string")

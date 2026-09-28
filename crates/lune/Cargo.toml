@@ -1,6 +1,6 @@
 [package]
 name = "lune"
-version = "0.10.6"
+version = "0.10.7"
 edition = "2024"
 license = "MPL-2.0"
 repository = "https://github.com/XopoIII/LuneBlox"

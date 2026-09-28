@@ -1,3 +1,4 @@
+--!strict
 local process = require("@lune/process")
 local stdio = require("@lune/stdio")
 local task = require("@lune/task")
@@ -20,7 +21,7 @@ local thread2 = task.delay(
 
 local sleepStart = os.clock()
 local sleepCounter = 0
-for i = 1, SLEEP_SAMPLES, 1 do
+for _ = 1, SLEEP_SAMPLES, 1 do
 	task.spawn(function()
 		local args = {
 			-- Sleep command on Windows in Seconds has some weird behavior with decimals ...

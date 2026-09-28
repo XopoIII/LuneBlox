@@ -19,14 +19,38 @@ static REFLECTION_DATABASE: OnceLock<ReflectionDatabase> = OnceLock::new();
 use lune_utils::TableBuilder;
 use roblox_install::RobloxStudio;
 
-const TYPEDEFS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/types.d.luau"));
+const TYPEDEFS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/types/init.luau"));
+
+const TYPEDEF_SUBMODULES: [(&str, &str); 2] = [
+    (
+        "database",
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/types/database.luau")),
+    ),
+    (
+        "instance",
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/types/instance.luau")),
+    ),
+];
 
 /**
     Returns a string containing type definitions for the `roblox` standard library.
+
+    The definitions require the modules returned by [`typedef_submodules`] from `@self`.
 */
 #[must_use]
 pub fn typedefs() -> String {
     TYPEDEFS.to_string()
+}
+
+/**
+    Returns the type definition modules that [`typedefs`] requires, as `(name, contents)` pairs.
+*/
+#[must_use]
+pub fn typedef_submodules() -> Vec<(&'static str, String)> {
+    TYPEDEF_SUBMODULES
+        .iter()
+        .map(|(name, contents)| (*name, (*contents).to_string()))
+        .collect()
 }
 
 /**

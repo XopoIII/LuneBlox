@@ -1,0 +1,31 @@
+# Selene linter config for the Luau in this repository: tests, scripts and examples.
+# https://kampfkarren.github.io/selene/
+#
+# `luneblox.yml` is Luau plus the globals Lune adds.
+std = "luneblox"
+
+exclude = [
+	# Roblox place and model fixtures, a submodule that is not ours.
+	"tests/roblox/rbx-test-files/**",
+	# Type definitions for the standard libraries: every function is a stub that exists only for
+	# its signature, so its parameters are unused by design. luau-lsp checks these instead.
+	"crates/*/types.d.luau",
+	"crates/*/types/**",
+	# Run by the scheduler's Rust examples, which inject `sleep`, `spawn`, `defer`, `readFile`
+	# and `exit` as globals. They are `--!nocheck` for the same reason.
+	"crates/mlua-luau-scheduler/examples/lua/**",
+	# Run in the Roblox Studio command bar to regenerate Rust tables, against Roblox's globals
+	# (`Enum`, `Font`, `PhysicalProperties`). They are `--!nocheck` for the same reason.
+	"scripts/font_enum_map.luau",
+	"scripts/physical_properties_enum_map.luau",
+]
+
+[lints]
+# Empty `if` branches / loops are almost always a mistake.
+empty_if = "warn"
+# Shadowing is easy to do by accident and hides bugs.
+shadowing = "warn"
+# Multiple statements on one line hurt readability.
+multiple_statements = "warn"
+# Flag deprecated API usage.
+deprecated = "warn"

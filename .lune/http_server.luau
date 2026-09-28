@@ -1,3 +1,4 @@
+--!strict
 --> A basic http server that echoes the given request
 --> body at /ping and otherwise responds 404 "Not Found"
 

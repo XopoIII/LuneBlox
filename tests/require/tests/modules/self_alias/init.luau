@@ -1,3 +1,4 @@
+--!strict
 local inner = require("@self/module")
 local outer = require("./module")
 

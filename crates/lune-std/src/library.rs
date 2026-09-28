@@ -85,6 +85,26 @@ impl LuneStandardLibrary {
     }
 
     /**
+        Returns the type definition modules that [`typedefs`](Self::typedefs)
+        requires from `@self`, as `(name, contents)` pairs.
+
+        A library with submodules is written out as a directory module:
+        `<library>/init.luau` holds its typedefs, and each submodule sits
+        beside it as `<library>/<name>.luau`.
+    */
+    #[must_use]
+    #[rustfmt::skip]
+    #[allow(unreachable_patterns)]
+    pub fn typedef_submodules(&self) -> Vec<(&'static str, String)> {
+        match self {
+            #[cfg(feature = "datetime")] Self::DateTime => lune_std_datetime::typedef_submodules(),
+            #[cfg(feature = "roblox")]   Self::Roblox   => lune_std_roblox::typedef_submodules(),
+
+            _ => Vec::new(),
+        }
+    }
+
+    /**
         Creates the Lua module for the library.
 
         # Errors

@@ -3,7 +3,7 @@
   "lint": {
     "*": true
   },
-  "lintErrors": false,
+  "lintErrors": true,
   "typeErrors": true,
   "globals": [
     "warn"

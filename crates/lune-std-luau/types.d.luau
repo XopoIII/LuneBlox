@@ -1,3 +1,4 @@
+--!strict
 --[=[
 	@interface CompileOptions
 	@within Luau

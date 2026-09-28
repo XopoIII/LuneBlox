@@ -1,3 +1,4 @@
+--!strict
 local function test(path: string)
 	local success, message = pcall(function()
 		local _ = require("./" .. path) :: any

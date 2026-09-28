@@ -1,3 +1,4 @@
+--!strict
 local luau = require("@lune/luau")
 
 local EMPTY_LUAU_CODE_BLOCK = "do end"

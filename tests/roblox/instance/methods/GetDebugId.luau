@@ -1,3 +1,4 @@
+--!strict
 local roblox = require("@lune/roblox")
 
 local part = roblox.Instance.new("Part")

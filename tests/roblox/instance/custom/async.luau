@@ -1,3 +1,4 @@
+--!strict
 local net = require("@lune/net")
 local roblox = require("@lune/roblox")
 local serde = require("@lune/serde")

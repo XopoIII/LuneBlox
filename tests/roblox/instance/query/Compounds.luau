@@ -1,3 +1,4 @@
+--!strict
 local query = require("./tree")
 local root = query.build()
 

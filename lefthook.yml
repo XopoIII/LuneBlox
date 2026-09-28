@@ -1,0 +1,64 @@
+# Git hooks. Install once with `lefthook install`.
+#
+# These are the same gates CI runs (.github/workflows/ci.yaml); running them here means a red
+# build is found before the push rather than after it. The tree is at zero: keep it there.
+pre-commit:
+  parallel: true
+  commands:
+    rustfmt:
+      glob: "*.rs"
+      run: cargo fmt --all --check
+
+    clippy:
+      glob: "*.{rs,toml}"
+      # Whole workspace: a change in one crate can break a lint in another that uses it.
+      run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+
+    stylua:
+      glob: "*.luau"
+      exclude:
+        - "tests/roblox/rbx-test-files/**"
+      run: stylua --check {staged_files}
+
+    selene:
+      glob: "*.luau"
+      # Mirrors selene.toml's exclude list: explicit file arguments bypass it.
+      exclude:
+        - "tests/roblox/rbx-test-files/**"
+        - "crates/*/types.d.luau"
+        - "crates/*/types/**"
+        - "crates/mlua-luau-scheduler/examples/lua/**"
+        - "scripts/font_enum_map.luau"
+        - "scripts/physical_properties_enum_map.luau"
+      run: selene {staged_files}
+
+    luau-types:
+      glob: "*.luau"
+      # Whole project: luau-lsp needs every module's requires, not the staged subset.
+      run: ./scripts/analyze.sh
+
+    strict-mode:
+      glob: "*.luau"
+      # Luau defaults to nonstrict, so a file without a directive is unchecked rather than
+      # unannotated, and the type gate then reports it clean.
+      run: sh scripts/check-strict.sh {staged_files}
+
+    file-size:
+      glob: "*.{rs,luau}"
+      # 500 lines, no exceptions: a file that reaches it is split into modules, not listed.
+      run: sh scripts/check-file-size.sh {staged_files}
+
+    english-only:
+      # Every artefact in this repository is written in English. A single non-English word in a
+      # comment is invisible to review and permanent once it lands.
+      run: sh scripts/check-english.sh {staged_files}
+
+    cargo-deny:
+      glob: "{Cargo.lock,deny.toml,*Cargo.toml}"
+      run: cargo deny check
+
+pre-push:
+  commands:
+    tests:
+      # Runs every Luau test script through the runtime; too slow for every commit.
+      run: cargo nextest run --workspace --all-features --locked

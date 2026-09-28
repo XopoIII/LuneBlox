@@ -1,3 +1,4 @@
+--!strict
 local util = require("./util")
 local pass, fail = util.pass, util.fail
 

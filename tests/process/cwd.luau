@@ -1,3 +1,4 @@
+--!strict
 local process = require("@lune/process")
 
 assert(process.cwd ~= nil, "Process cwd is missing")

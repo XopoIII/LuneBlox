@@ -1,3 +1,4 @@
+--!strict
 local DateTime = require("@lune/datetime")
 
 local now = DateTime.now()
