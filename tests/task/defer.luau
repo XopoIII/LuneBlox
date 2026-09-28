@@ -74,3 +74,20 @@ end
 task.defer(f, "", 1, f)
 task.defer(f, "inf", math.huge, f)
 task.defer(f, "NaN", 0 / 0, f)
+
+-- A thread that is resuming another coroutine is "normal", not suspended; deferring it
+-- from inside that coroutine should still resume it once it has yielded
+
+local resumedAfterDefer = false
+local outer
+outer = coroutine.create(function()
+	local inner = coroutine.create(function()
+		task.defer(outer)
+	end)
+	coroutine.resume(inner)
+	coroutine.yield()
+	resumedAfterDefer = true
+end)
+coroutine.resume(outer)
+task.wait(0.05)
+assert(resumedAfterDefer, "Defer should resume a thread that was normal when deferred")

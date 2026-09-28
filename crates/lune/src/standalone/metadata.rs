@@ -2,7 +2,7 @@ use std::{env, path::PathBuf, sync::LazyLock};
 
 use anyhow::{Result, bail};
 use async_fs as fs;
-use mlua::Compiler as LuaCompiler;
+use mlua::chunk::Compiler as LuaCompiler;
 
 pub static CURRENT_EXE: LazyLock<PathBuf> =
     LazyLock::new(|| env::current_exe().expect("failed to get current exe"));
@@ -51,6 +51,9 @@ impl Metadata {
         base_exe_path: PathBuf,
         script_contents: impl Into<Vec<u8>>,
     ) -> Result<Vec<u8>> {
+        // The bytecode is compiled here rather than in a runtime, so the compiler's
+        // flags have to be set the way the runtime would set them
+        lune::apply_roblox_fflags();
         let compiler = LuaCompiler::new()
             .set_optimization_level(2)
             .set_coverage_level(0)

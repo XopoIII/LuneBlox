@@ -34,6 +34,21 @@ end
 ";
 
 /**
+    Whether `spawn` and `defer` should take the thread.
+
+    mlua 0.12 reports a thread that is resuming another coroutine as `Normal` where
+    0.11 reported it as `Resumable`. Such a thread is suspended in all but name: a
+    deferred one runs once it yields, and a spawned one reports that it cannot be
+    resumed yet. Leaving it out would drop both silently.
+*/
+fn is_schedulable(thread: &LuaThread) -> bool {
+    matches!(
+        thread.status(),
+        LuaThreadStatus::Resumable | LuaThreadStatus::Normal
+    )
+}
+
+/**
     A collection of lua functions that may be called to interact with a [`Scheduler`].
 
     Note that these may all be implemented using [`LuaSchedulerExt`], however, this struct
@@ -162,7 +177,7 @@ impl Functions {
             move |lua, (tof, args): (LuaThreadOrFunction, LuaMultiValue)| {
                 let _span = tracing::trace_span!("Scheduler::fn_spawn").entered();
                 let thread = tof.into_thread(lua)?;
-                if thread.status() == LuaThreadStatus::Resumable {
+                if is_schedulable(&thread) {
                     // NOTE: We need to resume the thread once instantly for correct behavior,
                     // and only if we get the pending value back we can spawn to async executor
                     match thread.resume::<LuaMultiValue>(args.clone()) {
@@ -197,7 +212,7 @@ impl Functions {
             move |lua, (tof, args): (LuaThreadOrFunction, LuaMultiValue)| {
                 let _span = tracing::trace_span!("Scheduler::fn_defer").entered();
                 let thread = tof.into_thread(lua)?;
-                if thread.status() == LuaThreadStatus::Resumable {
+                if is_schedulable(&thread) {
                     defer_queue.push_item(lua, &thread, args)?;
                 }
                 Ok(thread)

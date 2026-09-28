@@ -1515,16 +1515,16 @@ dependencies = [
 
 [[package]]
 name = "luau0-src"
-version = "0.18.3+luau709"
+version = "0.22.0+luau740"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e73f7d752fe2ef0a41f132b83d0be154c6ae0ed84967b4df80a16901866be075"
+checksum = "4ea012e8a8aaff2f7b6c788fad41a60630003b6a0932bcf045f7d14952c9bd31"
 dependencies = [
  "cc",
 ]
 
 [[package]]
 name = "lune"
-version = "0.10.5"
+version = "0.10.6"
 dependencies = [
  "anyhow",
  "async-fs",
@@ -1820,9 +1820,9 @@ dependencies = [
 
 [[package]]
 name = "mlua"
-version = "0.11.6"
+version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ccd36acfa49ce6ee56d1307a061dd302c564eee757e6e4cd67eb4f7204846fab"
+checksum = "d96e5d00f19d8c46c71ceaced99593b90c31c57aa1fe2cb3e93a8b1698eedba9"
 dependencies = [
  "bstr",
  "either",
@@ -1833,7 +1833,6 @@ dependencies = [
  "num-traits",
  "parking_lot",
  "rustc-hash",
- "rustversion",
  "serde",
  "serde-value",
 ]
@@ -1856,9 +1855,8 @@ dependencies = [
 
 [[package]]
 name = "mlua-sys"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f1c3a7fc7580227ece249fd90aa2fa3b39eb2b49d3aec5e103b3e85f2c3dfc8"
+version = "0.12.0"
+source = "git+https://github.com/mlua-rs/mlua?rev=2cf6c60c65858b9ea95c14cc25dd11da984efad0#2cf6c60c65858b9ea95c14cc25dd11da984efad0"
 dependencies = [
  "cc",
  "cfg-if 1.0.4",

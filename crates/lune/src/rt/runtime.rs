@@ -4,7 +4,7 @@ use std::{
     ffi::OsString,
     path::PathBuf,
     sync::{
-        Arc,
+        Arc, Once,
         atomic::{AtomicBool, Ordering},
     },
 };
@@ -17,7 +17,31 @@ use lune_utils::{
 use mlua::prelude::*;
 use mlua_luau_scheduler::{Functions, Scheduler};
 
-use super::{RuntimeError, RuntimeResult};
+use super::{RuntimeError, RuntimeResult, roblox_fflags::ROBLOX_FFLAGS};
+
+/**
+    Sets Luau's fast flags the way the live Roblox client sets them, once per process.
+
+    Luau ships new compiler and VM work behind flags that default to off, and Roblox
+    turns them on remotely, so the same Luau source runs differently here and there
+    unless the flags match. `LUNE_ROBLOX_FFLAGS=0` keeps Luau's own defaults instead.
+
+    [`Runtime::new`] calls this; anything that compiles Luau without a runtime, such as
+    building a standalone binary, should call it first.
+*/
+pub fn apply_roblox_fflags() {
+    static APPLY: Once = Once::new();
+    APPLY.call_once(|| {
+        if std::env::var_os("LUNE_ROBLOX_FFLAGS").is_some_and(|value| value == "0") {
+            return;
+        }
+        for (name, enabled) in ROBLOX_FFLAGS {
+            // A flag this Luau does not declare is skipped; the table is generated
+            // against the same Luau version, so this only happens after a partial update
+            let _ = Lua::set_fflag(name, *enabled);
+        }
+    });
+}
 
 /**
     Values returned by running a Lune runtime until completion.
@@ -83,6 +107,7 @@ impl Runtime {
         - If any of the standard globals and libraries fail to inject
     */
     pub fn new() -> LuaResult<Self> {
+        apply_roblox_fflags();
         let lua = Lua::new();
 
         let sched = Scheduler::new(lua.clone());
