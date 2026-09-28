@@ -25,7 +25,9 @@ if not success then
 		string.find(message, "Connection reset")
 			or string.find(message, "Connection closed")
 			or string.find(message, "Connection refused")
-			or string.find(message, "No connection could be made"), -- Windows Request Error
+			or string.find(message, "No connection could be made") -- Windows Request Error
+			-- WSAECONNREFUSED: Windows words the message in the system's language, the code it does not
+			or string.find(message, "os error 10061", 1, true),
 		"Server did not stop responding to requests"
 	)
 else

@@ -121,4 +121,26 @@ function luau.load(source: string, loadOptions: LoadOptions?): (...any) -> ...an
 	return nil :: any
 end
 
+--[=[
+	@within Luau
+
+	Runs a full garbage collection cycle.
+
+	Scripts run sandboxed, as on Roblox, where `collectgarbage` accepts only `"count"`. A benchmark
+	still needs each measurement to start from the same heap, rather than from whatever the one
+	before it left behind.
+
+	### Example usage
+
+	```lua
+	local luau = require("@lune/luau")
+
+	luau.collect()
+	local before = collectgarbage("count")
+	```
+]=]
+function luau.collect(): ()
+	return nil :: any
+end
+
 return luau
