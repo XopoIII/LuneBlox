@@ -121,11 +121,12 @@ jobs:
           components: clippy
           targets: ${{ matrix.cargo-target }}
 
-      - name: Install binstall
-        uses: cargo-bins/cargo-binstall@main
-
+      # cargo-binstall fell back to building nextest from source on macOS aarch64, which
+      # nextest refuses without --locked; install-action always fetches the prebuilt binary
       - name: Install nextest
-        run: cargo binstall cargo-nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
 
       - name: Build
         run: |
