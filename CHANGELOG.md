@@ -8,9 +8,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## `0.10.7` - September 28th, 2026
 
-Changes taken from open Lune pull requests.
+Open Lune pull requests brought over, every dependency on its latest release, and the tree held at
+zero by git hooks: clippy with `-D warnings`, luau-lsp, selene, stylua, cargo-deny, and checks that
+every Luau file declares its type-checking mode and no source file passes 500 lines.
 
 ### Added
 
@@ -21,6 +23,8 @@ Changes taken from open Lune pull requests.
 
 ### Changed
 
+- Updated every dependency to its latest release, including the RustCrypto hashing crates and an
+  unpinned `blake3`; hashes and HMACs are unchanged. The unused, unmaintained `webpki` is removed
 - Attributes prefixed with `RBX` may now be read and written in the `roblox` standard library ([#413])
 - The `serde` standard library now uses `saphyr` for YAML instead of the unmaintained `serde_yaml2` ([#406])
 - `luneblox setup` writes the `roblox` and `datetime` typedefs as directory modules (`roblox/init.luau`
