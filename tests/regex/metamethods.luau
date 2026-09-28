@@ -1,3 +1,4 @@
+--!strict
 --!nolint
 
 local regex = require("@lune/regex")

@@ -1,3 +1,4 @@
+--!strict
 -- Coroutines should return true, ret values OR false, error
 
 local function pass()

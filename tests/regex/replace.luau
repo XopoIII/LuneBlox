@@ -1,3 +1,4 @@
+--!strict
 local regex = require("@lune/regex")
 
 -- Tests taken from the Regex crate

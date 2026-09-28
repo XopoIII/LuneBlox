@@ -1,3 +1,4 @@
+--!strict
 local serde = require("@lune/serde")
 
 local INPUT_STRING = "important data to verify the integrity of"

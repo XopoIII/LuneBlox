@@ -1,3 +1,4 @@
+--!strict
 export type OS = "linux" | "macos" | "windows"
 export type Arch = "x86_64" | "aarch64"
 export type Endianness = "big" | "little"

@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Unfortunately, this test is, for some reason, very flaky on Windows.
 

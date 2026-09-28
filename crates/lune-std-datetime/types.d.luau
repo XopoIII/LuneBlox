@@ -1,3 +1,4 @@
+--!strict
 --[[
 	NOTE: We export a couple different DateTimeValues types below to ensure
 	that types are completely accurate, for method args milliseconds will

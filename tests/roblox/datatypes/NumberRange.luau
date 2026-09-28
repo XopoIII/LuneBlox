@@ -1,3 +1,4 @@
+--!strict
 local roblox = require("@lune/roblox") :: any
 local NumberRange = roblox.NumberRange
 

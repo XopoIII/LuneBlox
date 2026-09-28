@@ -1,3 +1,4 @@
+--!strict
 local module = require("../modules/module")
 
 assert(type(module) == "table", "Required module did not return a table")

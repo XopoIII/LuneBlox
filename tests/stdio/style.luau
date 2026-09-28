@@ -1,3 +1,4 @@
+--!strict
 local stdio = require("@lune/stdio")
 
 local STYLES_VALID = { "reset", "bold", "dim" }

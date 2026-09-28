@@ -1,3 +1,4 @@
+--!strict
 local net = require("@lune/net")
 
 local encoded = net.urlEncode("🚀 This string will be encoded.")

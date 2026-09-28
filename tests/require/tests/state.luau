@@ -1,3 +1,4 @@
+--!strict
 -- the idea of this test is that state_module stores some state in one of its local
 -- variable
 local state_module = require("./state_module")

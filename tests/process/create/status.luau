@@ -1,3 +1,4 @@
+--!strict
 local process = require("@lune/process")
 
 local testCode = math.random(0, 255)

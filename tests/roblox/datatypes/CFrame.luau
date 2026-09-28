@@ -1,3 +1,4 @@
+--!strict
 local roblox = require("@lune/roblox") :: any
 local CFrame = roblox.CFrame
 local Vector3 = roblox.Vector3

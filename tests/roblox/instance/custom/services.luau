@@ -1,3 +1,4 @@
+--!strict
 local roblox = require("@lune/roblox")
 
 -- Services that rbx-dom does not know about (such as FileSystemService, which

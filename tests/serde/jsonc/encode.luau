@@ -1,3 +1,4 @@
+--!strict
 local serde = require("@lune/serde")
 local source = require("./source")
 

@@ -1,3 +1,4 @@
+--!strict
 local TOML_LINES = {
 	"[package]",
 	'name = "my-cool-toml-package"',

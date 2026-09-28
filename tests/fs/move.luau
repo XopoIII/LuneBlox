@@ -1,3 +1,4 @@
+--!strict
 local fs = require("@lune/fs")
 local utils = require("./utils")
 

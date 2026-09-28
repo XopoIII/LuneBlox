@@ -1,3 +1,4 @@
+--!strict
 local task = require("@lune/task")
 
 local module1

@@ -1,3 +1,4 @@
+--!strict
 local DateTime = require("@lune/datetime")
 
 local values = DateTime.fromRfc3339("2023-08-27T05:54:19Z"):toLocalTime()

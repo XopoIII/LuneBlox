@@ -1,3 +1,4 @@
+--!strict
 local net = require("@lune/net")
 
 local PORT = 8811

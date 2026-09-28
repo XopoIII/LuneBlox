@@ -1,3 +1,4 @@
+--!strict
 export type DatabaseScriptability = "None" | "Custom" | "Read" | "ReadWrite" | "Write"
 
 export type DatabasePropertyTag =

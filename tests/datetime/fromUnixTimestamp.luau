@@ -1,3 +1,4 @@
+--!strict
 local DateTime = require("@lune/datetime")
 
 -- Bug in rust side implementation for fromUnixTimestamp, calculation for conversion there is wonky,

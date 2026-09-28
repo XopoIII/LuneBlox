@@ -1,3 +1,4 @@
+--!strict
 local process = require("@lune/process")
 
 -- Executing a non existent command as a child process

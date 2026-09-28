@@ -1,3 +1,4 @@
+--!strict
 local process = require("@lune/process")
 local regex = require("@lune/regex")
 local roblox = require("@lune/roblox")

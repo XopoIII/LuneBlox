@@ -1,3 +1,4 @@
+--!strict
 local fs = require("@lune/fs")
 local net = require("@lune/net")
 local serde = require("@lune/serde")

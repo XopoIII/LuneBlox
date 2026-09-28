@@ -1,3 +1,4 @@
+--!strict
 -- NOTE: luau-lsp warns without this for the roblox types below
 --!nolint UnknownType
 

@@ -1,3 +1,4 @@
+--!strict
 local luau = require("@lune/luau")
 
 local TEST_SCRIPT = [[

@@ -1,3 +1,4 @@
+--!strict
 local serde = require("@lune/serde")
 
 local encoded = serde.encode("yaml", {

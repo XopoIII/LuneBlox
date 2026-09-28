@@ -1,3 +1,4 @@
+--!strict
 --[[
 	Generates `crates/lune/src/rt/roblox_fflags.rs`: the Luau fast flags that the live
 	Roblox client sets, limited to the flags the Luau version Lune builds against declares.

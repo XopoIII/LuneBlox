@@ -1,3 +1,4 @@
+--!strict
 --> A utility script that prints out a CSV
 --> file in a prettified format to stdout
 

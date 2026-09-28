@@ -1,3 +1,4 @@
+--!strict
 --!nolint UnknownType
 
 local TEMP_DIR_PATH = "bin/"

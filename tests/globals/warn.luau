@@ -1,3 +1,4 @@
+--!strict
 assert(warn ~= nil, "Missing 'warn' global")
 assert(
 	type(warn) == "function",

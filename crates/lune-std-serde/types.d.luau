@@ -1,3 +1,4 @@
+--!strict
 --[=[
 	@within Serde
 	@interface EncodeDecodeFormat

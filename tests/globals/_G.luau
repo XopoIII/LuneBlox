@@ -1,3 +1,4 @@
+--!strict
 assert(_G ~= nil, "Missing _G")
 
 assert(type(_G) == "table", "Invalid type for _G")

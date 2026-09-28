@@ -1,3 +1,4 @@
+--!strict
 local process = require("@lune/process")
 
 assert(type(process.args) == "table", "Process args should be a plain table")

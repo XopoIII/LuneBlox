@@ -1,3 +1,4 @@
+--!strict
 local errValue = newproxy(false)
 
 local success, result = pcall(function()

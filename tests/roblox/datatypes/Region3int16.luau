@@ -1,3 +1,4 @@
+--!strict
 local roblox = require("@lune/roblox") :: any
 local Region3int16 = roblox.Region3int16
 local Vector3int16 = roblox.Vector3int16

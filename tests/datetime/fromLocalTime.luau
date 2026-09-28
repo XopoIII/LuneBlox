@@ -1,3 +1,4 @@
+--!strict
 local DateTime = require("@lune/datetime")
 
 local timeValues1 = os.date("*t", 1693049188)

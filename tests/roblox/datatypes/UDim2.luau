@@ -1,3 +1,4 @@
+--!strict
 local roblox = require("@lune/roblox") :: any
 local UDim = roblox.UDim
 local UDim2 = roblox.UDim2

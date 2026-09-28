@@ -1,3 +1,4 @@
+--!strict
 local fs = require("@lune/fs")
 
 fs.writeDir("./types")
