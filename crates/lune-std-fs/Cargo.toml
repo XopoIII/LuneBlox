@@ -15,8 +15,8 @@ workspace = true
 [dependencies]
 mlua = { version = "0.12.1", features = ["luau"] }
 
-async-fs = "2.1"
-bstr = "1.9"
+async-fs = "2.2"
+bstr = "1.13"
 futures-lite = "2.6"
 
 lune-utils = { version = "0.3.5", path = "../lune-utils" }

@@ -24,11 +24,11 @@ async-compression = { version = "0.4", features = [
     "zstd",
 ] }
 
-blocking = "1.6"
-bstr = "1.9"
+blocking = "1.7"
+bstr = "1.13"
 data-encoding = "2.11"
 futures-lite = "2.6"
-lz4 = "1.26"
+lz4 = "1.28"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0", features = ["preserve_order"] }
 saphyr = "0.0.11"
@@ -38,7 +38,7 @@ toml = { version = "1.1", features = ["preserve_order"] }
 digest = "0.10.7"
 hmac = "0.12.1"
 md-5 = "0.10.6"
-sha1 = "0.10.6"
+sha1 = "0.10.7"
 sha2 = "0.10.8"
 sha3 = "0.10.8"
 # This feature MIGHT break due to the unstable nature of the digest crate.

@@ -61,9 +61,9 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "2.0"
 
-async-io = "2.4"
-async-fs = "2.1"
-blocking = "1.6"
+async-io = "2.6"
+async-fs = "2.2"
+blocking = "1.7"
 futures-lite = "2.6"
 
 tracing = "0.1"
@@ -75,7 +75,7 @@ lune-utils = { version = "0.3.5", path = "../lune-utils" }
 
 ### CLI
 
-clap = { optional = true, version = "4.1", features = ["derive"] }
+clap = { optional = true, version = "4.6", features = ["derive"] }
 rustyline = { optional = true, version = "18.0" }
 zip = { optional = true, version = "8.6", default-features = false, features = [
 	"bzip2",
@@ -85,4 +85,4 @@ zip = { optional = true, version = "8.6", default-features = false, features = [
 ] }
 
 [dev-dependencies]
-tempfile = "3.0"
+tempfile = "3.27"
