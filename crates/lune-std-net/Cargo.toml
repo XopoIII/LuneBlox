@@ -35,7 +35,6 @@ rustls = { version = "0.23", default-features = false, features = ["std", "tls12
 rustls-pki-types = "1.15"
 url = "2.5"
 urlencoding = "2.1"
-webpki = "0.22"
 webpki-roots = "1.0"
 
 lune-utils = { version = "0.3.5", path = "../lune-utils" }
