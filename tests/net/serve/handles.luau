@@ -6,7 +6,7 @@ local PORT = 8822
 local URL = `http://127.0.0.1:{PORT}`
 local RESPONSE = "Hello, lune!"
 
-local handle = net.serve(PORT, function(request)
+local handle = net.serve(PORT, function(_request)
 	return RESPONSE
 end)
 

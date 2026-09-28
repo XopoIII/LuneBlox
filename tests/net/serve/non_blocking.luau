@@ -16,7 +16,7 @@ local thread = task.delay(1, function()
 	process.exit(1)
 end)
 
-local handle = net.serve(PORT, function(request)
+local handle = net.serve(PORT, function(_request)
 	return RESPONSE
 end)
 

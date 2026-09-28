@@ -1,0 +1,15 @@
+# Selene standard library for Lune: Luau plus the globals Lune adds.
+# Referenced from selene.toml as `std = "luneblox"`.
+---
+base: luau
+name: luneblox
+globals:
+  # selene's luau base requires assert's message; Luau does not.
+  assert:
+    args:
+      - type: any
+      - required: false
+        type: string
+  warn:
+    args:
+      - type: "..."

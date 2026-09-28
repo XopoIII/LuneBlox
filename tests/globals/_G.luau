@@ -1,4 +1,6 @@
 --!strict
+--# selene: allow(global_usage)
+-- This file tests _G itself.
 assert(_G ~= nil, "Missing _G")
 
 assert(type(_G) == "table", "Invalid type for _G")

@@ -2,7 +2,7 @@
 local net = require("@lune/net")
 local serde = require("@lune/serde")
 
-local runtime, version = table.unpack(_VERSION:split(" "))
+local runtime, version = table.unpack(string.split(_VERSION, " "))
 local expectedUserAgent = runtime:lower() .. "/" .. version
 
 local userAgent: string =

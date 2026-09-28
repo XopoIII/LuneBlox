@@ -24,7 +24,7 @@ end
 for _, className in db:GetClassNames() do
 	local class = db:GetClass(className)
 	assert(class ~= nil)
-	for name, value in class.DefaultProperties do
+	for name in class.DefaultProperties do
 		local found = false
 		local current: roblox.DatabaseClass? = class
 		while current ~= nil do
