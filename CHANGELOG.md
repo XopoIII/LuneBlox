@@ -8,6 +8,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+Changes taken from open Lune pull requests.
+
+### Added
+
+- Added `base64` and `hex` encoding formats to `serde.encode` and `serde.decode` ([#404])
+- Added XDG Base Directory support: the build cache and REPL history now live in `$XDG_CACHE_HOME/luneblox` and
+  `$XDG_STATE_HOME/luneblox` on XDG-compliant systems, while existing `~/.luneblox` locations keep being used when present.
+  Both can be overridden with the `LUNEBLOX_CACHE` and `LUNEBLOX_STATE` environment variables ([#342])
+
+### Changed
+
+- Attributes prefixed with `RBX` may now be read and written in the `roblox` standard library ([#413])
+- The `serde` standard library now uses `saphyr` for YAML instead of the unmaintained `serde_yaml2` ([#406])
+
+### Fixed
+
+- Fixed `CFrame.lookAt`, `CFrame.lookAlong` and `CFrame.new(pos, lookAt)` producing incorrect rotations when not rotating purely around the Y axis ([#419])
+- Fixed `Color3:ToHex()` not matching Roblox rounding and casing ([#410])
+- Fixed YAML scalars being decoded with the wrong types in the `serde` standard library ([#406])
+
+[#342]: https://github.com/lune-org/lune/pull/342
+[#404]: https://github.com/lune-org/lune/pull/404
+[#406]: https://github.com/lune-org/lune/pull/406
+[#410]: https://github.com/lune-org/lune/pull/410
+[#413]: https://github.com/lune-org/lune/pull/413
+[#419]: https://github.com/lune-org/lune/pull/419
+
 ## `0.10.6` - LuneBlox
 
 The first release of LuneBlox, a Lune that runs Luau the way Roblox runs it. The command is
@@ -36,7 +65,6 @@ The first release of LuneBlox, a Lune that runs Luau the way Roblox runs it. The
 
 - Fixed the `close` method on web sockets always erroring with "Socket has been closed" instead of closing the socket
 - Fixed the documentation for `serde.hmac` saying it returns a base64 string, when it returns a hex string
-- Fixed `CFrame.lookAt`, `CFrame.lookAlong` and `CFrame.new(pos, lookAt)` producing incorrect rotations when not rotating purely around the Y axis
 
 ## `0.10.5` - July 2nd, 2026
 

@@ -1,5 +1,6 @@
 #![allow(clippy::cargo_common_metadata)]
 
+pub mod dirs;
 mod rt;
 
 #[cfg(test)]
