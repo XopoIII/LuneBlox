@@ -8,4 +8,6 @@ assert(serde.encode("base64", buffer.fromstring(source)) == encoded)
 assert(serde.decode("base64", encoded) == source)
 assert(serde.decode("base64", buffer.fromstring(encoded)) == source)
 
-assert(not pcall(serde.decode, "base64", "invalid"))
+assert(not pcall(function()
+	return serde.decode("base64", "invalid")
+end))

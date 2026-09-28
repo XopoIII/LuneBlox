@@ -8,4 +8,6 @@ assert(serde.encode("hex", buffer.fromstring(source)) == encoded)
 assert(serde.decode("hex", encoded) == source)
 assert(serde.decode("hex", buffer.fromstring(string.upper(encoded))) == source)
 
-assert(not pcall(serde.decode, "hex", "invalid"))
+assert(not pcall(function()
+	return serde.decode("hex", "invalid")
+end))
