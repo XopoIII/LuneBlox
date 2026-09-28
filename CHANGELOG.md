@@ -23,6 +23,9 @@ Changes taken from open Lune pull requests.
 
 - Attributes prefixed with `RBX` may now be read and written in the `roblox` standard library ([#413])
 - The `serde` standard library now uses `saphyr` for YAML instead of the unmaintained `serde_yaml2` ([#406])
+- `luneblox setup` writes the `roblox` and `datetime` typedefs as directory modules (`roblox/init.luau`
+  with its submodules beside it) and removes the single-file typedefs they replace; `@lune/roblox`
+  and `@lune/datetime` resolve as before
 
 ### Fixed
 

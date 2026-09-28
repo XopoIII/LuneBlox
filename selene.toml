@@ -10,6 +10,7 @@ exclude = [
 	# Type definitions for the standard libraries: every function is a stub that exists only for
 	# its signature, so its parameters are unused by design. luau-lsp checks these instead.
 	"crates/*/types.d.luau",
+	"crates/*/types/**",
 	# Run by the scheduler's Rust examples, which inject `sleep`, `spawn`, `defer`, `readFile`
 	# and `exit` as globals. They are `--!nocheck` for the same reason.
 	"crates/mlua-luau-scheduler/examples/lua/**",
