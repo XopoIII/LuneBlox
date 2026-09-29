@@ -8,6 +8,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## `0.10.10` - September 29th, 2026
+
+CI no longer runs on the Node.js 20 actions GitHub has deprecated. The runtime is unchanged.
+
+### Changed
+
+- CI and the release workflow use the Node.js 24 majors of their actions: `actions/checkout` v7,
+  `upload-artifact` v7, `download-artifact` v8, `softprops/action-gh-release` v3, and
+  `CompeyDev/setup-rokit` v0.2.1, whose v0.1 pulled in `actions/cache@v4`
+
 ## `0.10.9` - September 28th, 2026
 
 A full garbage collection a script can ask for, so a benchmark can start each measurement from the
