@@ -121,37 +121,45 @@ impl Functions {
             .expect(ERR_METADATA_NOT_ATTACHED)
             .clone();
 
+        /*
+            The thread is resumed through the native `coroutine.resume`, not `LuaThread::resume`:
+            mlua turns a thrown value into a `LuaError` holding its string form and a traceback,
+            and takes it off the thread's stack, which loses a table error and leaves
+            `coroutine.close` nothing to return. The native function hands back the value as
+            thrown, as Roblox does, and leaves it where `coroutine.close` finds it.
+        */
+        let native_resume = lua
+            .globals()
+            .get::<LuaTable>("coroutine")?
+            .get::<LuaFunction>("resume")?;
         let resume_queue = defer_queue.clone();
         let resume_map = thread_map.clone();
         let resume =
             lua.create_function(move |lua, (thread, args): (LuaThread, LuaMultiValue)| {
                 let _span = tracing::trace_span!("Scheduler::fn_resume").entered();
-                match thread.resume::<LuaMultiValue>(args.clone()) {
-                    Ok(v) => {
-                        if v.front().is_some_and(is_poll_pending) {
-                            // Pending, defer to scheduler and return nil
-                            resume_queue.push_item(lua, &thread, args)?;
-                            (true, LuaValue::Nil).into_lua_multi(lua)
-                        } else {
-                            // Not pending, store the value if thread is done
-                            if thread.status() != LuaThreadStatus::Resumable {
-                                let id = ThreadId::from(&thread);
-                                if resume_map.is_tracked(id) {
-                                    resume_map.insert(id, Ok(v.clone()));
-                                }
-                            }
-                            (true, v).into_lua_multi(lua)
-                        }
-                    }
-                    Err(e) => {
-                        // Not pending, store the error
-                        let id = ThreadId::from(&thread);
-                        if resume_map.is_tracked(id) {
-                            resume_map.insert(id, Err(e.clone()));
-                        }
-                        (false, e.to_string()).into_lua_multi(lua)
-                    }
+                let mut results =
+                    native_resume.call::<LuaMultiValue>((thread.clone(), args.clone()))?;
+                let resumed = results.pop_front() == Some(LuaValue::Boolean(true));
+                if resumed && results.front().is_some_and(is_poll_pending) {
+                    // Pending, defer to scheduler and return nil
+                    resume_queue.push_item(lua, &thread, args)?;
+                    return (true, LuaValue::Nil).into_lua_multi(lua);
                 }
+                // Not pending, store the result if the thread is done
+                let id = ThreadId::from(&thread);
+                if resumed {
+                    if thread.status() != LuaThreadStatus::Resumable && resume_map.is_tracked(id) {
+                        resume_map.insert(id, Ok(results.clone()));
+                    }
+                } else if resume_map.is_tracked(id) {
+                    let message = match results.front() {
+                        Some(value) => value.to_string()?,
+                        None => String::from("nil"),
+                    };
+                    resume_map.insert(id, Err(LuaError::runtime(message)));
+                }
+                results.push_front(LuaValue::Boolean(resumed));
+                Ok(results)
             })?;
 
         let wrap_env = lua.create_table_from(vec![
