@@ -30,6 +30,8 @@ for file in "$@"; do
 		tests/roblox/rbx-test-files/*) continue ;;
 		# Unicode on purpose: compression fixtures, and the output of non-English locales.
 		tests/serde/test-files/* | tests/datetime/formatLocalTime.luau) continue ;;
+		# Luau's own sources, vendored unchanged but for one fix; its table of look-alike letters.
+		vendor/luau0-src/luau/Ast/src/Confusables.cpp) continue ;;
 		# Lock files and binaries are not prose.
 		*.lock | *.png | *.ico | *.rbxl | *.rbxm | *.rbxlx | *.rbxmx) continue ;;
 	esac

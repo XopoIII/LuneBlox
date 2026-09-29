@@ -109,6 +109,7 @@ create_tests! {
 
 #[cfg(feature = "std-luau")]
 create_tests! {
+    luau_codegen_far_constant: "luau/codegen_far_constant",
     luau_collect: "luau/collect",
     luau_compile: "luau/compile",
     luau_load: "luau/load",

@@ -8,6 +8,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+- Loading a module with `codegenEnabled` no longer kills the process on ARM64 (Apple Silicon, Linux
+  aarch64). Luau 0.740's ARM64 register allocator could evict a value loaded from a constant past
+  K255 and plan to reload it from there, which no single ARM64 load reaches; Luau's assertion stopped
+  the process with no message (exit code 133 run directly). Such a value now goes to a spill slot, as
+  Luau did before its release 708, and the function still compiles to native code. The fix is carried
+  in a vendored copy of `luau0-src` (`vendor/luau0-src`) until a Luau release has it
+
 ## `0.10.11` - September 29th, 2026
 
 A coroutine's error reaches the code that resumed it unchanged, as on Roblox, so error values that
