@@ -18,6 +18,8 @@ members = [
     "crates/lune-utils",
     "crates/mlua-luau-scheduler",
 ]
+# Third-party sources patched in below; not ours to lint or format
+exclude = ["vendor"]
 
 # Profile for building the release binary, with the following options set:
 #
@@ -48,10 +50,17 @@ opt-level = 3
 #
 # mlua 0.12.1 on crates.io pins luau0-src 0.21 (Luau 0.736); mlua's own main moved
 # mlua-sys to luau0-src 0.22 (Luau 0.740) at this commit, keeping its version at 0.12.0.
-# Only mlua-sys is patched: mlua's main also turns fractional-to-integer conversions
+# Only mlua-sys is patched, not mlua: mlua's main also turns fractional-to-integer conversions
 # into errors, which Lune's Roblox datatypes rely on. Drop this once mlua-sys ships it.
 [patch.crates-io]
 mlua-sys = { git = "https://github.com/mlua-rs/mlua", rev = "2cf6c60c65858b9ea95c14cc25dd11da984efad0" }
+
+# Luau's sources as luau0-src 0.22.0+luau740 ships them, with one fix to the ARM64 native code
+# generator (search the vendored tree for "LuneBlox:"). Luau 0.740's register allocator can plan
+# to reload a spilled value from a constant past K255, which no single ARM64 load reaches: an
+# asserting build of Luau (mlua's, so ours) stops the process there, and a release build loads
+# the wrong value. Drop this once a Luau release carries a fix.
+luau0-src = { path = "vendor/luau0-src" }
 
 # Lints for all crates in the workspace
 #

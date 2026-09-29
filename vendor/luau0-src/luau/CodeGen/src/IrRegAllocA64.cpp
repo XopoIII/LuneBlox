@@ -609,7 +609,12 @@ void IrRegAllocA64::spill(Set& set, uint32_t index, uint32_t targetInstIdx)
     {
         // instead of spilling the register to never reload it, we assume the register is not needed anymore
     }
-    else if (function.hasRestoreLocation(def, /*limitToCurrentBlock*/ true))
+    // LuneBlox: a restore location is only usable when a single load can reach it. A constant past
+    // K255 is out of range for an immediate offset from rConstants, and getReloadAddress returns
+    // xzr for it, which restore() would encode as a load from [sp]. Such a value goes to a spill slot
+    // instead, as Luau did before release 708 dropped this check along with getReloadAddress_DEPRECATED.
+    else if (function.hasRestoreLocation(def, /*limitToCurrentBlock*/ true) &&
+             getReloadAddress(function.findRestoreLocation(def, /*limitToCurrentBlock*/ true)).base != xzr)
     {
         ValueRestoreLocation loc = function.findRestoreLocation(def, true);
 
