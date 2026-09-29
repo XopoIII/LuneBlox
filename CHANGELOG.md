@@ -8,7 +8,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## `0.10.11` - September 29th, 2026
+
+A coroutine's error reaches the code that resumed it unchanged, as on Roblox, so error values that
+are tables, and messages compared exactly, work the same here as in a live game.
 
 ### Fixed
 
