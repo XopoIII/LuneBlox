@@ -8,6 +8,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+- `coroutine.resume` returns the value a coroutine threw unchanged, as on Roblox: a table error comes
+  back as the same table, and a string as thrown, with no `runtime error:` prefix or traceback.
+  `coroutine.wrap` propagates the same value, and `coroutine.close` on a coroutine that errored
+  returns `false` and that value instead of the thread itself
+
 ## `0.10.10` - September 29th, 2026
 
 CI no longer runs on the Node.js 20 actions GitHub has deprecated. The runtime is unchanged.
