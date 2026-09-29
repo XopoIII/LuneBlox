@@ -18,7 +18,7 @@ jobs:
       version: ${{ steps.get_version.outputs.value }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Get version from manifest
         id: get_version
@@ -66,7 +66,7 @@ jobs:
     runs-on: ${{ matrix.runner-os }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
@@ -83,7 +83,7 @@ jobs:
         run: ./scripts/zip-release.sh ${{ matrix.cargo-target }}
 
       - name: Upload release artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact-name }}
           path: release.zip
@@ -94,10 +94,10 @@ jobs:
     needs: ["init", "build"]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Download releases
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: ./releases
 
@@ -105,7 +105,7 @@ jobs:
         run: ./scripts/unpack-releases.sh "./releases"
 
       - name: Create release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
