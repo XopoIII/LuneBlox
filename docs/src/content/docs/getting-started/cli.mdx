@@ -1,0 +1,223 @@
+---
+title: CLI
+description: Every luneblox subcommand - run, list, setup, build and repl - with its arguments and flags.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+```text
+luneblox [COMMAND]
+```
+
+| Command | What it does |
+|---|---|
+| [`run`](#run) | Run a script |
+| [`list`](#list) | List scripts available to run |
+| [`setup`](#setup) | Set up type definitions for your editor |
+| [`build`](#build) | Build a standalone executable |
+| [`repl`](#repl) | Launch an interactive REPL (the default) |
+
+With no command, `luneblox` starts the REPL. `luneblox --help` prints the command list,
+`luneblox <command> --help` prints the help for one command, and `luneblox --version` prints the
+version.
+
+## run
+
+```text
+luneblox run <SCRIPT_PATH> [SCRIPT_ARGS]...
+```
+
+Runs a script file.
+
+| Argument | Meaning |
+|---|---|
+| `SCRIPT_PATH` | A script name or the path to a file. `-` reads the script from stdin. |
+| `SCRIPT_ARGS` | Everything after the script path. Stored in `process.args`. |
+
+```sh
+luneblox run script.luau
+luneblox run build --release --target web
+```
+
+### Arguments go to the script
+
+`run` takes no flags of its own. Everything after the script path is passed to the script untouched,
+including words that start with `-`:
+
+```sh
+luneblox run script.luau --help -v --output out.txt
+```
+
+```luau
+--!strict
+local process = require("@lune/process")
+print(process.args) --> { "--help", "-v", "--output", "out.txt" }
+```
+
+`process.args` is read-only.
+
+### Reading the script from stdin
+
+A script path of exactly `-` reads the whole of stdin and runs it:
+
+```sh
+echo 'print("hello")' | luneblox run -
+luneblox run - one two < script.luau
+```
+
+Arguments after the `-` still reach `process.args`. A script run this way has no file path, so it can
+require the `@lune/*` libraries but not other files.
+
+### Script lookup order
+
+The path may leave out the `.luau` or `.lua` extension. For a path `name`, these files match, and a
+directory matches through its `init` file:
+
+- `name.luau`
+- `name.lua`
+- `name/init.luau`
+- `name/init.lua`
+
+If more than one of them exists the path is ambiguous and the run fails.
+
+A relative path is looked up in this order, and the first match runs:
+
+1. The path itself, from the current directory.
+2. `lune/<path>` in the current directory.
+3. `.lune/<path>` in the current directory.
+4. `lune/<path>` in your home directory.
+5. `.lune/<path>` in your home directory.
+
+An absolute path is used as given, and the script folders are not searched.
+
+### Environment
+
+`run` turns on Luau's native code generation. Set `LUNE_LUAU_JIT` to `0`, `false` or `off` to run
+without it. See [Environment variables](/LuneBlox/reference/environment-variables/).
+
+### Exit code
+
+- The code passed to `process.exit`, if the script called it.
+- Otherwise `1` if any thread threw an error that nothing caught, and `0` if none did.
+- `1` if the script could not be found or read.
+
+## list
+
+```text
+luneblox list
+```
+
+Lists the scripts in the script folders. It takes no arguments.
+
+It reads the `lune` folder of the current directory, or `.lune` when there is no `lune` folder, and
+does the same in your home directory. An entry is listed when it is a `.luau` or `.lua` file, or a
+directory with an `init.luau` or `init.lua` in it.
+
+```text
+Available scripts in current directory:
+>  build    - Builds the place file
+>  release  - Tags and publishes a release
+>  scratch
+Available global scripts:
+>  notes
+```
+
+When only the current directory has scripts, the heading is `Available scripts:`. When neither place
+has any, it prints `No scripts found.` When no script folder exists in either place, it prints
+`No lune directory was found.` and exits with code 1.
+
+Scripts with a description come first; within each group they are sorted by name.
+
+### Descriptions
+
+A description comes from `-->` comments at the very top of the script:
+
+```luau
+--> Tags and publishes a release
+--!strict
+local process = require("@lune/process")
+```
+
+Several `-->` lines in a row are joined with spaces into one description.
+
+<Aside type="caution" title="The comment must be on line 1">
+Reading stops at the first line that does not start with `-->`. A `--!strict` directive, a blank line
+or a shebang above the comment leaves the script without a description.
+</Aside>
+
+## setup
+
+```text
+luneblox setup
+```
+
+Writes the type definitions of the `@lune/*` libraries and points the `lune` alias at them, so that
+luau-lsp can check and complete them. It takes no arguments.
+
+- Typedefs go to `~/.luneblox/.typedefs/<version>/`.
+- `.luaurc` in the current directory gets `aliases.lune` set to that directory. The file is created
+  when it does not exist.
+
+Run it from the project root. [Editor setup](/LuneBlox/getting-started/editor-setup/) describes the
+result.
+
+## build
+
+```text
+luneblox build [OPTIONS] <INPUT>
+```
+
+Compiles a script to bytecode and appends it to a copy of the `luneblox` executable. The result runs
+the script directly, without `luneblox` installed.
+
+| Argument or flag | Meaning |
+|---|---|
+| `INPUT` | The path to the script file. |
+| `-o`, `--output <OUTPUT>` | The path to write. Defaults to the input path without its `.luau` or `.lua` extension. |
+| `-t`, `--target <TARGET>` | The target to build for, as `os-arch`. Defaults to the current system. |
+
+```sh
+luneblox build tool.luau
+luneblox build tool.luau --output dist/tool
+luneblox build tool.luau --target windows-x86_64
+```
+
+`INPUT` is read as a file path exactly as given. The script folders are not searched and the
+extension is not optional.
+
+For a Windows target the output gets an `.exe` extension when it does not have one. The output path
+cannot be the same as the input path; an input file with no extension needs `--output`.
+
+### Targets
+
+A target is an operating system and an architecture joined by a hyphen. Names are not case-sensitive.
+
+| Part | Name | Aliases |
+|---|---|---|
+| OS | `windows` | `win` |
+| OS | `linux` | |
+| OS | `macos` | `mac`, `darwin` |
+| Architecture | `x86_64` | `x64` |
+| Architecture | `aarch64` | `arm64` |
+
+So `mac-arm64` is `macos-aarch64`, and `win-x64` is `windows-x86_64`.
+
+For a target other than the current system, the base executable is downloaded from the LuneBlox
+release of the same version and cached. See
+[Standalone executables](/LuneBlox/guides/standalone-executables/).
+
+## repl
+
+```text
+luneblox repl
+luneblox
+```
+
+Starts an interactive session. It takes no arguments.
+
+- The prompt is `> `. It becomes `>> ` while a statement is incomplete, such as after an unclosed
+  `function` or `do`.
+- An error is printed and the session continues.
+- Ctrl+C once prints `Interrupt: ^C again to exit`; a second Ctrl+C exits. Ctrl+D exits at once.
+- Input history is kept between sessions in `.luneblox_history` in the state directory. See
+  [Directories](/LuneBlox/reference/directories/).

@@ -1,0 +1,306 @@
+---
+title: Processes and the terminal
+description: How to read arguments and the environment, run other programs with @lune/process, and write to and read from the terminal with @lune/stdio.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+`@lune/process` describes the running script and starts other programs. `@lune/stdio` writes to the
+terminal, reads from standard input and prompts the user.
+
+```luau
+local process = require("@lune/process")
+
+local result = process.exec("git", { "rev-parse", "--short", "HEAD" })
+if result.ok then
+	print("commit", result.stdout)
+else
+	process.exit(result.code)
+end
+```
+
+## Arguments, environment and platform
+
+```sh
+luneblox run deploy.luau staging --dry-run
+```
+
+```luau
+local process = require("@lune/process")
+
+print(process.args[1]) --> staging
+print(process.args[2]) --> --dry-run
+```
+
+`process.args` holds the arguments given after the script name. It is read-only: assigning to it
+throws.
+
+`process.env` is a table of environment variables. An unset variable reads as nil. Assigning a
+string sets the variable, and assigning nil removes it.
+
+```luau
+local port = tonumber(process.env.PORT) or 8080
+
+process.env.BUILD_MODE = "release"
+process.env.BUILD_MODE = nil
+
+for name, value in process.env do
+	print(name, value)
+end
+```
+
+| Value | Meaning |
+|---|---|
+| `process.cwd` | The directory the script was started from. It always ends with a path separator. |
+| `process.os` | `"linux"`, `"macos"` or `"windows"` |
+| `process.arch` | `"x86_64"` or `"aarch64"` |
+| `process.endianness` | `"big"` or `"little"` |
+
+Because `process.cwd` ends with a separator, join onto it directly: `process.cwd .. "build"`.
+
+## Exiting
+
+`process.exit(code)` stops the script as soon as possible. Code 0, or no code, is success; anything
+else is a failure. It overrides the exit code the script would otherwise end with.
+
+```luau
+if #process.args == 0 then
+	print("usage: deploy <target>")
+	process.exit(1)
+end
+```
+
+## Running a program and waiting for it
+
+`process.exec(program, params, options)` runs a program, waits for it to exit, and returns its
+result. It yields the calling thread only; other tasks keep running.
+
+```luau
+local process = require("@lune/process")
+
+local result = process.exec("ls", { "-a" })
+print(result.ok) --> true when the exit code was zero
+print(result.code)
+print(result.stdout)
+print(result.stderr)
+```
+
+<Aside type="caution" title="Two kinds of failure">
+A program that runs and exits with a non-zero code does not throw: check `result.ok`. A program that
+cannot be started at all, such as one that does not exist, throws. Use `pcall` when the program may
+be missing.
+</Aside>
+
+### Options
+
+| Option | Meaning |
+|---|---|
+| `cwd` | The working directory for the child. A leading `~` is replaced with the user's home directory. |
+| `env` | Extra environment variables for the child, as a table of strings. |
+| `shell` | `true` to run through the default shell, or the name of a shell to use. |
+| `stdio` | What to do with the child's output, and what to feed its input. See below. |
+
+Without `shell`, the program is started directly and each entry in `params` is passed as one
+argument, with no quoting or expansion. With `shell`, the line is interpreted by the shell, so
+variables, pipes and redirections work.
+
+```luau
+local result = process.exec("echo $HOME | wc -c", nil, { shell = true })
+
+local built = process.exec("cargo", { "build", "--release" }, {
+	cwd = "crates/app",
+	env = { RUSTFLAGS = "-D warnings" },
+})
+```
+
+The default shell is `/bin/sh` on Linux and macOS and PowerShell on Windows. Pass a name, such as
+`shell = "bash"`, when the command needs a specific one.
+
+### Output and input
+
+`stdio` is either one kind for both output streams, or a table with `stdout`, `stderr` and `stdin`.
+
+| Kind | Result table | The terminal |
+|---|---|---|
+| `"default"` | Receives the output | Sees nothing |
+| `"inherit"` | Receives the output | Sees it as well |
+| `"forward"` | Stays empty | Sees it |
+| `"none"` | Stays empty | Sees nothing; no stream is created |
+
+```luau
+-- Show a long build's output live, and still inspect it afterwards
+local result = process.exec("cargo", { "test" }, { stdio = "inherit" })
+
+-- Keep stdout for parsing, let errors go straight to the terminal
+local listing = process.exec("git", { "status", "--porcelain" }, {
+	stdio = { stdout = "default", stderr = "forward" },
+})
+```
+
+`stdin` is not a kind: it is a string or buffer written to the child's standard input. When it is
+left out, the child's input is closed, so a program that reads its input does not hang.
+
+```luau
+local sorted = process.exec("sort", {}, {
+	stdio = { stdin = "pear\napple\nfig\n" },
+})
+print(sorted.stdout)
+```
+
+## Running a program in the background
+
+`process.create(program, params, options)` starts a program and returns at once, with handles to its
+streams. Use it for long-running programs and for ones you talk to while they run. Its options are
+`cwd`, `env` and `shell`; there is no `stdio` option.
+
+```luau
+local process = require("@lune/process")
+
+local child = process.create("cat")
+
+child.stdin:write("hello, world")
+child.stdin:close()
+
+print(child.stdout:readToEnd()) --> hello, world
+
+local status = child:status()
+print(status.ok, status.code)
+```
+
+| Member | Meaning |
+|---|---|
+| `child.stdin:write(data)` | Writes a string or buffer to the child's input. |
+| `child.stdin:close()` | Closes the child's input. Many programs wait for this before they finish. |
+| `child.stdout:read(chunkSize)` | Reads up to `chunkSize` bytes, 1 KB by default. Yields until data arrives; returns nil when there is no more. |
+| `child.stdout:readToEnd()` | Yields until the child exits and returns everything it wrote. |
+| `child.stderr` | A reader with the same two methods. |
+| `child:status()` | Yields until the child exits and returns `{ ok, code }`. |
+| `child:kill()` | Kills the child. |
+
+To stream output as it is produced, read in a loop until nil:
+
+```luau
+local process = require("@lune/process")
+local stdio = require("@lune/stdio")
+
+local child = process.create("ping", { "-c", "3", "example.com" })
+
+while true do
+	local chunk = child.stdout:read()
+	if chunk == nil then
+		break
+	end
+	stdio.write(chunk)
+end
+
+local status = child:status()
+```
+
+After `child:kill()`, output written before the kill can still be read, and writing to `stdin`
+throws.
+
+## Writing to the terminal
+
+`print` formats its arguments and adds a newline. `stdio.write` writes a string to standard output
+exactly as given, and `stdio.ewrite` does the same to standard error.
+
+```luau
+local stdio = require("@lune/stdio")
+
+stdio.write("Working")
+for _ = 1, 3 do
+	stdio.write(".")
+end
+stdio.write(" done\n")
+
+stdio.ewrite("warning: nothing to do\n")
+```
+
+`stdio.format(...)` returns the string `print` would have written: arguments separated by a space,
+and tables expanded with sorted keys. Use it to build messages for `stdio.ewrite` or `error`.
+
+```luau
+stdio.ewrite(stdio.format("bad config:", { retries = -1 }) .. "\n")
+```
+
+## Colors and styles
+
+`stdio.color(name)` and `stdio.style(name)` return ANSI escape strings. They do not write anything:
+write the returned string, and the setting stays in effect until you write a reset.
+
+```luau
+local stdio = require("@lune/stdio")
+
+local red = stdio.color("red")
+local bold = stdio.style("bold")
+local reset = stdio.color("reset") .. stdio.style("reset")
+
+print(`{bold}{red}error:{reset} something went wrong`)
+```
+
+Colors are `black`, `red`, `green`, `yellow`, `blue`, `purple`, `cyan`, `white` and `reset`. Styles
+are `bold`, `dim` and `reset`. Any other name throws.
+
+## Reading input
+
+`stdio.readLine()` reads one line from standard input, and `stdio.readToEnd()` reads everything up
+to the end of input. Both work with piped input, which makes them the right choice for scripts run
+by other programs.
+
+```sh
+cat data.json | luneblox run summarize.luau
+```
+
+```luau
+local serde = require("@lune/serde")
+local stdio = require("@lune/stdio")
+
+local data = serde.decode("json", stdio.readToEnd())
+print(#data, "entries")
+```
+
+## Prompting the user
+
+`stdio.prompt(kind, message, defaultOrOptions)` asks an interactive question.
+
+```luau
+local stdio = require("@lune/stdio")
+
+local name = stdio.prompt("text", "Project name", "my-project")
+local confirmed = stdio.prompt("confirm", "Create it?", true)
+local choice = stdio.prompt("select", "Template", { "game", "plugin", "library" })
+local extras = stdio.prompt("multiselect", "Extras", { "tests", "ci", "docs" })
+```
+
+| Kind | Third argument | Returns |
+|---|---|---|
+| `"text"` | A default string, optional | The string entered |
+| `"confirm"` | A default boolean, optional | `true` or `false` |
+| `"select"` | The list of options | The index of the chosen option, or nil |
+| `"multiselect"` | The list of options | A list of chosen indexes, or nil |
+
+`select` and `multiselect` return indexes into the list, not the option strings. Calling
+`stdio.prompt()` with no arguments is a text prompt with no message.
+
+<Aside type="caution" title="Prompts need a terminal">
+`stdio.prompt` does not degrade when standard input is not a TTY. It throws
+`IO error: not a terminal`, and under some runners it blocks with nothing printed. A script that can
+reach a prompt must not run from CI, a git hook or a test. Take the answer from `process.args` or
+`process.env` in those places, and prompt only when it is missing and a person is present.
+</Aside>
+
+```luau
+local process = require("@lune/process")
+local stdio = require("@lune/stdio")
+
+local target = process.args[1] or process.env.DEPLOY_TARGET
+if target == nil then
+	target = stdio.prompt("text", "Deploy target")
+end
+```
+
+## Reference
+
+The full listings are on the [process reference](/LuneBlox/reference/process/) and the
+[stdio reference](/LuneBlox/reference/stdio/). Passing arguments on the command line is covered in
+[running scripts](/LuneBlox/guides/running-scripts/).

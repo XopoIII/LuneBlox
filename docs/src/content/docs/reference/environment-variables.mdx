@@ -1,0 +1,122 @@
+---
+title: Environment variables
+description: Every environment variable the luneblox binary reads, what it does and the values it accepts.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+| Variable | Read by | Effect |
+|---|---|---|
+| [`LUNE_ROBLOX_FFLAGS`](#lune_roblox_fflags) | Everything that runs or compiles Luau | `0` keeps Luau's default fast flags |
+| [`LUNE_LUAU_JIT`](#lune_luau_jit) | `luneblox run` | `0`, `false` or `off` turns native code generation off |
+| [`LUNEBLOX_CACHE`](#luneblox_cache) | `luneblox build --target` | Sets the cache directory |
+| [`LUNEBLOX_STATE`](#luneblox_state) | `luneblox repl` | Sets the state directory |
+| [`XDG_CACHE_HOME`](#xdg_cache_home-and-xdg_state_home) | `luneblox build --target` | Base of the cache directory on Linux |
+| [`XDG_STATE_HOME`](#xdg_cache_home-and-xdg_state_home) | `luneblox repl` | Base of the state directory on Linux |
+| [`RUST_LOG`](#rust_log) | Every command | Turns on internal trace logging |
+
+The first two keep the `LUNE_` prefix. The directory overrides use `LUNEBLOX_`.
+
+## LUNE_ROBLOX_FFLAGS
+
+By default LuneBlox sets Luau's fast flags to the values the live Roblox client uses. With this
+variable set to `0`, it leaves Luau's own defaults in place.
+
+| Value | Effect |
+|---|---|
+| `0` | Luau's default flags |
+| Anything else, or unset | Roblox's flags |
+
+```sh
+LUNE_ROBLOX_FFLAGS=0 luneblox run bench.luau
+```
+
+It is read once per process, before the first Luau VM is created, by `luneblox run`, the REPL,
+`luneblox build` and standalone executables. See [Fast flags](/LuneBlox/guides/fast-flags/).
+
+## LUNE_LUAU_JIT
+
+`luneblox run` turns on Luau's native code generation. This variable turns it off.
+
+| Value | Effect |
+|---|---|
+| `0`, `false`, `off` | The script runs interpreted |
+| Anything else, or unset | Native code generation is on |
+
+The match is exact and case-sensitive: `OFF` and `False` leave it on.
+
+```sh
+LUNE_LUAU_JIT=off luneblox run bench.luau
+```
+
+Only `luneblox run` reads it. The REPL and standalone executables run with native code generation
+off whatever its value. See [Running scripts](/LuneBlox/guides/running-scripts/).
+
+## LUNEBLOX_CACHE
+
+The cache directory, used as given. `luneblox build --target` keeps downloaded base executables in
+its `target` folder.
+
+```sh
+LUNEBLOX_CACHE=/tmp/luneblox-cache luneblox build tool.luau --target linux-x86_64
+```
+
+The base executable lands in `/tmp/luneblox-cache/target/linux-x86_64`.
+
+When set, it wins over every other rule, including an existing `~/.luneblox/target`. No `luneblox`
+segment is appended to it.
+
+## LUNEBLOX_STATE
+
+The state directory, used as given. The REPL keeps its history file, `.luneblox_history`, in it.
+
+```sh
+LUNEBLOX_STATE=/tmp/luneblox-state luneblox repl
+```
+
+The history is `/tmp/luneblox-state/.luneblox_history`. When set, it wins over every other rule.
+
+## XDG_CACHE_HOME and XDG_STATE_HOME
+
+On Linux, when the `LUNEBLOX_` overrides are not set, the cache directory is
+`$XDG_CACHE_HOME/luneblox` and the state directory is `$XDG_STATE_HOME/luneblox`. When the XDG
+variables are not set, their standard defaults apply: `~/.cache` and `~/.local/state`.
+
+On macOS and Windows these variables are not read; the platform's own cache location is used.
+
+Files that already exist in the older home-directory locations keep being used. See
+[Directories](/LuneBlox/reference/directories/) for the full order.
+
+<Aside>
+None of these four move the type definitions. `luneblox setup` always writes them to
+`~/.luneblox/.typedefs/<version>/`, because the `lune` alias in `.luaurc` points there.
+</Aside>
+
+## RUST_LOG
+
+`luneblox` has internal trace logging, written to stderr. It is off unless `RUST_LOG` sets a level:
+
+```sh
+RUST_LOG=trace luneblox run script.luau
+```
+
+This is for debugging the runtime itself, such as the order the scheduler resumes threads in. A
+script does not need it.
+
+## Variables for your script
+
+Every environment variable of the process is available to the script in `process.env`:
+
+```luau
+--!strict
+local process = require("@lune/process")
+
+local port = tonumber(process.env.PORT) or 8080
+print(port)
+```
+
+```sh
+PORT=3000 luneblox run server.luau
+```
+
+See [process](/LuneBlox/reference/process/).

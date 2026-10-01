@@ -1,0 +1,139 @@
+---
+title: Keeping Luau current
+description: A maintainer's guide to moving LuneBlox to a new Luau release - the mlua-sys patch, the vendored Luau sources, the fast flag table and the tests.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+This page is for people who maintain LuneBlox. Its whole purpose is to run the Luau that Roblox runs,
+so when Roblox moves to a new Luau release, LuneBlox follows.
+
+## The three pieces
+
+Luau reaches the binary through three things in the repository. All three move together.
+
+### mlua-sys, patched
+
+LuneBlox uses [mlua](https://github.com/mlua-rs/mlua) for its Luau bindings. `mlua-sys` is the crate
+that pins which Luau is built. The crates.io release of mlua 0.12.1 pins Luau 0.736, so `Cargo.toml`
+patches `mlua-sys` to the commit on mlua's main branch that moved it to Luau 0.740:
+
+```toml
+[patch.crates-io]
+mlua-sys = { git = "https://github.com/mlua-rs/mlua", rev = "2cf6c60c65858b9ea95c14cc25dd11da984efad0" }
+```
+
+Only `mlua-sys` is patched, not `mlua`. mlua's main branch also turns fractional-to-integer
+conversions into errors, and the Roblox datatypes rely on those conversions.
+
+### luau0-src, vendored
+
+`luau0-src` is the crate that carries Luau's C++ sources. LuneBlox keeps a copy in
+`vendor/luau0-src` and patches the dependency to it:
+
+```toml
+[patch.crates-io]
+luau0-src = { path = "vendor/luau0-src" }
+```
+
+The copy is `luau0-src` 0.22.0+luau740 as published, plus fixes to Luau's own C++. Each fix is marked
+with a comment that starts with `LuneBlox:`. The directory is excluded from the workspace, so it is
+not linted or formatted.
+
+List the fixes with:
+
+```sh
+grep -rn "LuneBlox:" vendor/luau0-src
+```
+
+Today there is one, in `luau/CodeGen/src/IrRegAllocA64.cpp`: the ARM64 register allocator no longer
+plans to reload a spilled value from a constant past K255.
+
+<Aside title="Why fixes are needed at all">
+mlua builds Luau without `NDEBUG`, so Luau's assertions are live. A code generation bug that Roblox's
+release build miscompiles silently stops this process instead. That makes such bugs visible here
+first, and a fix has to be carried until a Luau release has it.
+</Aside>
+
+### The fast flag table
+
+`crates/lune/src/rt/roblox_fflags.rs` is generated against one Luau version and one Roblox client
+version. See [Fast flags](/LuneBlox/guides/fast-flags/).
+
+## Moving to a new Luau release
+
+<Steps>
+
+1. **Point `mlua-sys` at the new Luau.** Change the `rev` of the `mlua-sys` patch in `Cargo.toml` to
+   an mlua commit that pins the new Luau. If a crates.io release of `mlua-sys` now carries it, bump
+   the dependency and drop the patch.
+
+2. **Re-copy `vendor/luau0-src`.** Replace the directory with the `luau0-src` crate version the new
+   `mlua-sys` asks for.
+
+3. **Re-apply the marked fixes.** Before replacing the directory, collect every `LuneBlox:` fix. For
+   each one, check whether the new Luau has taken it. Re-apply those it has not, keeping the
+   `LuneBlox:` comment. If none remain, drop the `luau0-src` patch and the vendored directory.
+
+4. **Build.**
+
+   ```sh
+   cargo build
+   ```
+
+5. **Regenerate the fast flags.** The generator reads the flags the new Luau declares, so it has to
+   run after the sources have moved.
+
+   ```sh
+   luneblox run scripts/generate_roblox_fflags.luau
+   ```
+
+6. **Run the test suite.** Rust tests and every Luau test:
+
+   ```sh
+   cargo nextest run --workspace --all-features
+   ```
+
+7. **Run the gates.** The tree is kept at zero warnings.
+
+   ```sh
+   lefthook run pre-commit --all-files
+   ```
+
+8. **Update the words.** The Luau version appears in `README.md`, in the comments of `Cargo.toml` and
+   in a new `CHANGELOG.md` entry.
+
+</Steps>
+
+`_VERSION` needs no change. The part after the `+` is read from Luau itself at run time.
+
+## Checking the result
+
+```sh
+cargo run -- run - <<'EOF'
+print(_VERSION)
+EOF
+```
+
+It should print the new Luau number after the `+`, such as `LuneBlox 0.10.12+740`.
+
+The regression test for each carried fix must still pass. For the ARM64 fix it is
+`tests/luau/codegen_far_constant.luau`, registered in `crates/lune/src/tests.rs`. A Luau test that is
+not registered there never runs.
+
+## When only Roblox's flags move
+
+Roblox changes flag values between Luau releases. To pick those up without moving Luau, do steps 5
+to 7 alone and release.
+
+## Things to keep in mind
+
+- **mlua's main is not used as a whole.** Take the `mlua-sys` commit, not a newer `mlua`.
+- **The release profile builds `mlua-sys` at `opt-level = 3`** while the rest of the workspace uses
+  `"z"`. If the crate that compiles Luau's C++ changes, the override in `Cargo.toml` has to follow it,
+  or the VM silently goes back to `-Os`.
+- **Test on ARM64 and x64.** The native code generators are separate, and the one carried fix so far
+  was ARM64 only.
+- **Releases go to GitHub only.** `luneblox build --target` downloads base executables from the
+  release of the same version, so a release needs all six target archives. See
+  [Standalone executables](/LuneBlox/guides/standalone-executables/).

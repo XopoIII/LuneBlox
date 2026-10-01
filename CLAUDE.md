@@ -68,6 +68,21 @@ The same gates run in CI (`.github/workflows/ci.yaml`) and before each commit (`
 - **cargo-deny only sees the six release targets.** Crates that exist only for wasm, such as `stdweb`
   under `rbx_cookie`, are never built and stay out of the checks.
 
+## Documentation
+
+The site at <https://xopoiii.github.io/LuneBlox/> is Astro Starlight in `docs/`, set up as in BlinkBlox
+and KeepBlox. `.github/workflows/docs.yml` publishes it on every push to `main`; CI builds it on every
+pull request, and the build fails on a dead internal link.
+
+- Pages are `.mdx` under `docs/src/content/docs/`, with `title` and `description` frontmatter and no
+  `# h1` in the body. A new page is added to the `sidebar` in `docs/astro.config.mjs`.
+- Internal links are absolute, carry the base and end with a slash: `/LuneBlox/guides/files/`.
+- Notes use the `<Aside>` component, not `:::` syntax.
+- **The `@lune/*` reference pages are generated, not written.** `docs/scripts/generate-reference.mjs`
+  writes `docs/src/content/docs/reference/<library>.md` from the typedefs' doc comments before every
+  `dev` and `build`; they are gitignored. To change one, change the doc comment in the typedef.
+- The changelog page imports `CHANGELOG.md`; it is not copied.
+
 ## The prompt trap
 
 `stdio.prompt` does not degrade when stdin is not a TTY - it throws `IO error: not a terminal`, and under
@@ -93,6 +108,8 @@ hook or CI. `tests/stdio/prompt.luau` is deliberately left out of the automated 
 | Check dependencies | `cargo deny check` |
 | Run all pre-commit gates | `lefthook run pre-commit --all-files` |
 | Regenerate the fast flags | `lune run scripts/generate_roblox_fflags` |
+| Preview the docs site | `npm ci --prefix docs && npm run dev --prefix docs` |
+| Build the docs site (checks every internal link) | `npm run build --prefix docs` |
 | Look at an upstream pull request | `git fetch upstream pull/<n>/head:pr-<n>` |
 
 A Luau test is a script under `tests/`, registered in `crates/lune/src/tests.rs`; a new test file that

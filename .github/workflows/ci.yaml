@@ -76,6 +76,31 @@ jobs:
         with:
           command: check
 
+  # The docs site deploys only from main (docs.yml), so building it here puts a broken page or a dead
+  # link before review. The link validator fails the build on a dead internal link.
+  docs:
+    name: Build the docs site
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./docs
+        run: npm ci
+
+      - name: Build
+        working-directory: ./docs
+        run: npm run build
+
   ci:
     needs: ["fmt"]
     strategy:

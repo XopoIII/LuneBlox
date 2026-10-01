@@ -1,0 +1,96 @@
+---
+title: Why LuneBlox
+description: Why the fork exists - the Luau version, the fast flags, the optimization level and the live assertions that make it run Luau the way Roblox does.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+LuneBlox is [Lune](https://github.com/lune-org/lune) with the Luau underneath changed, so that code
+tested or measured here behaves like the code players run.
+
+## The gap
+
+Lune 0.10.5 runs Luau 0.709. Roblox runs 0.740 (September 2026). On top of the version, Roblox runs
+Luau with its own set of fast flags: Luau ships new compiler and VM work behind flags that default to
+off, and Roblox turns them on remotely.
+
+A benchmark or a test run on Lune therefore measures a VM that no game runs.
+
+## What LuneBlox changes
+
+| | Lune 0.10.5 | LuneBlox 0.10.12 |
+|---|---|---|
+| Luau | 0.709 | 0.740, the version Roblox runs |
+| Luau's fast flags | Luau's defaults | set as the live Roblox client sets them |
+| Luau's C++ built with | `-Os` | `-O3` |
+| `_VERSION` | `Lune 0.10.5+709` | `LuneBlox 0.10.12+740` |
+
+### The Luau version
+
+LuneBlox builds against Luau 0.740. The version is part of `_VERSION`, after the `+`, so a script or a
+bug report can say which Luau it ran on:
+
+```luau
+--!strict
+print(_VERSION) --> LuneBlox 0.10.12+740
+```
+
+[Keeping Luau current](/LuneBlox/guides/keeping-luau-current/) describes how the version is moved.
+
+### The fast flags
+
+At startup LuneBlox sets each Luau fast flag to the value the live Roblox client has for it. The table
+is generated from Roblox's published client settings and limited to the flags that this Luau
+declares.
+
+`LUNE_ROBLOX_FFLAGS=0` runs with Luau's own defaults instead, to measure what the flags change. See
+[Fast flags](/LuneBlox/guides/fast-flags/).
+
+### The optimization level
+
+Lune's release profile optimizes for size (`opt-level = "z"`). Luau's C++ is compiled by a build
+script that takes its optimization level from that profile, so the whole VM was built with `-Os`.
+
+LuneBlox builds Luau's C++ at `-O3` and keeps the size profile for the Rust code. Measured on an
+M-series Mac with Luau 0.740 and Roblox's flags, against the same build at `-Os`:
+
+| Operation | Faster by |
+|---|---|
+| `pcall` | 34% |
+| A Luau-to-Luau metamethod call | 29% |
+| A called closure | 24% |
+
+The cost is 370 KB of binary size.
+
+## Performance
+
+Measured on an Apple M1, median of three runs, on one Luau networking library's generated modules,
+LuneBlox against Lune 0.10.5:
+
+- Interpreted code - what most Roblox clients run - is 39 to 57% faster to encode and decode.
+- Modules that Lune's Luau left interpreted even when natively compiled now compile.
+
+<Aside title="Native timings are Roblox's, not the VM's best">
+Roblox sets the `DebugCodegenOptSize` flag, which skips a native code optimization, and LuneBlox
+sets it too. Native timings here are what Roblox gets rather than the best the VM can do.
+</Aside>
+
+## Assertions are live
+
+LuneBlox builds Luau with its assertions compiled in. A code generation bug that a release build of
+Luau miscompiles silently stops this process instead.
+
+That is how the ARM64 fix in 0.10.12 was found. Luau 0.740's ARM64 register allocator could plan to
+reload a spilled value from a constant past K255, which no single ARM64 load reaches. With assertions
+on, loading a function with more than 256 constants as native code stopped the process; without them,
+the function would load the wrong value.
+
+Fixes like this one are carried in a copy of Luau's sources in the repository (`vendor/luau0-src`),
+each marked with a `LuneBlox:` comment, until a Luau release has them.
+
+## What stays the same
+
+LuneBlox keeps Lune's whole interface: the same `@lune/*` libraries, the same task scheduler, the same
+Roblox datatypes and place and model files. A script written for Lune runs unchanged.
+
+[Migrating from Lune](/LuneBlox/guides/migrating-from-lune/) lists the few things that differ.

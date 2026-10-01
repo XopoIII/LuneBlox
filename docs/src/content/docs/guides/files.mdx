@@ -1,0 +1,229 @@
+---
+title: Files and data formats
+description: How to read, write, copy and inspect files with @lune/fs, and encode, compress and hash their contents with @lune/serde.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+`@lune/fs` reads and writes the filesystem. `@lune/serde` turns the strings it reads into Luau values
+and back, and compresses and hashes them.
+
+```luau
+local fs = require("@lune/fs")
+local serde = require("@lune/serde")
+
+local config = serde.decode("json", fs.readFile("config.json"))
+config.runs = (config.runs or 0) + 1
+fs.writeFile("config.json", serde.encode("json", config, true))
+```
+
+Relative paths are resolved against the directory the script was started from, which is
+`process.cwd`, not against the script's own file.
+
+## Reading and writing files
+
+`fs.readFile(path)` returns the whole file as a string. Luau strings hold any bytes, so the same call
+reads binary files.
+
+`fs.writeFile(path, contents)` takes a string or a `buffer`. It creates the file, or replaces its
+contents when the file exists.
+
+```luau
+local fs = require("@lune/fs")
+
+fs.writeFile("notes.txt", "first line\n")
+
+local bytes = buffer.create(4)
+buffer.writeu32(bytes, 0, 0xDEADBEEF)
+fs.writeFile("blob.bin", bytes)
+
+print(#fs.readFile("blob.bin")) --> 4
+```
+
+<Aside type="caution" title="The parent directory must exist">
+`fs.writeFile` does not create missing directories. Call `fs.writeDir` on the parent first.
+</Aside>
+
+## Directories
+
+`fs.writeDir(path)` creates a directory together with any missing parents. `fs.readDir(path)` returns
+the names of the entries inside a directory - names only, not full paths, and not recursive.
+
+```luau
+local fs = require("@lune/fs")
+
+fs.writeDir("out/reports/2026")
+
+local function walk(dir: string)
+	for _, name in fs.readDir(dir) do
+		local path = dir .. "/" .. name
+		if fs.isDir(path) then
+			walk(path)
+		else
+			print(path)
+		end
+	end
+end
+
+walk("out")
+```
+
+## Checking what a path is
+
+`fs.isFile(path)` and `fs.isDir(path)` return `false` for a path that does not exist, so they double
+as existence checks.
+
+`fs.metadata(path)` returns more. It does not throw for a missing path: it returns a table whose
+`exists` is `false` and whose other fields are nil.
+
+```luau
+local fs = require("@lune/fs")
+
+local meta = fs.metadata("notes.txt")
+if meta.exists then
+	print(meta.kind) --> file
+	print(meta.size) --> size in bytes, nil for a directory
+	print(meta.modifiedAt:toRfc3339())
+	print(meta.permissions.readOnly)
+end
+```
+
+| Field | Value |
+|---|---|
+| `exists` | `true` or `false` |
+| `kind` | `"file"` or `"dir"` |
+| `size` | Size in bytes for a file, nil for a directory |
+| `createdAt`, `modifiedAt`, `accessedAt` | `DateTime` values from `@lune/datetime` |
+| `permissions` | A table with one field, `readOnly` |
+
+## Copy, move and remove
+
+`fs.copy(from, to)` copies a file, or a directory with everything in it. `fs.move(from, to)` moves or
+renames. Both throw when something already exists at `to`. Pass `true` as the third argument, or
+`{ overwrite = true }`, to replace it.
+
+```luau
+local fs = require("@lune/fs")
+
+fs.copy("assets", "build/assets", true)
+fs.move("build/app.tmp", "build/app.rbxl", { overwrite = true })
+```
+
+`fs.removeFile(path)` removes one file. `fs.removeDir(path)` removes a directory and all of its
+contents. Both throw when the path does not exist.
+
+```luau
+if fs.isDir("build") then
+	fs.removeDir("build")
+end
+fs.writeDir("build")
+```
+
+<Aside type="caution">
+`fs.move` fails when the target is on a different mount point. Use `fs.copy` and then remove the
+source in that case.
+</Aside>
+
+## Errors
+
+Every `fs` function throws on failure: a missing file, a missing parent directory, a permission
+problem. Wrap the call in `pcall` where a failure is expected.
+
+```luau
+local fs = require("@lune/fs")
+
+local ok, contents = pcall(fs.readFile, "maybe-missing.txt")
+if ok then
+	print(contents)
+else
+	print("could not read:", contents)
+end
+```
+
+Checking with `fs.isFile` first is simpler when a missing file is the only case you care about.
+
+## JSON, TOML and YAML
+
+`serde.decode(format, encoded)` parses a string or buffer into a Luau value.
+`serde.encode(format, value, pretty)` does the reverse. The format always comes first.
+
+```luau
+local fs = require("@lune/fs")
+local serde = require("@lune/serde")
+
+local manifest = serde.decode("toml", fs.readFile("Cargo.toml"))
+print(manifest.package.name)
+
+local settings = serde.decode("yaml", fs.readFile("settings.yaml"))
+fs.writeFile("settings.json", serde.encode("json", settings, true))
+```
+
+| Format | Notes |
+|---|---|
+| `json` | |
+| `jsonc` | JSON with comments allowed |
+| `toml` | |
+| `yaml` | |
+| `base64`, `hex` | Binary-to-text encodings, see below |
+
+- `pretty` defaults to `false`, and is supported for `json` and `toml` only.
+- A JSON or YAML `null` decodes to nil, so a key whose value is null is absent from the table.
+- Decoding malformed input throws. Use `pcall` on input you do not control.
+
+```luau
+local ok, value = pcall(serde.decode, "json" :: "json", untrustedText)
+```
+
+## Base64 and hex
+
+The `base64` and `hex` formats take a string or a buffer and return a string.
+
+```luau
+local serde = require("@lune/serde")
+
+local encoded = serde.encode("base64", "\0Hello, world!\255")
+print(encoded) --> AEhlbGxvLCB3b3JsZCH/
+print(serde.decode("base64", encoded) == "\0Hello, world!\255") --> true
+```
+
+## Compression
+
+`serde.compress(format, s, level)` and `serde.decompress(format, s)` take a string or buffer and
+return a string. The formats are `brotli`, `gzip`, `lz4`, `zlib` and `zstd`.
+
+```luau
+local fs = require("@lune/fs")
+local serde = require("@lune/serde")
+
+local source = fs.readFile("data.json")
+fs.writeFile("data.json.gz", serde.compress("gzip", source))
+
+local restored = serde.decompress("gzip", fs.readFile("data.json.gz"))
+assert(restored == source)
+```
+
+`level` is optional. It is clamped to what the format allows, and the best compression level is used
+when it is left out.
+
+## Hashing
+
+`serde.hash(algorithm, message)` returns the hash as a lowercase hex string.
+`serde.hmac(algorithm, message, secret)` returns an HMAC the same way. Messages and secrets may be
+strings or buffers, and need not be valid UTF-8.
+
+```luau
+local fs = require("@lune/fs")
+local serde = require("@lune/serde")
+
+print(serde.hash("sha256", fs.readFile("build/app.rbxl")))
+print(serde.hmac("sha256", "payload", "secret key"))
+```
+
+The algorithms are `md5`, `sha1`, `sha224`, `sha256`, `sha384`, `sha512`, `sha3-224`, `sha3-256`,
+`sha3-384`, `sha3-512` and `blake3`. An unknown algorithm name throws.
+
+## Reference
+
+The full listings are on the [fs reference](/LuneBlox/reference/fs/) and the
+[serde reference](/LuneBlox/reference/serde/). The timestamps in `fs.metadata` are described on the
+[datetime reference](/LuneBlox/reference/datetime/).

@@ -1,0 +1,20 @@
+---
+// Starlight's own 404 route looks for a `404` docs entry and warns on every build without one, and a
+// `404` entry collides with its catch-all docs route instead. So the route is disabled in
+// astro.config.mjs and the page is made here.
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+---
+
+<StarlightPage
+	frontmatter={{
+		title: 'Page not found',
+		template: 'splash',
+		editUrl: false,
+		pagefind: false,
+		hero: {
+			title: 'Page not found',
+			tagline: 'The page you asked for is not here.',
+			actions: [{ text: 'Go to the home page', link: '/LuneBlox/', icon: 'right-arrow' }],
+		},
+	}}
+/>

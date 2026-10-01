@@ -1,0 +1,101 @@
+---
+title: Installation
+description: How to install the luneblox binary with Rokit, from a GitHub release or from source, and where it keeps its files.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+LuneBlox is one executable named `luneblox`. It has no installer and no runtime dependencies.
+
+## With Rokit
+
+[Rokit](https://github.com/rojo-rbx/rokit) is the toolchain manager most Roblox projects use. From
+your project directory:
+
+```sh
+rokit add XopoIII/LuneBlox luneblox
+```
+
+Check that it runs:
+
+```sh
+luneblox --version
+```
+
+## From a GitHub release
+
+Releases are published to GitHub only. Nothing goes to crates.io.
+
+Each [release](https://github.com/XopoIII/LuneBlox/releases/latest) carries one zip file per target,
+named `luneblox-<version>-<os>-<arch>.zip`:
+
+| Target | Archive for 0.10.12 |
+|---|---|
+| Linux x86_64 | `luneblox-0.10.12-linux-x86_64.zip` |
+| Linux aarch64 | `luneblox-0.10.12-linux-aarch64.zip` |
+| macOS x86_64 | `luneblox-0.10.12-macos-x86_64.zip` |
+| macOS aarch64 | `luneblox-0.10.12-macos-aarch64.zip` |
+| Windows x86_64 | `luneblox-0.10.12-windows-x86_64.zip` |
+| Windows aarch64 | `luneblox-0.10.12-windows-aarch64.zip` |
+
+The archive holds a single file, `luneblox` (`luneblox.exe` on Windows). Unzip it and put it in a
+directory on your `PATH`.
+
+## From source
+
+Building needs a Rust toolchain with Cargo and a C++ compiler: Luau's C++ sources are compiled as
+part of the build.
+
+<Steps>
+
+1. Clone the repository. The build uses the copy of Luau's sources in `vendor/luau0-src`, so a
+   checkout of the whole repository is required.
+
+   ```sh
+   git clone https://github.com/XopoIII/LuneBlox.git
+   cd LuneBlox
+   ```
+
+2. Build the release binary:
+
+   ```sh
+   cargo build --release
+   ```
+
+3. The binary is `target/release/luneblox` (`luneblox.exe` on Windows). Copy it to a directory on
+   your `PATH`.
+
+</Steps>
+
+<Aside>
+The release profile optimizes the Rust code for size and builds Luau's C++ at `-O3`. A debug build
+(`cargo build`) works for development but is much slower at running scripts.
+</Aside>
+
+## Beside upstream Lune
+
+The command is `luneblox`, not `lune`, so it installs next to an upstream Lune rather than in its
+place. Both can be on the same `PATH` and in the same `rokit.toml`.
+
+The two runtimes share only the things that make scripts portable: the script folders (`lune` and
+`.lune`) and the `@lune/*` library names. See
+[Migrating from Lune](/LuneBlox/guides/migrating-from-lune/).
+
+## Where its files live
+
+LuneBlox writes nothing until you use a command that needs to:
+
+| What | Written by | Location |
+|---|---|---|
+| Type definitions | `luneblox setup` | `~/.luneblox/.typedefs/<version>/` |
+| Base executables for other targets | `luneblox build --target` | `target/` inside the cache directory |
+| REPL history | `luneblox repl` | `.luneblox_history` inside the state directory |
+
+The cache and state directories depend on the platform and can be moved with `LUNEBLOX_CACHE` and
+`LUNEBLOX_STATE`. [Directories](/LuneBlox/reference/directories/) lists every location and the order
+they are chosen in.
+
+## Next
+
+Run a first script in the [quick start](/LuneBlox/getting-started/quick-start/), then set up
+completion and type checking in [Editor setup](/LuneBlox/getting-started/editor-setup/).

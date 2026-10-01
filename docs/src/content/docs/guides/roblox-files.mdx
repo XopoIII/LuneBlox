@@ -1,0 +1,402 @@
+---
+title: Roblox place and model files
+description: How to read, change and write Roblox place and model files with @lune/roblox, and how to add the classes, properties and methods it does not ship with.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+`@lune/roblox` reads `.rbxl`, `.rbxlx`, `.rbxm` and `.rbxmx` files into instances, lets you work with
+them through the API you know from Roblox, and writes them back.
+
+```luau
+local fs = require("@lune/fs")
+local roblox = require("@lune/roblox")
+
+local game = roblox.deserializePlace(fs.readFile("place.rbxl"))
+
+local workspace = game:GetService("Workspace")
+for _, child in workspace:GetChildren() do
+	print(child.ClassName, child.Name)
+end
+
+fs.writeFile("place.rbxl", roblox.serializePlace(game))
+```
+
+It is a file library, not an engine. Nothing is simulated or rendered, no events fire, and scripts in
+the place do not run.
+
+## Reading and writing files
+
+The four functions work on file contents, not on paths. Read and write the file itself with
+`@lune/fs`.
+
+| Function | Takes | Returns |
+|---|---|---|
+| `roblox.deserializePlace(contents)` | A place file's contents | A `DataModel` |
+| `roblox.deserializeModel(contents)` | A model file's contents | A list of the root instances |
+| `roblox.serializePlace(dataModel, xml)` | A `DataModel` | The file contents as a string |
+| `roblox.serializeModel(instances, xml)` | A list of instances | The file contents as a string |
+
+Deserializing accepts both the binary and the XML format. Serializing writes binary unless `xml` is
+`true`; pick the file extension to match.
+
+```luau
+local fs = require("@lune/fs")
+local roblox = require("@lune/roblox")
+
+local roots = roblox.deserializeModel(fs.readFile("sword.rbxm"))
+local sword = roots[1]
+sword.Name = "Longsword"
+
+fs.writeFile("longsword.rbxm", roblox.serializeModel({ sword }))
+fs.writeFile("longsword.rbxmx", roblox.serializeModel({ sword }, true))
+```
+
+<Aside type="caution">
+`deserializeModel` always returns a list, even for a model with one root. `serializeModel` always
+takes a list. Passing a single instance is an error.
+</Aside>
+
+Instance references survive a round trip. An `ObjectValue` whose `Value` points at another instance
+in the same file still points at it after serializing and deserializing, including across the roots
+of a model and across services of a place.
+
+Each deserialized file is its own independent tree. The same place read twice gives two separate
+`DataModel` values that do not compare equal, and editing one does not affect the other.
+
+## Instances
+
+`roblox.Instance.new(className)` creates an instance. Its `Name` starts as the class name and its
+`Parent` is nil.
+
+```luau
+local roblox = require("@lune/roblox")
+local Instance = roblox.Instance
+
+local folder = Instance.new("Folder")
+folder.Name = "Assets"
+
+local part = Instance.new("Part")
+part.Parent = folder
+
+print(part:GetFullName()) --> Assets.Part
+print(part:IsA("BasePart")) --> true
+```
+
+- Class names are case-sensitive, and an unknown class throws.
+- Classes that Roblox marks as not creatable, such as `BasePart`, can be created here.
+- The usual methods are available: `Clone`, `Destroy`, `ClearAllChildren`, `GetChildren`,
+  `GetDescendants`, `GetFullName`, `IsA`, `IsAncestorOf`, `IsDescendantOf`, the `FindFirstChild` and
+  `FindFirstAncestor` families, and the attribute and tag methods below.
+- `Destroy` destroys the instance and its descendants. Reading a property of a destroyed instance
+  throws. Destroying the root of a deserialized file tears down the whole tree.
+
+A new place starts from a `DataModel`. `GetService` returns the service, creating it when it is
+missing; `FindService` returns nil instead of creating it.
+
+```luau
+local game = roblox.Instance.new("DataModel")
+
+print(game:FindService("ReplicatedStorage")) --> nil
+local storage = game:GetService("ReplicatedStorage")
+
+local module = roblox.Instance.new("ModuleScript")
+module.Parent = storage
+```
+
+## Properties and datatypes
+
+Properties are read and written by name, as on Roblox. A property that has never been set reads as
+the class default. A property the class does not have throws.
+
+The typedefs know only `Name`, `ClassName` and `Parent`, and do not describe the datatypes. In
+strict mode, cast the library or the instance to `any` to reach everything else.
+
+```luau
+local roblox = require("@lune/roblox") :: any
+local Instance = roblox.Instance
+local Vector3 = roblox.Vector3
+local CFrame = roblox.CFrame
+local BrickColor = roblox.BrickColor
+local Enum = roblox.Enum
+
+local part = Instance.new("Part")
+part.Anchored = true
+part.Size = Vector3.new(4, 1, 2)
+part.CFrame = CFrame.new(0, 10, 0)
+part.BrickColor = BrickColor.Red()
+part.Shape = Enum.PartType.Ball
+
+print(part.Transparency) --> 0, the default
+```
+
+The datatypes are fields of the library, named as on Roblox: `Axes`, `BrickColor`, `CFrame`,
+`Color3`, `ColorSequence`, `ColorSequenceKeypoint`, `Content`, `Enum`, `Faces`, `Font`,
+`NumberRange`, `NumberSequence`, `NumberSequenceKeypoint`, `PhysicalProperties`, `Ray`, `Rect`,
+`Region3`, `Region3int16`, `UDim`, `UDim2`, `Vector2`, `Vector2int16`, `Vector3` and
+`Vector3int16`. `typeof` returns the datatype's name for their values.
+
+A child can also be reached by indexing its parent with its name, such as `game.Workspace`. Prefer
+`FindFirstChild` for names you do not control, since a name can clash with a property.
+
+<Aside>
+Every property in the reflection database can be read and written, including ones a Roblox script
+cannot touch, such as hidden and non-scriptable properties.
+</Aside>
+
+## Attributes and tags
+
+```luau
+local roblox = require("@lune/roblox") :: any
+
+local folder = roblox.Instance.new("Folder")
+
+folder:SetAttribute("Health", 100)
+folder:SetAttribute("Spawn", roblox.Vector3.new(0, 5, 0))
+print(folder:GetAttribute("Health")) --> 100
+
+for name, value in folder:GetAttributes() do
+	print(name, value)
+end
+
+folder:SetAttribute("Health", nil) -- removes it
+
+folder:AddTag("Checkpoint")
+print(folder:HasTag("Checkpoint")) --> true
+print(folder:GetTags())
+folder:RemoveTag("Checkpoint")
+```
+
+- Attribute names may use letters, digits, periods, hyphens, underscores and forward slashes, and
+  may be up to 100 characters long.
+- Names that begin with `RBX` may be read and written.
+- Attribute values may be strings, numbers, booleans, and datatypes such as `Vector3`, `CFrame`,
+  `Color3`, `UDim2`, `Font` and enum items.
+- `Clone` copies attributes along with properties.
+
+## Finding instances with QueryDescendants
+
+`instance:QueryDescendants(selector)` returns the descendants that match a selector, in depth-first
+order. The instance itself is never included. The selector syntax and the results follow the Roblox
+engine.
+
+```luau
+local workspace = game:GetService("Workspace")
+
+local parts = workspace:QueryDescendants("BasePart")
+local spawns = workspace:QueryDescendants("Part.Spawn")
+local unanchored = workspace:QueryDescendants("[Anchored = false]")
+```
+
+| Selector | Matches |
+|---|---|
+| `Part` | Instances for which `IsA("Part")` is true. Case-sensitive. |
+| `.Fruit` | Instances with the tag `Fruit`. |
+| `#RedTree` | Instances whose `Name` is exactly `RedTree`. |
+| `[CanCollide = false]` | A property value, using the class default when it was never set. |
+| `[Material = Plastic]` | An enum property, by item name. |
+| `[$Variety]` | Instances that have the attribute `Variety`. |
+| `[$Variety = Fuji]` | An attribute value. String comparison is case-sensitive. |
+| `Model.Apple` | A compound: every part must match the same instance. |
+| `Model > Part` | Parts that are direct children of a Model. |
+| `Model >> Part` | Parts anywhere under a Model. |
+| `> Part` | Direct children of the instance being queried. |
+| `.Fruit, .SwordPart` | A list: the matches of each selector, one after the other. |
+| `BasePart:not(MeshPart)` | Negation of a selector list. |
+| `Model:has(.Fruit)` | Instances whose own descendants contain a match. |
+
+<Aside type="caution" title="A space is not a descendant combinator">
+Unlike CSS, whitespace between two selectors joins them into one compound. `Model Part` asks for one
+instance that is both a Model and a Part, and matches nothing. Write `Model >> Part`.
+</Aside>
+
+Other things to know:
+
+- An unknown class name, tag or name matches nothing. It is not an error.
+- An empty selector matches nothing.
+- A selector list does not remove duplicates: an instance matched by two selectors in the list
+  appears twice.
+- An unquoted value may not contain a decimal point: `[Transparency = 0.5]` is an error. Double
+  quotes widen the characters allowed, as in `[$Flavor = "4.0"]`; they do not force a string
+  comparison. Single quotes are an error.
+- A property selector needs a value: `[Anchored]` is an error. Only attributes can be tested for
+  presence.
+- A boolean attribute matches only `true` or `false`, not `1` or `0`.
+- Comparing a property or attribute of a type that cannot be compared, such as a `Color3` or a
+  `Vector3`, is an error.
+- A malformed selector throws: an unterminated bracket or parenthesis, an unknown pseudo-class, `*`,
+  or a combinator with nothing after it.
+
+## The reflection database
+
+`roblox.getReflectionDatabase()` returns the bundled description of Roblox's classes and enums. It
+is what the library uses to know which properties exist and what their defaults are.
+
+```luau
+local roblox = require("@lune/roblox")
+
+local db = roblox.getReflectionDatabase()
+print(db.Version)
+print(#db:GetClassNames(), "classes,", #db:GetEnumNames(), "enums")
+
+local class = db:GetClass("Part")
+if class then
+	print(class.Superclass)
+	for name, prop in class.Properties do
+		print(name, prop.Datatype, prop.Scriptability)
+	end
+end
+
+local enum = db:GetEnum("PartType")
+if enum then
+	for name, value in enum.Items do
+		print(name, value)
+	end
+end
+```
+
+- `GetClass` and `GetEnum` need the exact name. `FindClass` and `FindEnum` ignore case and
+  surrounding whitespace. All four return nil when nothing is found.
+- `class.Properties` lists only the properties the class itself declares. Walk `Superclass` to
+  collect inherited ones.
+- `class.DefaultProperties` maps property names to default values, and `class.Tags` holds tags such
+  as `"Service"` and `"NotCreatable"`.
+- `enum.Items` maps item names to their numbers. It does not hold `EnumItem` values.
+
+## Adding properties and methods
+
+The library implements what a file needs, not the engine's behaviour. A method such as
+`HttpService:GetAsync` does not exist until you supply it. `roblox.implementMethod` and
+`roblox.implementProperty` add members to a class and to every class that inherits from it.
+
+```luau
+local net = require("@lune/net")
+local roblox = require("@lune/roblox")
+local serde = require("@lune/serde")
+
+roblox.implementMethod("HttpService", "GetAsync", function(_, url: string)
+	return net.request(url).body
+end)
+
+roblox.implementMethod("HttpService", "JSONDecode", function(_, value: string)
+	return serde.decode("json", value)
+end)
+
+local game = roblox.Instance.new("DataModel")
+local HttpService = game:GetService("HttpService") :: any
+local data = HttpService:JSONDecode(HttpService:GetAsync("https://httpbingo.org/json"))
+```
+
+The callback receives the instance first, then the arguments the caller passed. Whatever it returns
+is returned to the caller. It may call yielding functions, as `GetAsync` does above.
+
+`implementProperty` takes a getter and an optional setter. Without a setter the property is
+read-only, and assigning to it throws.
+
+```luau
+local roblox = require("@lune/roblox")
+
+local labels = {}
+
+roblox.implementProperty("BasePart", "Label", function(instance)
+	return labels[instance:GetDebugId()] or ""
+end, function(instance, value)
+	labels[instance:GetDebugId()] = value
+end)
+
+local part = roblox.Instance.new("Part") :: any
+part.Label = "floor"
+print(part.Label) --> floor
+```
+
+<Aside type="caution">
+Members the library already implements take precedence. Implementing `FindFirstChild` or `Parent`
+again has no effect; your callback is never called.
+</Aside>
+
+## Adding classes and services
+
+Some classes exist only in particular Roblox builds and are missing from the reflection database.
+`roblox.registerClass(className, superClassName)` adds one. The superclass defaults to `"Instance"`,
+and may be a built-in class or one registered earlier.
+
+```luau
+local roblox = require("@lune/roblox")
+
+roblox.registerClass("Inventory")
+roblox.registerClass("Backpack2", "Inventory")
+
+roblox.implementMethod("Inventory", "Count", function(instance)
+	return #instance:GetChildren()
+end)
+
+local pack = roblox.Instance.new("Backpack2") :: any
+print(pack:IsA("Inventory")) --> true
+print(pack:Count()) --> 0
+```
+
+`roblox.registerService(serviceName)` does the same and marks the class as a service, so that
+`GetService` creates and returns it. A class registered with `registerClass` is not a service, and
+`GetService` throws for it.
+
+```luau
+local fs = require("@lune/fs")
+local roblox = require("@lune/roblox")
+
+roblox.registerService("FileSystemService")
+roblox.implementMethod("FileSystemService", "ReadFile", function(_, path: string)
+	return fs.readFile(path)
+end)
+
+local game = roblox.Instance.new("DataModel")
+local files = game:GetService("FileSystemService") :: any
+print(files:ReadFile("README.md"))
+```
+
+Registering a name that already exists throws, whether it is built in or was registered before. So
+does a superclass that does not exist.
+
+## Roblox web APIs and Studio paths
+
+`roblox.getAuthCookie()` returns the Roblox auth cookie of the logged-in user, or nil when none is
+found. The value is formatted for use as a `Cookie` header and is restricted to official Roblox
+endpoints. Pass `true` to get the raw cookie value instead.
+
+```luau
+local net = require("@lune/net")
+local roblox = require("@lune/roblox")
+
+local cookie = roblox.getAuthCookie()
+assert(cookie ~= nil, "not logged in to Roblox on this machine")
+
+local response = net.request({
+	url = "https://assetdelivery.roblox.com/v2/assetId/1234567890",
+	headers = { Cookie = cookie },
+})
+```
+
+<Aside type="caution">
+The cookie grants access to the account. Do not print it, write it to a file, or send it anywhere
+but Roblox.
+</Aside>
+
+Four functions return where Roblox Studio keeps its files on this machine:
+`roblox.studioApplicationPath()`, `roblox.studioContentPath()`, `roblox.studioPluginPath()` and
+`roblox.studioBuiltinPluginPath()`. The application path is where Studio would be; it is not checked
+to exist. The plugin folder may be missing when no local plugin was ever installed.
+
+```luau
+local fs = require("@lune/fs")
+local roblox = require("@lune/roblox")
+
+local plugin = roblox.Instance.new("Folder")
+plugin.Name = "MyPlugin"
+
+fs.writeFile(roblox.studioPluginPath() .. "/MyPlugin.rbxm", roblox.serializeModel({ plugin }))
+```
+
+## Reference
+
+The full listing is on the [roblox reference](/LuneBlox/reference/roblox/). Reading and writing the
+files themselves is covered in [files and data formats](/LuneBlox/guides/files/), and requests to
+Roblox's web APIs in [networking](/LuneBlox/guides/networking/).

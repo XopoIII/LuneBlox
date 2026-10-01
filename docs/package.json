@@ -1,0 +1,23 @@
+{
+  "name": "luneblox-docs",
+  "version": "0.0.1",
+  "description": "Documentation site for LuneBlox, a Luau runtime that runs Luau the way Roblox runs it",
+  "private": true,
+  "type": "module",
+  "license": "MPL-2.0",
+  "scripts": {
+    "reference": "node scripts/generate-reference.mjs",
+    "predev": "node scripts/generate-reference.mjs",
+    "dev": "astro dev",
+    "prebuild": "node scripts/generate-reference.mjs",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "0.42.4",
+    "astro": "7.3.5",
+    "sharp": "0.35.5",
+    "starlight-links-validator": "0.26.0",
+    "starlight-llms-txt": "0.12.0"
+  }
+}

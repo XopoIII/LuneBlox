@@ -1,0 +1,170 @@
+---
+title: Standalone executables
+description: How luneblox build turns a script into one executable, how to choose the output and target, and where base executables for other targets come from.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+`luneblox build` turns a script into a single executable that runs without `luneblox` installed.
+
+```sh
+luneblox build tool.luau
+./tool arg1 arg2
+```
+
+```text
+Compiling standalone binary from tool.luau
+Writing standalone binary to tool
+```
+
+## How it works
+
+1. The input file is compiled to Luau bytecode.
+2. A base executable is chosen: the running `luneblox` itself, or a `luneblox` built for the target.
+3. The bytecode is appended to a copy of the base executable, followed by its length and a marker.
+4. The result is written to the output path and marked executable.
+
+When any `luneblox` binary starts, it checks whether its own file ends with that marker. If it does,
+it runs the embedded bytecode instead of acting as the CLI. A standalone executable is therefore the
+whole runtime plus your script: every `@lune/*` library is available in it.
+
+## Arguments
+
+A standalone executable has no subcommands. Every argument after the executable name goes to the
+script in `process.args`:
+
+```luau
+--!strict
+local process = require("@lune/process")
+print(process.args)
+```
+
+```sh
+luneblox build tool.luau
+./tool --verbose input.txt
+```
+
+The script sees `--verbose` and `input.txt`.
+
+The exit code follows the same rules as `luneblox run`: the `process.exit` code if there is one,
+otherwise `1` after an uncaught error and `0` without one.
+
+## One file only
+
+<Aside type="caution" title="Requires of other files are not bundled">
+Only the input file is compiled into the executable. `require("@lune/...")` works, because the
+libraries are part of the runtime. A `require` of another script file is not bundled.
+</Aside>
+
+If your script is split across modules, combine it into one file before building.
+
+The input is read as a file path exactly as given. Unlike `luneblox run`, the script folders are not
+searched and the extension cannot be left out.
+
+## Output
+
+`--output` (`-o`) sets the path to write:
+
+```sh
+luneblox build tool.luau --output dist/tool
+```
+
+Without it, the output is the input path with its `.luau` or `.lua` extension removed: `tool.luau`
+becomes `tool`.
+
+- For a Windows target, `.exe` is added when the output path does not already end in it.
+- The output cannot be the same path as the input. An input file that has no extension needs
+  `--output`.
+- An existing file at the output path is overwritten.
+- On Unix the file is created with mode `755`.
+
+## Target
+
+`--target` (`-t`) builds for another operating system or architecture:
+
+```sh
+luneblox build tool.luau --target windows-x86_64
+luneblox build tool.luau --target linux-aarch64 --output dist/tool-linux-arm64
+```
+
+A target is written `os-arch`:
+
+| OS | Architecture |
+|---|---|
+| `windows` (or `win`) | `x86_64` (or `x64`) |
+| `linux` | `aarch64` (or `arm64`) |
+| `macos` (or `mac`, `darwin`) | |
+
+Without `--target`, or when the target is the system `luneblox` is running on, the base executable is
+the running `luneblox` and nothing is downloaded.
+
+## Base executables for other targets
+
+For any other target, `luneblox` needs a `luneblox` binary built for that target. It downloads one
+from the LuneBlox release with the same version as the `luneblox` you are running:
+
+```text
+https://github.com/XopoIII/LuneBlox/releases/download/v<version>/luneblox-<version>-<os>-<arch>.zip
+```
+
+```text
+Requested target 'linux-aarch64' does not exist in cache
+Downloading luneblox-0.10.12-linux-aarch64...
+Downloaded successfully and added to cache
+```
+
+Base executables come from LuneBlox's own releases, not Lune's. A standalone executable built for
+another target has to carry the same Luau as one built for this one.
+
+If the release has no archive for the target, the build fails with
+`failed to find lune target '<target>' in GitHub release`. A locally built development version has
+no release, so it can only build for its own system.
+
+### The cache
+
+The binary is taken out of the archive and stored in the `target` folder of the cache directory,
+named after the target:
+
+```text
+<cache directory>/target/
+  linux-aarch64
+  linux-x86_64
+  macos-x86_64
+  windows-x86_64exe
+```
+
+Later builds for the same target use the cached file and make no request. The file name does not
+include the version, so after upgrading `luneblox`, delete the `target` folder to have the base
+executables downloaded again for the new version.
+
+`LUNEBLOX_CACHE` moves the cache directory, which is useful in CI:
+
+```sh
+LUNEBLOX_CACHE=.cache/luneblox luneblox build tool.luau --target linux-x86_64
+```
+
+[Directories](/LuneBlox/reference/directories/) says where the cache directory is on each platform.
+
+## Luau and fast flags
+
+The bytecode is compiled at optimization level 2 with debug level 1, so error messages carry line
+numbers.
+
+Luau's fast flags are set to the live Roblox client's values before the script is compiled, because
+some flags change what the compiler emits. The standalone executable sets them again when it starts,
+before it runs the bytecode.
+
+`LUNE_ROBLOX_FFLAGS=0` is read at both moments. Set it when building to compile with Luau's default
+flags, and when running the executable to run with them. See [Fast flags](/LuneBlox/guides/fast-flags/).
+
+A standalone executable does not read `LUNE_LUAU_JIT`; it runs with native code generation off.
+
+## Building for every target
+
+```sh
+for target in linux-x86_64 linux-aarch64 macos-x86_64 macos-aarch64 windows-x86_64 windows-aarch64; do
+  luneblox build tool.luau --target "$target" --output "dist/tool-$target"
+done
+```
+
+The Windows outputs get `.exe` added.

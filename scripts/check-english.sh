@@ -33,7 +33,7 @@ for file in "$@"; do
 		# Luau's own sources, vendored unchanged but for one fix; its table of look-alike letters.
 		vendor/luau0-src/luau/Ast/src/Confusables.cpp) continue ;;
 		# Lock files and binaries are not prose.
-		*.lock | *.png | *.ico | *.rbxl | *.rbxm | *.rbxlx | *.rbxmx) continue ;;
+		*.lock | */package-lock.json | *.png | *.ico | *.rbxl | *.rbxm | *.rbxlx | *.rbxmx) continue ;;
 	esac
 
 	hits=$(perl -CSD -ne 'if (/(?=\P{ASCII})\p{L}/) { print "  $ARGV:$.: $_" }' -- "$file" 2>/dev/null || true)
