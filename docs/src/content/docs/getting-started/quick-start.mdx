@@ -1,0 +1,237 @@
+---
+title: Quick start
+description: Write a first script, run it with luneblox run, require the built-in libraries and put scripts in a script folder.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## A first script
+
+Create `hello.luau`:
+
+```luau
+--!strict
+print("Hello from", _VERSION)
+```
+
+Run it:
+
+```sh
+luneblox run hello.luau
+```
+
+```text
+Hello from LuneBlox 0.10.12+740
+```
+
+`_VERSION` is the LuneBlox version, then `+`, then the Luau release it was built with. The file
+extension is optional: `luneblox run hello` finds the same file.
+
+## Arguments
+
+Everything after the script path goes to the script, in `process.args`:
+
+```luau
+--!strict
+local process = require("@lune/process")
+
+if #process.args == 0 then
+	print("Usage: greet <name>...")
+	process.exit(1)
+end
+
+for _, name in process.args do
+	print(`Hello, {name}!`)
+end
+```
+
+```sh
+luneblox run greet.luau Ada Grace
+```
+
+```text
+Hello, Ada!
+Hello, Grace!
+```
+
+`process.exit(1)` ends the script and makes `luneblox` exit with code 1.
+
+## The built-in libraries
+
+The standard libraries are required by name, under the `lune` alias. The alias keeps Lune's name so
+that scripts written for Lune run unchanged.
+
+| Library | What it is for |
+|---|---|
+| [`@lune/fs`](/LuneBlox/reference/fs/) | Files and directories |
+| [`@lune/net`](/LuneBlox/reference/net/) | HTTP requests, HTTP servers, web sockets |
+| [`@lune/process`](/LuneBlox/reference/process/) | Arguments, environment, child processes, exit |
+| [`@lune/task`](/LuneBlox/reference/task/) | The task scheduler: spawn, defer, delay, wait |
+| [`@lune/stdio`](/LuneBlox/reference/stdio/) | Terminal input, colors and formatting |
+| [`@lune/serde`](/LuneBlox/reference/serde/) | JSON, YAML, TOML, base64, hex, compression, hashing |
+| [`@lune/datetime`](/LuneBlox/reference/datetime/) | Dates and times |
+| [`@lune/regex`](/LuneBlox/reference/regex/) | Regular expressions |
+| [`@lune/luau`](/LuneBlox/reference/luau/) | Compiling and loading Luau, garbage collection |
+| [`@lune/roblox`](/LuneBlox/reference/roblox/) | Roblox place and model files, instances and datatypes |
+
+## A small tour
+
+### Files
+
+List the current directory, directories first:
+
+```luau
+--!strict
+local fs = require("@lune/fs")
+
+local entries = fs.readDir(".")
+
+-- fs functions yield, so they are called before the sort, not inside it
+local isDir = {}
+for _, entry in entries do
+	isDir[entry] = fs.isDir(entry)
+end
+
+table.sort(entries, function(a, b)
+	if isDir[a] ~= isDir[b] then
+		return isDir[a]
+	end
+	return a < b
+end)
+
+for _, entry in entries do
+	print(if isDir[entry] then "dir " else "file", entry)
+end
+```
+
+More in the [files guide](/LuneBlox/guides/files/).
+
+### Tasks
+
+`task` schedules work the way Roblox does. The script ends when the last task has finished:
+
+```luau
+--!strict
+local task = require("@lune/task")
+
+task.spawn(function()
+	print("runs at once")
+	task.wait(1)
+	print("one second later")
+end)
+
+task.delay(2, function()
+	print("two seconds later")
+end)
+
+print("the main thread continues")
+```
+
+More in the [task scheduler guide](/LuneBlox/guides/task-scheduler/).
+
+### Network and JSON
+
+```luau
+--!strict
+local net = require("@lune/net")
+local process = require("@lune/process")
+local serde = require("@lune/serde")
+
+local response = net.request({
+	url = "https://jsonplaceholder.typicode.com/posts/1",
+	method = "PATCH",
+	headers = {
+		["Content-Type"] = "application/json",
+	} :: { [string]: string },
+	body = serde.encode("json", { title = "foo" }),
+})
+
+if not response.ok then
+	print(response.statusCode, response.statusMessage)
+	process.exit(1)
+end
+
+local post = serde.decode("json", response.body)
+print(post.title)
+```
+
+More in the [networking guide](/LuneBlox/guides/networking/).
+
+### Child processes
+
+```luau
+--!strict
+local process = require("@lune/process")
+
+local result = process.exec("git", { "status", "--short" })
+if result.ok then
+	print(result.stdout)
+else
+	print(result.stderr)
+	process.exit(result.code)
+end
+```
+
+More in the [processes guide](/LuneBlox/guides/processes/).
+
+### Terminal input
+
+```luau
+--!strict
+local stdio = require("@lune/stdio")
+
+local name = stdio.prompt("text", "Your name")
+local sure = stdio.prompt("confirm", "Continue?")
+if sure then
+	print(`Hello, {name}!`)
+end
+```
+
+<Aside type="caution" title="Prompts need a terminal">
+`stdio.prompt` throws `IO error: not a terminal` when stdin is not a TTY. Do not reach a prompt from
+CI, a git hook or a pipe.
+</Aside>
+
+## Script folders
+
+A script does not have to be addressed by its path. Put project scripts in a folder named `lune` or
+`.lune` and run them by name from the project root:
+
+```text
+my-project/
+  .lune/
+    build.luau
+    release.luau
+```
+
+```sh
+luneblox run build
+```
+
+`luneblox list` prints the scripts it finds. A script that starts with a `-->` comment gets a
+description in that list:
+
+```luau
+--> Builds the place file and copies it to the output folder
+--!strict
+print("building")
+```
+
+```sh
+luneblox list
+```
+
+```text
+Available scripts:
+>  build    - Builds the place file and copies it to the output folder
+>  release
+```
+
+The same two folder names in your home directory hold global scripts, which run from anywhere.
+[Running scripts](/LuneBlox/guides/running-scripts/) has the full lookup order.
+
+## Next
+
+- [CLI](/LuneBlox/getting-started/cli/) - every subcommand and flag.
+- [Editor setup](/LuneBlox/getting-started/editor-setup/) - completion and type checking for `@lune/*`.
+- [Standalone executables](/LuneBlox/guides/standalone-executables/) - ship a script as one binary.

@@ -1,0 +1,225 @@
+---
+title: Running scripts
+description: How luneblox finds a script, what it passes to it, how stdin and exit codes work, and how the REPL and native code generation behave.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+## How a script is found
+
+```sh
+luneblox run <path>
+```
+
+### One path, four candidates
+
+The path is treated as a Luau module path. A `.luau` or `.lua` extension is removed first, and a
+trailing `init` segment is removed too, so these all name the same script:
+
+```sh
+luneblox run tools/build
+luneblox run tools/build.luau
+luneblox run tools/build/init.luau
+```
+
+For the module path `tools/build`, these files are candidates:
+
+- `tools/build.luau`
+- `tools/build.lua`
+- `tools/build/init.luau`
+- `tools/build/init.lua`
+
+Exactly one of them must exist. If two exist, such as `build.luau` next to a `build/init.luau`, the
+path is ambiguous and the run fails. A directory with no `init` file fails with
+`The path is a directory without an init file`.
+
+### Where it looks
+
+A relative path is tried in five places, in this order. The first place that resolves wins.
+
+| Order | Location |
+|---|---|
+| 1 | The path itself, relative to the current directory |
+| 2 | `lune/<path>` in the current directory |
+| 3 | `.lune/<path>` in the current directory |
+| 4 | `lune/<path>` in your home directory |
+| 5 | `.lune/<path>` in your home directory |
+
+So a file in the current directory shadows a script of the same name in a script folder, and a
+project script shadows a global one.
+
+An absolute path is used as given. The script folders are never searched for it.
+
+When nothing matches, the error names the first location:
+
+```text
+Failed to resolve script at path /work/project/build (NotFound)
+```
+
+### Project scripts and global scripts
+
+The `lune` and `.lune` folders in a project hold its scripts: build steps, code generation, release
+tasks. Run them from the project root, since the folders are looked up in the current directory and
+not in parent directories.
+
+The same folders in your home directory hold global scripts, which are found from any directory:
+
+```text
+~/.lune/
+  notes.luau
+```
+
+```sh
+cd /anywhere
+luneblox run notes
+```
+
+`luneblox list` prints both sets. For each place it reads `lune`, or `.lune` when `lune` does not
+exist, so keep the scripts of one place in one folder.
+
+<Aside>
+The folder names are Lune's, on purpose. A project's `.lune` folder works with both `lune` and
+`luneblox`.
+</Aside>
+
+### Shebang lines
+
+If the file starts with `#!`, that first line is skipped. Line numbers in error messages still match
+the file.
+
+```luau
+#!/usr/bin/env -S luneblox run
+print("run me directly")
+```
+
+## Arguments
+
+Everything after the script path is passed to the script. `luneblox` does not parse it, so flags
+reach the script as written:
+
+```sh
+luneblox run deploy --env staging -v
+```
+
+```luau
+--!strict
+local process = require("@lune/process")
+
+for index, arg in process.args do
+	print(index, arg)
+end
+```
+
+```text
+1 --env
+2 staging
+3 -v
+```
+
+`process.args` is a read-only table of strings. It does not include `luneblox`, `run` or the script
+path. Environment variables are in `process.env`. See [process](/LuneBlox/reference/process/).
+
+## Reading the script from stdin
+
+A script path of a single `-` reads the script from stdin until it closes, then runs it:
+
+```sh
+echo 'print(1 + 1)' | luneblox run -
+```
+
+Arguments still work:
+
+```sh
+luneblox run - one two < script.luau
+```
+
+A script run this way is named `stdin` in error messages. It has no location on disk, so it can
+require the `@lune/*` libraries but not other files.
+
+<Aside type="caution" title="Stdin is used up">
+The script itself was stdin, so there is nothing left for the script to read from it.
+</Aside>
+
+## Exit codes
+
+| Situation | Exit code |
+|---|---|
+| The script called `process.exit(code)` | `code` |
+| The script called `process.exit()` with no code | `0` |
+| A thread threw an error that nothing caught | `1` |
+| Everything finished without an error | `0` |
+| The script could not be found or read | `1` |
+
+An explicit `process.exit` code wins over the automatic one: a script that logged an uncaught error
+in a spawned task and then calls `process.exit(0)` exits with `0`.
+
+An uncaught error in any thread counts, not only in the main one. The error is printed to stderr,
+the other threads keep running, and the exit code becomes `1` when the script ends:
+
+```luau
+--!strict
+local task = require("@lune/task")
+
+task.spawn(function()
+	error("background failure")
+end)
+
+task.wait(1)
+print("still running")
+```
+
+```sh
+luneblox run example.luau; echo $?
+```
+
+The last line printed is `1`.
+
+Exit codes are one byte, `0` to `255`.
+
+## The REPL
+
+`luneblox` with no command, or `luneblox repl`, starts an interactive session:
+
+```text
+Lune v0.10.12
+> print(1 + 1)
+2
+> for i = 1, 2 do
+>> print(i)
+>> end
+1
+2
+```
+
+- The `>> ` prompt means the statement is incomplete and the next line continues it.
+- All input runs in one runtime, and the `@lune/*` libraries can be required.
+- An error is printed and the session goes on.
+- Ctrl+C prints `Interrupt: ^C again to exit`; pressing it again exits. Ctrl+D exits at once.
+- Each line is saved to `.luneblox_history` in the state directory and is available with the up
+  arrow in later sessions. See [Directories](/LuneBlox/reference/directories/).
+
+The REPL needs a terminal. Do not start it from CI or a git hook.
+
+## Native code generation
+
+`luneblox run` turns on Luau's native code generation for the script. To run it interpreted, set
+`LUNE_LUAU_JIT` to `0`, `false` or `off`:
+
+```sh
+LUNE_LUAU_JIT=0 luneblox run bench.luau
+```
+
+Only those three values, in lower case, turn it off. Any other value, or no value, leaves it on.
+
+The variable is read by `luneblox run` only. The REPL and
+[standalone executables](/LuneBlox/guides/standalone-executables/) do not read it and run with native
+code generation off.
+
+Whatever the setting, a chunk loaded with `luau.load` is compiled to native code only when its
+`codegenEnabled` option is set. See [luau](/LuneBlox/reference/luau/).
+
+## Fast flags
+
+Every way of running Luau here - `run`, the REPL, a standalone executable - sets Luau's fast flags to
+the live Roblox client's values first. `LUNE_ROBLOX_FFLAGS=0` skips that. See
+[Fast flags](/LuneBlox/guides/fast-flags/).

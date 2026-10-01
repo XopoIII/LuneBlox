@@ -1,0 +1,134 @@
+---
+title: Directories
+description: Every directory luneblox reads or writes - type definitions, the build cache, REPL state and the script folders - and the order each is chosen in.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+| Directory | Holds | Used by |
+|---|---|---|
+| [Typedefs](#typedefs) | Type definitions of the `@lune/*` libraries | `luneblox setup` |
+| [Cache](#cache) | Base executables for other targets | `luneblox build --target` |
+| [State](#state) | REPL history | `luneblox repl` |
+| [Script folders](#script-folders) | Your scripts | `luneblox run`, `luneblox list` |
+
+LuneBlox creates a directory only when a command first needs it.
+
+## Typedefs
+
+```text
+~/.luneblox/.typedefs/<version>/
+```
+
+`luneblox setup` writes one directory per LuneBlox version, such as `~/.luneblox/.typedefs/0.10.12/`.
+
+This location is always under the home directory. No environment variable moves it: the `lune` alias
+that setup writes to `.luaurc` points at this exact path, and a language server has to find it.
+
+Directories of older versions are not removed. They can be deleted by hand once no project's
+`.luaurc` points at them.
+
+See [Editor setup](/LuneBlox/getting-started/editor-setup/).
+
+## Cache
+
+The cache directory holds one folder, `target`, with the base executables that
+`luneblox build --target` downloads:
+
+```text
+<cache directory>/target/linux-x86_64
+<cache directory>/target/macos-aarch64
+<cache directory>/target/windows-x86_64exe
+```
+
+A file is named after its target. For Windows targets the name ends in `exe` with no dot.
+
+The cache directory is the first of these that applies:
+
+1. `LUNEBLOX_CACHE`, if set. It is used as given.
+2. `~/.luneblox`, if `~/.luneblox/target` exists and the platform location below has no `target`
+   folder yet.
+3. The `luneblox` folder in the platform's cache location.
+
+| Platform | Platform cache location | Cache directory |
+|---|---|---|
+| Linux | `$XDG_CACHE_HOME`, or `~/.cache` | `~/.cache/luneblox` |
+| macOS | `~/Library/Caches` | `~/Library/Caches/luneblox` |
+| Windows | The local application data folder | `luneblox` inside it |
+
+Rule 2 keeps an existing `~/.luneblox/target` in use, so nothing is downloaded twice. Once the
+platform location has its own `target` folder, it wins. To move to the platform location, delete or
+move `~/.luneblox/target`.
+
+Everything in the cache can be deleted. It is downloaded again when needed.
+
+See [Standalone executables](/LuneBlox/guides/standalone-executables/).
+
+## State
+
+The state directory holds one file, the REPL's input history:
+
+```text
+<state directory>/.luneblox_history
+```
+
+The state directory is the first of these that applies:
+
+1. `LUNEBLOX_STATE`, if set. It is used as given.
+2. The home directory itself, if `~/.luneblox_history` exists and the platform location below has no
+   `.luneblox_history` yet.
+3. The `luneblox` folder in the platform's state location.
+
+| Platform | Platform state location | History file |
+|---|---|---|
+| Linux | `$XDG_STATE_HOME`, or `~/.local/state` | `~/.local/state/luneblox/.luneblox_history` |
+| macOS | None; the cache location is used | `~/Library/Caches/luneblox/.luneblox_history` |
+| Windows | None; the cache location is used | `luneblox\.luneblox_history` in local application data |
+
+<Aside title="The older history file is in the home directory">
+The older location of the history is the file `~/.luneblox_history`, directly in the home directory.
+It is not inside `~/.luneblox`.
+</Aside>
+
+## The ~/.luneblox directory
+
+Putting the rules above together, `~/.luneblox` can contain:
+
+| Path | Present when |
+|---|---|
+| `~/.luneblox/.typedefs/` | `luneblox setup` has been run. Always here. |
+| `~/.luneblox/target/` | Base executables were cached here before, and are still used from here. |
+
+On a fresh install, only `.typedefs` ends up in it.
+
+## Script folders
+
+Script folders are yours; LuneBlox only reads them. They keep the names Lune uses, so the same
+folders work with both.
+
+| Folder | Scope |
+|---|---|
+| `lune/` in the current directory | Project scripts |
+| `.lune/` in the current directory | Project scripts |
+| `~/lune/` | Global scripts |
+| `~/.lune/` | Global scripts |
+
+`luneblox run <name>` tries the path as given first, then these four folders in the order of the
+table. The folders are looked up in the current directory only, not in its parents.
+
+`luneblox list` shows one folder per scope: `lune`, or `.lune` when `lune` does not exist.
+
+See [Running scripts](/LuneBlox/guides/running-scripts/).
+
+## Files in the project
+
+| File | Written by | Purpose |
+|---|---|---|
+| `.luaurc` in the current directory | `luneblox setup` | Gets `aliases.lune` set to the typedefs directory |
+
+Nothing else is written into a project. `luneblox build` writes only the output file you asked for.
+
+## Environment variables
+
+`LUNEBLOX_CACHE`, `LUNEBLOX_STATE`, `XDG_CACHE_HOME` and `XDG_STATE_HOME` are described in
+[Environment variables](/LuneBlox/reference/environment-variables/).

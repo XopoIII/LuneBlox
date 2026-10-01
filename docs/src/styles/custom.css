@@ -1,0 +1,17 @@
+/* LuneBlox blue, the night sky behind the moon. */
+:root {
+	--sl-color-accent-low: #18214a;
+	--sl-color-accent: #5673e6;
+	--sl-color-accent-high: #c9d3fb;
+}
+
+:root[data-theme='light'] {
+	--sl-color-accent-low: #dfe5fd;
+	--sl-color-accent: #3a52c0;
+	--sl-color-accent-high: #1a255e;
+}
+
+/* The changelog page imports CHANGELOG.md, whose own "Changelog" heading repeats the page's. */
+.lb-imported > h2:first-child {
+	display: none;
+}

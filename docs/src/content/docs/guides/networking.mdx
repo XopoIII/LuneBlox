@@ -1,0 +1,280 @@
+---
+title: Networking
+description: How to send HTTP requests, run an HTTP and WebSocket server, and open WebSocket and TCP connections with @lune/net.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+`@lune/net` covers four jobs: sending HTTP requests, serving them, talking over WebSockets, and
+raw TCP. Every call that waits on the network yields the calling thread only, so other tasks keep
+running.
+
+```luau
+local net = require("@lune/net")
+
+local response = net.request("https://example.com")
+print(response.statusCode, response.statusMessage)
+```
+
+## Sending a request
+
+`net.request` takes a URL, or a table of parameters. Only `url` is required.
+
+```luau
+local net = require("@lune/net")
+local serde = require("@lune/serde")
+
+local response = net.request({
+	url = "https://httpbingo.org/anything",
+	method = "POST",
+	query = { page = "1", tag = { "a", "b" } },
+	headers = { ["Content-Type"] = "application/json" },
+	body = serde.encode("json", { title = "Cool Pencil" }),
+})
+
+if response.ok then
+	local data = serde.decode("json", response.body)
+	print(data)
+else
+	print("request failed:", response.statusCode, response.statusMessage)
+end
+```
+
+| Parameter | Meaning |
+|---|---|
+| `url` | The URL to request. Required. |
+| `method` | `"GET"`, `"POST"`, `"PUT"`, `"DELETE"`, `"HEAD"`, `"OPTIONS"` or `"PATCH"`. Default `"GET"`. |
+| `body` | A string or buffer. |
+| `query` | Query parameters. Values are URL-encoded for you; a list of strings sends the key several times. |
+| `headers` | Request headers. A value may be a string or a list of strings. |
+| `options` | `{ decompress = false }` turns automatic decompression of the response body off. |
+
+The response is a table:
+
+| Field | Meaning |
+|---|---|
+| `ok` | `true` when the status code is in the range 200 to 299. |
+| `statusCode` | The numeric status code. |
+| `statusMessage` | The canonical message for the code, such as `"Not Found"`. |
+| `headers` | Response headers. Names are lowercase. |
+| `body` | The body as a string, or an empty string. |
+
+<Aside type="caution" title="A 404 is not an error">
+`net.request` throws only for network and I/O failures, such as a refused connection. A response with
+status 400 or 500 is returned normally with `ok` set to `false`. Check `response.ok` after every
+request, and use `pcall` where the host may be unreachable.
+</Aside>
+
+Redirects are followed. A compressed response is decompressed by default, and its `content-encoding`
+header is removed; with `options = { decompress = false }` the body and the header are left as sent.
+
+## JSON
+
+`net` has no JSON functions of its own. Encode request bodies and decode response bodies with
+`serde.encode("json", value)` and `serde.decode("json", text)` from `@lune/serde`, as in the example
+above. Decoding throws on a body that is not JSON, so guard it when the server may answer with an
+error page:
+
+```luau
+local ok, data = pcall(serde.decode, "json" :: "json", response.body)
+```
+
+## URL encoding
+
+Values passed in `query` are encoded for you. For anything you put into a URL by hand, use
+`net.urlEncode` and `net.urlDecode`.
+
+```luau
+local net = require("@lune/net")
+
+local encoded = net.urlEncode("a value with spaces")
+print(encoded) --> a%20value%20with%20spaces
+print(net.urlDecode(encoded)) --> a value with spaces
+```
+
+Both take an optional second argument, `binary`. Pass `true` when the string is binary data or is
+not valid UTF-8.
+
+## Serving HTTP
+
+`net.serve(port, handler)` starts a server and returns at once. The handler is called for each
+request and returns either a string, sent with status 200, or a response table.
+
+```luau
+local net = require("@lune/net")
+
+local handle = net.serve(8080, function(request)
+	if request.path == "/" then
+		return "Hello from LuneBlox!"
+	elseif request.method == "POST" and request.path == "/echo" then
+		return {
+			status = 200,
+			headers = { ["Content-Type"] = "text/plain" },
+			body = request.body,
+		}
+	end
+	return { status = 404, body = "Not Found" }
+end)
+
+print("Listening on port 8080")
+```
+
+The request table:
+
+| Field | Meaning |
+|---|---|
+| `path` | The path requested, `/` when none was given. |
+| `query` | Query parameters. A key given more than once arrives as a list of strings. |
+| `method` | The HTTP method, always uppercase. |
+| `headers` | Request headers. |
+| `body` | The body as a string, or an empty string. |
+
+The response table may set `status` (100 to 599), `headers` and `body` (a string or buffer). All
+three are optional.
+
+The script keeps running while the server is listening. Call `handle.stop()` to shut it down - with
+a dot, not a colon. Calling `stop` a second time throws.
+
+```luau
+handle.stop()
+```
+
+A handler may yield. It can call `net.request`, `fs.readFile` or `task.wait` and other requests are
+still served in the meantime.
+
+### Choosing the address
+
+By default the server listens on the loopback interface only. To accept connections from other
+machines, pass a config table with `address` next to the handler. The address is an IP, with or
+without an `http://` prefix.
+
+```luau
+net.serve(8080, {
+	address = "http://0.0.0.0",
+	handleRequest = function(request)
+		return "Hello!"
+	end,
+})
+```
+
+A malformed address throws.
+
+## Serving WebSockets
+
+Add `handleWebSocket` to the config table. A request that asks for a WebSocket upgrade is upgraded
+automatically and passed to it, never to `handleRequest`. The handler receives one socket per
+connection and runs in its own thread.
+
+```luau
+local net = require("@lune/net")
+
+net.serve(8080, {
+	handleRequest = function(request)
+		return "This is the HTTP side."
+	end,
+	handleWebSocket = function(socket)
+		repeat
+			local message = socket:next()
+			if message ~= nil then
+				socket:send("Echo - " .. message)
+			end
+		until message == nil
+	end,
+})
+```
+
+The config table needs at least one of the two handlers. When `handleRequest` is left out, a plain
+HTTP request is answered with `426 Upgrade Required`.
+
+## WebSocket clients
+
+`net.socket(url)` connects to a `ws://` or `wss://` URL and returns the same kind of socket the
+server handler receives. It throws when the server does not support WebSockets or the connection
+fails.
+
+```luau
+local net = require("@lune/net")
+
+local socket = net.socket("ws://127.0.0.1:8080")
+
+socket:send("ping")
+print(socket:next()) --> Echo - ping
+
+socket:close()
+print(socket.closeCode) --> 1000
+```
+
+| Member | Meaning |
+|---|---|
+| `socket:send(message, asBinaryMessage)` | Sends a string or buffer. Pass `true` as the second argument to send a binary message. |
+| `socket:next()` | Yields until the next message arrives and returns it. Returns nil once the socket is closed. |
+| `socket:close(code)` | Closes the socket, with an optional close code. |
+| `socket.closeCode` | nil while open. After closing, a code between 1000 and 4999; 1000 is a normal closure. |
+
+<Aside type="caution">
+`send` throws on a closed socket. `next` does not: it returns nil immediately. A read loop must stop
+on nil, or it spins forever.
+</Aside>
+
+A connection closed without a close code reports `1005` (no status) or `1006` (abnormal closure).
+
+To read and write at the same time, read in a separate task:
+
+```luau
+local net = require("@lune/net")
+local task = require("@lune/task")
+
+local socket = net.socket("ws://127.0.0.1:8080")
+
+task.spawn(function()
+	while true do
+		local message = socket:next()
+		if message == nil then
+			break
+		end
+		print("received", message)
+	end
+end)
+
+socket:send("first")
+socket:send("second")
+```
+
+## TCP
+
+`net.tcp.connect(host, port, config)` opens a plain TCP stream, for protocols that are not HTTP. For
+HTTP, use `net.request` and `net.serve`.
+
+```luau
+local net = require("@lune/net")
+
+local stream = net.tcp.connect("example.com", 80)
+stream:write("GET / HTTP/1.1\r\nHost: example.com\r\nConnection: close\r\n\r\n")
+
+local chunks = {}
+while true do
+	local chunk = stream:read()
+	if chunk == nil or #chunk == 0 then
+		break
+	end
+	table.insert(chunks, chunk)
+end
+stream:close()
+
+print(table.concat(chunks))
+```
+
+- The third argument is `true` for a TLS connection, or a table: `{ tls = true }`, and optionally
+  `ttl` for the packets' time to live.
+- `stream:read(size)` yields until data is available and returns up to `size` bytes. It returns nil
+  when the stream is closed.
+- `stream:write(data)` takes a string or buffer, and throws after `stream:close()`.
+- `stream.localIp`, `stream.localPort`, `stream.remoteIp` and `stream.remotePort` describe the two
+  ends of the connection.
+- `net.tcp.connect` throws when the connection fails.
+
+## Reference
+
+The full listing is on the [net reference](/LuneBlox/reference/net/). JSON and compression are on the
+[serde reference](/LuneBlox/reference/serde/), and running requests concurrently is covered in the
+[task scheduler guide](/LuneBlox/guides/task-scheduler/).

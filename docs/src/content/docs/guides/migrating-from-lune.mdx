@@ -1,0 +1,190 @@
+---
+title: Migrating from Lune
+description: What changes for a Lune user - the binary name, directories, _VERSION and a handful of behaviours - and what stays exactly the same.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+LuneBlox was forked from Lune 0.10.5. Scripts written for Lune run unchanged; what changes is the
+command you type, where the tool keeps its own files, and a few behaviours that now match Roblox.
+
+## What does not change
+
+- **The library names.** `require("@lune/fs")` and every other `@lune/*` library keep their names and
+  their interface.
+- **The script folders.** Scripts are still found in `lune` and `.lune`, in the current directory and
+  in your home directory.
+- **The script comment for descriptions.** A leading `-->` comment still describes a script in the
+  script list.
+- **The subcommands.** `run`, `list`, `setup`, `build` and `repl` take the same arguments.
+
+LuneBlox installs beside Lune, so you can keep both and move one project at a time.
+
+## What changes
+
+### The command
+
+The binary is `luneblox`:
+
+```sh
+luneblox run script.luau
+```
+
+In `rokit.toml`, add it with:
+
+```sh
+rokit add XopoIII/LuneBlox luneblox
+```
+
+Replace `lune` with `luneblox` in CI workflows, git hooks, `package.json` scripts and anywhere else
+the command is spelled out.
+
+### The directories
+
+| What | LuneBlox |
+|---|---|
+| Type definitions | `~/.luneblox/.typedefs/<version>/` |
+| Base executables for `build --target` | `$XDG_CACHE_HOME/luneblox/target` on XDG systems |
+| REPL history | `$XDG_STATE_HOME/luneblox/.luneblox_history` on XDG systems |
+
+`LUNEBLOX_CACHE` and `LUNEBLOX_STATE` override the last two. [Directories](/LuneBlox/reference/directories/)
+has the full rules.
+
+### The typedefs alias
+
+The `lune` alias in `.luaurc` must point at LuneBlox's typedefs. Run this once in each project:
+
+```sh
+luneblox setup
+```
+
+It rewrites `aliases.lune` to `~/.luneblox/.typedefs/<version>/`. The alias name stays `lune`, so no
+`require` changes.
+
+### `_VERSION`
+
+```luau
+--!strict
+print(_VERSION) --> LuneBlox 0.10.12+740
+```
+
+Lune 0.10.5 prints `Lune 0.10.5+709`. Code that parses `_VERSION` and expects it to start with `Lune `
+needs to accept `LuneBlox ` too.
+
+### The Luau underneath
+
+Luau moves from 0.709 to 0.740, runs with the fast flags of the live Roblox client, and is built at
+`-O3`. Timings change, so benchmarks recorded on Lune need to be taken again. See
+[Why LuneBlox](/LuneBlox/guides/why-luneblox/).
+
+### `build --target` downloads from LuneBlox
+
+Base executables for cross-compilation come from LuneBlox's GitHub releases, not Lune's, so a
+standalone binary built for another target carries the same Luau and flags.
+
+## Behaviour changes
+
+### Coroutine errors arrive unchanged
+
+Since 0.10.11, `coroutine.resume` returns the value a coroutine threw exactly as thrown, as on Roblox.
+There is no `runtime error:` prefix and no traceback appended.
+
+```luau
+--!strict
+local thread = coroutine.create(function()
+	error({ code = 404 })
+end)
+
+local ok, err = coroutine.resume(thread)
+print(ok) --> false
+print(type(err)) --> table
+print(err.code) --> 404
+```
+
+The same holds for the related functions:
+
+- `coroutine.wrap` propagates the same value.
+- `coroutine.close` on a coroutine that errored returns `false` and that value, not the thread.
+
+<Aside type="caution" title="If you matched on the old message">
+Code that stripped a `runtime error:` prefix, or searched an error string for a traceback, now sees
+the bare value. Compare the error directly.
+</Aside>
+
+### `task.spawn` and `task.defer` on a resuming thread
+
+`task.spawn` and `task.defer` no longer drop a thread that is itself resuming another coroutine. This
+was a regression from moving to mlua 0.12 and is fixed since 0.10.6.
+
+### Roblox datatypes
+
+Fixed since 0.10.7:
+
+- `CFrame.lookAt`, `CFrame.lookAlong` and `CFrame.new(pos, lookAt)` produced incorrect rotations when
+  not rotating purely around the Y axis.
+- `Color3:ToHex()` did not match Roblox's rounding and casing.
+
+Attributes whose names start with `RBX` can now be read and written through `@lune/roblox`.
+
+### YAML
+
+`@lune/serde` uses a different YAML library since 0.10.7. YAML scalars that were decoded with the
+wrong types are now decoded correctly. If a script worked around a wrongly typed value, check it.
+
+### Web sockets
+
+The `close` method on a web socket closes the socket. In Lune 0.10.5 it always errored with
+`Socket has been closed`.
+
+## New in LuneBlox
+
+### `luau.collect`
+
+Scripts run sandboxed, where `collectgarbage` accepts only `"count"`, as on Roblox. `luau.collect()`
+runs a full garbage collection cycle, so a benchmark can start each measurement from the same heap:
+
+```luau
+--!strict
+local luau = require("@lune/luau")
+
+luau.collect()
+local before = collectgarbage("count")
+```
+
+See [luau](/LuneBlox/reference/luau/).
+
+### `base64` and `hex` in serde
+
+`serde.encode` and `serde.decode` accept `"base64"` and `"hex"` as formats. Both take strings and
+buffers:
+
+```luau
+--!strict
+local serde = require("@lune/serde")
+
+local encoded = serde.encode("base64", "hello")
+print(encoded) --> aGVsbG8=
+print(serde.decode("base64", encoded)) --> hello
+print(serde.encode("hex", "hello")) --> 68656c6c6f
+```
+
+See [serde](/LuneBlox/reference/serde/).
+
+### XDG directories and overrides
+
+The build cache and the REPL history follow the XDG Base Directory variables, and `LUNEBLOX_CACHE` and
+`LUNEBLOX_STATE` set them outright. See
+[Environment variables](/LuneBlox/reference/environment-variables/).
+
+### `LUNE_ROBLOX_FFLAGS`
+
+`LUNE_ROBLOX_FFLAGS=0` runs with Luau's default fast flags. See [Fast flags](/LuneBlox/guides/fast-flags/).
+
+## Checklist
+
+1. Install `luneblox` next to `lune`.
+2. Run `luneblox setup` in the project.
+3. Replace `lune` with `luneblox` in scripts, hooks and CI.
+4. Run your tests. Look first at code that inspects coroutine error values or `_VERSION`.
+
+The [changelog](/LuneBlox/changelog/) has every release in full.

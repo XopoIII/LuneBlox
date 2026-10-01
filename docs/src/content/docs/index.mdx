@@ -1,0 +1,98 @@
+---
+title: LuneBlox
+description: A standalone Luau runtime that runs the Luau version Roblox runs, with the fast flags the live Roblox client sets.
+template: splash
+hero:
+  tagline: A standalone Luau runtime that runs Luau the way Roblox runs it. Code tested or measured here behaves like the code players run.
+  actions:
+    - text: Install
+      link: /LuneBlox/getting-started/installation/
+      icon: right-arrow
+      variant: primary
+    - text: Why LuneBlox
+      link: /LuneBlox/guides/why-luneblox/
+      icon: document
+      variant: secondary
+    - text: GitHub
+      link: https://github.com/XopoIII/LuneBlox
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## What it is
+
+LuneBlox is [Lune](https://github.com/lune-org/lune) with the [Luau](https://luau-lang.org) underneath
+changed. It keeps Lune's whole interface: the same `@lune/*` libraries, the same task scheduler, the
+same Roblox datatypes and place and model files. Lune scripts run unchanged.
+
+```sh
+luneblox run script.luau
+luneblox setup              # typedefs for luau-lsp, aliased as @lune
+luneblox build script.luau  # a standalone executable, carrying the same Luau and flags
+```
+
+## What it changes
+
+Lune 0.10.5 runs Luau 0.709. Roblox runs 0.740, and runs it with its own set of Luau's fast flags:
+Luau ships new compiler and VM work behind flags that default to off, and Roblox turns them on
+remotely. A benchmark or a test run on Lune measures a VM no game runs.
+
+| | Lune 0.10.5 | LuneBlox |
+|---|---|---|
+| Luau | 0.709 | 0.740, the version Roblox runs |
+| Luau's fast flags | Luau's defaults | set as the live Roblox client sets them |
+| Luau's C++ built with | `-Os` | `-O3` |
+| `_VERSION` | `Lune 0.10.5+709` | `LuneBlox <version>+740` |
+
+[Why LuneBlox](/LuneBlox/guides/why-luneblox/) has the measurements, and
+[Migrating from Lune](/LuneBlox/guides/migrating-from-lune/) lists what a Lune user will notice.
+
+## A first look
+
+```luau
+local fs = require("@lune/fs")
+local net = require("@lune/net")
+local serde = require("@lune/serde")
+
+local response = net.request("https://api.github.com/repos/XopoIII/LuneBlox")
+local repository = serde.decode("json", response.body)
+
+fs.writeFile("stars.txt", tostring(repository.stargazers_count))
+print(_VERSION, "wrote stars.txt")
+```
+
+The [quick start](/LuneBlox/getting-started/quick-start/) walks through a first script.
+
+## What is in the box
+
+<CardGrid>
+	<Card title="Files and data" icon="document">
+		Read and write files and directories with `@lune/fs`; encode JSON, TOML and YAML, compress and
+		hash with `@lune/serde`. [Files and data](/LuneBlox/guides/files/).
+	</Card>
+	<Card title="Networking" icon="random">
+		HTTP requests, an HTTP and WebSocket server, and plain TCP with `@lune/net`.
+		[Networking](/LuneBlox/guides/networking/).
+	</Card>
+	<Card title="Processes and the terminal" icon="laptop">
+		Arguments, the environment and child processes with `@lune/process`; colours and prompts with
+		`@lune/stdio`. [Processes](/LuneBlox/guides/processes/).
+	</Card>
+	<Card title="The task scheduler" icon="rocket">
+		`task.spawn`, `task.defer`, `task.delay` and `task.wait`, as on Roblox.
+		[The task scheduler](/LuneBlox/guides/task-scheduler/).
+	</Card>
+	<Card title="Roblox files" icon="puzzle">
+		Open place and model files, change instances and properties, and write them back with
+		`@lune/roblox`. [Roblox files](/LuneBlox/guides/roblox-files/).
+	</Card>
+	<Card title="Standalone executables" icon="setting">
+		`luneblox build` turns a script into one executable, for this machine or another target.
+		[Standalone executables](/LuneBlox/guides/standalone-executables/).
+	</Card>
+</CardGrid>
+
+Every library is listed in full in the reference, starting with [fs](/LuneBlox/reference/fs/). Those
+pages are generated from the same typedefs `luneblox setup` gives your editor.

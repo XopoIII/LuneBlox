@@ -1,0 +1,142 @@
+---
+title: Editor setup
+description: How luneblox setup writes type definitions for the built-in libraries and points luau-lsp at them through the lune alias.
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+The `@lune/*` libraries are built into the binary, so an editor cannot see them on disk.
+`luneblox setup` writes their type definitions to your home directory and adds an alias that
+[luau-lsp](https://github.com/JohnnyMorganz/luau-lsp) follows.
+
+## Run setup
+
+<Steps>
+
+1. From the root of your project:
+
+   ```sh
+   luneblox setup
+   ```
+
+   ```text
+   Type definitions for Lune v0.10.12 have been set up successfully.
+   You may need to restart your editor for the changes to take effect.
+   ```
+
+2. Restart the editor, or reload the language server.
+
+</Steps>
+
+## What it writes
+
+### Type definitions
+
+One Luau module per library, under a directory named after the LuneBlox version:
+
+```text
+~/.luneblox/.typedefs/0.10.12/
+  fs.luau
+  luau.luau
+  net.luau
+  process.luau
+  regex.luau
+  serde.luau
+  stdio.luau
+  task.luau
+  datetime/
+    init.luau
+    ...
+  roblox/
+    init.luau
+    ...
+```
+
+`datetime` and `roblox` are directory modules: an `init.luau` with its submodules beside it. If an
+older single-file `datetime.luau` or `roblox.luau` is in the same directory, setup removes it, because
+a file and a directory with the same name make the require ambiguous.
+
+This location is always under your home directory. `LUNEBLOX_CACHE` and the XDG variables do not move
+it.
+
+### The alias in .luaurc
+
+Setup reads `.luaurc` in the current directory, creates it when it does not exist, and sets one key:
+
+```json
+{
+  "aliases": {
+    "lune": "~/.luneblox/.typedefs/0.10.12/"
+  }
+}
+```
+
+Other keys and other aliases are kept. The file is written back as indented JSON.
+
+With the alias in place, `require("@lune/fs")` resolves to `fs.luau` in that directory for the
+language server. At run time `luneblox` ignores the alias and serves the built-in library.
+
+<Aside type="caution" title=".luaurc must be plain JSON">
+Setup parses `.luaurc` as strict JSON. A file with comments or trailing commas fails with
+`Failed to parse settings`; the typedefs are still written, but the alias is not.
+</Aside>
+
+## After an upgrade
+
+The directory is named after the version, so the alias written by 0.10.11 still points at the 0.10.11
+typedefs after you install 0.10.12. Run `luneblox setup` again after each upgrade. It replaces the
+alias and leaves the old directory in place.
+
+If `.luaurc` is committed, everyone on the project needs the same LuneBlox version and has to run
+`luneblox setup` once on their machine.
+
+## luau-lsp
+
+### In an editor
+
+Install the luau-lsp extension for your editor. It reads `.luaurc` on its own. LuneBlox scripts are
+not Roblox scripts, so turn the Roblox globals off. The LuneBlox repository uses these settings for
+Visual Studio Code:
+
+```json
+{
+  "luau-lsp.types.roblox": false,
+  "luau-lsp.sourcemap.enabled": false
+}
+```
+
+### On the command line
+
+The same check runs outside an editor, which is how the LuneBlox repository type-checks its own
+scripts in CI:
+
+```sh
+luau-lsp analyze --platform=standard .lune
+```
+
+`--platform=standard` is the command-line form of turning the Roblox types off.
+
+## Strict mode
+
+Start every script with a mode directive so that it is checked the same way wherever it is opened:
+
+```luau
+--!strict
+local fs = require("@lune/fs")
+```
+
+Or set it for the whole project in `.luaurc`:
+
+```json
+{
+  "languageMode": "strict",
+  "aliases": {
+    "lune": "~/.luneblox/.typedefs/0.10.12/"
+  }
+}
+```
+
+## Next
+
+The reference pages for each library, starting with [fs](/LuneBlox/reference/fs/), are generated from
+the same type definitions that setup writes.

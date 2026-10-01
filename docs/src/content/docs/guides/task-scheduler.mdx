@@ -1,0 +1,345 @@
+---
+title: Tasks, time and utilities
+description: How the task scheduler runs threads alongside coroutines, plus working with dates in @lune/datetime, compiling code with @lune/luau and matching text with @lune/regex.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+A script runs on one OS thread. `@lune/task` schedules Luau threads on it, the way the `task` library
+does on Roblox: a thread runs until it yields, and the scheduler then picks the next one.
+
+```luau
+local task = require("@lune/task")
+
+task.spawn(function()
+	task.wait(1)
+	print("second")
+end)
+
+print("first")
+```
+
+The script does not end when the main chunk returns. It ends when no thread is left waiting, or when
+`process.exit` is called.
+
+## Spawn, defer and delay
+
+All three take a function or an existing thread, followed by arguments to pass to it, and return the
+thread.
+
+| Function | When it runs |
+|---|---|
+| `task.spawn(f, ...)` | Now. The caller continues when `f` yields or returns. |
+| `task.defer(f, ...)` | At the end of the current task queue, after threads already spawned. |
+| `task.delay(seconds, f, ...)` | After at least `seconds`. Never right away, even with 0. |
+
+```luau
+local task = require("@lune/task")
+
+task.defer(print, "third")
+task.spawn(print, "first")
+print("second")
+
+task.delay(0.5, function(name)
+	print("hello,", name)
+end, "world")
+```
+
+Use `task.spawn` to start work that should begin immediately, and `task.defer` to let the current
+code finish first.
+
+## Waiting
+
+`task.wait(seconds)` yields the current thread for at least that long and returns the time actually
+waited. With no argument it waits the minimum possible, which still yields and lets other threads
+run.
+
+```luau
+local waited = task.wait(0.25)
+print(`waited {waited} seconds`)
+```
+
+The wait is never shorter than asked, but it can be longer: accuracy depends on the operating
+system's sleep, and is usually within a few milliseconds. Negative, NaN and infinite durations are
+treated leniently and do not throw.
+
+## Cancelling
+
+`task.cancel(thread)` stops a thread from being resumed again. It works on deferred and delayed
+threads that have not started, and on spawned threads that are waiting.
+
+```luau
+local task = require("@lune/task")
+local process = require("@lune/process")
+
+local timeout = task.delay(10, function()
+	print("timed out")
+	process.exit(1)
+end)
+
+task.wait(1) -- the work that might hang goes here
+
+task.cancel(timeout)
+```
+
+A pending `task.delay` keeps the script alive until it fires. Cancel a timeout you no longer need,
+or the script waits for it.
+
+## Library calls yield
+
+Calls that wait on the outside world yield the calling thread and nothing else: `net.request`,
+`process.exec`, `task.wait`, reading from a socket or a child process, `stdio.prompt` and so on.
+While one thread waits, the others run. This is how to do several slow things at once:
+
+```luau
+local net = require("@lune/net")
+local task = require("@lune/task")
+
+local urls = { "https://example.com", "https://example.org" }
+local results = {}
+local pending = #urls
+
+for index, url in urls do
+	task.spawn(function()
+		results[index] = net.request(url)
+		pending -= 1
+	end)
+end
+
+while pending > 0 do
+	task.wait()
+end
+
+print(results[1].statusCode, results[2].statusCode)
+```
+
+Code between two yields is never interrupted, so plain variables shared between threads, like
+`pending` above, need no locking.
+
+## Coroutines and the scheduler
+
+The `coroutine` library works as in plain Luau, and the two can be mixed.
+
+- `task.spawn`, `task.defer` and `task.delay` accept a thread made with `coroutine.create`.
+- `task.cancel` accepts any thread.
+- A yielding library call works inside a coroutine. `coroutine.resume` returns when the coroutine
+  reaches the call, and the scheduler resumes the coroutine when the call completes.
+
+```luau
+local task = require("@lune/task")
+
+local done = false
+coroutine.resume(coroutine.create(function()
+	task.wait(0.1)
+	done = true
+end))
+
+print(done) --> false
+task.wait(0.2)
+print(done) --> true
+```
+
+<Aside type="caution">
+Because of this, `coroutine.resume` returning `true` does not mean the coroutine has finished or
+yielded a value of its own. It may be parked in the scheduler. Check `coroutine.status`, or use a
+flag as above.
+</Aside>
+
+A thread can also be handed to the scheduler from inside another coroutine. A thread that is
+resuming another coroutine has the status `normal`; `task.defer(thread)` and `task.spawn(thread)`
+resume it once it has yielded.
+
+### Errors come back unchanged
+
+`coroutine.resume` returns `false` and the value the coroutine threw, exactly as thrown, as on
+Roblox. A table comes back as the same table. A string comes back with no `runtime error:` prefix
+and no traceback, so messages can be compared exactly.
+
+```luau
+local tag = { code = 7 }
+
+local thread = coroutine.create(function()
+	error(tag)
+end)
+
+local ok, err = coroutine.resume(thread)
+print(ok) --> false
+print(rawequal(err, tag)) --> true
+
+local ok2, err2 = coroutine.resume(coroutine.create(function()
+	error("boom", 0)
+end))
+print(err2 == "boom") --> true
+```
+
+`coroutine.wrap` propagates the same value to its caller, and `coroutine.close` on a coroutine that
+errored returns `false` and that value. Resuming a dead coroutine returns `false` and
+`"cannot resume dead coroutine"`.
+
+## Dates and times
+
+`@lune/datetime` creates `DateTime` values. A `DateTime` is one moment in time; it has no time zone
+of its own, and is formatted as either local or universal (UTC) time when you ask.
+
+```luau
+local DateTime = require("@lune/datetime")
+
+local now = DateTime.now()
+print(now.unixTimestamp) -- seconds since the UNIX epoch
+print(now.unixTimestampMillis) -- milliseconds since the UNIX epoch
+print(now:toRfc3339()) -- such as 2026-10-01T12:34:56Z
+```
+
+### Creating
+
+```luau
+local fromSeconds = DateTime.fromUnixTimestamp(1693068988)
+local fromString = DateTime.fromRfc3339("2023-08-26T16:56:28Z")
+local fromMail = DateTime.fromRfc2822("Fri, 21 Nov 1997 09:55:06 -0600")
+
+local fromValues = DateTime.fromUniversalTime({
+	year = 2023,
+	month = 8,
+	day = 26,
+	hour = 16,
+	minute = 56,
+	second = 28,
+})
+print(fromValues.unixTimestamp) --> 1693068988
+```
+
+`fromUniversalTime` and `fromLocalTime` take the same table. All six fields from `year` to `second`
+are required; `millisecond` is optional. A date that does not exist, such as February 30th, throws,
+and so does a string that does not follow its format.
+
+`fromIsoDate` and `toIsoDate` are deprecated. Use `fromRfc3339` and `toRfc3339`.
+
+### Formatting and reading
+
+```luau
+local moment = DateTime.fromUnixTimestamp(1693068988)
+
+print(moment:formatUniversalTime("%Y-%m-%dT%H:%M:%SZ", "en")) --> 2023-08-26T16:56:28Z
+print(moment:formatLocalTime("%A, %d %B %Y", "fr"))
+print(moment:formatLocalTime()) -- "%Y-%m-%d %H:%M:%S" in English
+
+local values = moment:toUniversalTime()
+print(values.year, values.month, values.day) --> 2023 8 26
+```
+
+`formatLocalTime` and `formatUniversalTime` take a `strftime`-style format string and a locale:
+`en`, `de`, `es`, `fr`, `it`, `ja`, `pl`, `pt-br`, `pt` or `tr`. `toLocalTime` and `toUniversalTime`
+return the same table the constructors take, with `millisecond` always present.
+
+To measure elapsed time, use `os.clock()` rather than subtracting two `DateTime` values.
+
+## Compiling and loading Luau
+
+`@lune/luau` compiles source to bytecode and turns source or bytecode into a function.
+
+```luau
+local luau = require("@lune/luau")
+
+local bytecode = luau.compile("return 1 + 1", { optimizationLevel = 2 })
+local fn = luau.load(bytecode, { debugName = "sum" })
+print(fn()) --> 2
+
+-- Source can be loaded directly
+print(luau.load("return ...")("hello")) --> hello
+```
+
+`luau.compile` throws on a syntax error. Its options are `optimizationLevel` (default 1),
+`coverageLevel` (default 0) and `debugLevel` (default 1). Each accepts 0, 1 or 2, and a value
+outside that range throws.
+
+`luau.load` options:
+
+| Option | Meaning |
+|---|---|
+| `debugName` | The chunk's name in errors and stack traces. |
+| `environment` | A table of globals for the chunk. |
+| `injectGlobals` | Whether the standard globals are added to a custom environment. Default `true`. |
+| `codegenEnabled` | Whether native code generation is used for the chunk. Default `false`. |
+
+```luau
+local sandboxed = luau.load("return greet()", {
+	environment = {
+		greet = function()
+			return "hi"
+		end,
+	},
+})
+print(sandboxed()) --> hi
+```
+
+<Aside type="caution">
+A custom `environment` deoptimizes the chunk and disables code generation for it, whatever
+`codegenEnabled` says. Do not benchmark code loaded that way.
+</Aside>
+
+### Collecting garbage in benchmarks
+
+Scripts run sandboxed, as on Roblox, where `collectgarbage` accepts only `"count"`. A benchmark
+still needs each measurement to start from the same heap, not from whatever the previous one left
+behind. `luau.collect()` runs a full garbage collection cycle.
+
+```luau
+local luau = require("@lune/luau")
+
+local function measure(name: string, fn: () -> ())
+	luau.collect()
+	local before = collectgarbage("count")
+	local start = os.clock()
+	fn()
+	local elapsed = os.clock() - start
+	print(name, elapsed, collectgarbage("count") - before)
+end
+```
+
+## Regular expressions
+
+Luau's string patterns cover most needs. `@lune/regex` adds full regular expressions for the rest.
+`regex.new(pattern)` throws when the pattern is invalid.
+
+```luau
+local regex = require("@lune/regex")
+
+local re = regex.new("[0-9]+")
+
+print(re:isMatch("look, a number: 1241425")) --> true
+
+local found = re:find("1337 wow")
+if found then
+	print(found.text, found.start, found.finish, found.len) --> 1337 1 4 4
+end
+
+print(re:replace("age: 26", "Z")) --> age: Z
+print(regex.new("[0-9]"):replaceAll("age: 26", "Z")) --> age: ZZ
+print(regex.new(","):split("1,2,3,4")) -- a list of four strings
+```
+
+`find` and `captures` return nil when nothing matches. `replace` changes the first match only;
+`replaceAll` changes every match.
+
+Capture groups are read with `captures`. Index 0 is the whole match, groups start at 1, and named
+groups are read with `group`. In `format` and in replacement strings, `$1` and `$name` insert a
+group, and `$$` is a literal dollar sign.
+
+```luau
+local date = regex.new("(?<day>[0-9]{2})-(?<month>[0-9]{2})-(?<year>[0-9]{4})")
+
+local caps = date:captures("Released on 14-03-2010.")
+if caps then
+	print(caps:get(0).text) --> 14-03-2010
+	print(caps:get(1).text) --> 14
+	print(caps:group("year").text) --> 2010
+	print(caps:format("$year/$month/$day")) --> 2010/03/14
+end
+```
+
+## Reference
+
+The full listings are on the [task reference](/LuneBlox/reference/task/), the
+[datetime reference](/LuneBlox/reference/datetime/), the [luau reference](/LuneBlox/reference/luau/)
+and the [regex reference](/LuneBlox/reference/regex/). The flags Luau itself runs with are covered
+in [fast flags](/LuneBlox/guides/fast-flags/).

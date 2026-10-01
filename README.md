@@ -11,7 +11,7 @@
 [![License](https://img.shields.io/github/license/XopoIII/LuneBlox?style=flat-square&color=informational)](LICENSE.txt)
 [![Release](https://img.shields.io/github/v/release/XopoIII/LuneBlox?style=flat-square&color=informational)](https://github.com/XopoIII/LuneBlox/releases/latest)
 
-[Lune documentation](https://lune-org.github.io/docs) ·
+[Documentation](https://xopoiii.github.io/LuneBlox/) ·
 [Releases](https://github.com/XopoIII/LuneBlox/releases/latest) ·
 [Changelog](CHANGELOG.md)
 
@@ -55,8 +55,9 @@ optimisation, so native timings here are what Roblox gets rather than the best t
 ## Where it comes from
 
 LuneBlox is built from [Lune](https://github.com/lune-org/lune) and keeps its whole interface: the same
-`@lune/*` libraries, the same task scheduler, the same Roblox datatypes and place/model files. Lune's
-documentation covers everything this page does not: <https://lune-org.github.io/docs>.
+`@lune/*` libraries, the same task scheduler, the same Roblox datatypes and place/model files. The
+documentation covers the command line, every library and what differs from Lune:
+<https://xopoiii.github.io/LuneBlox/>.
 
 ## Install
 
