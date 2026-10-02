@@ -2,6 +2,7 @@
 <!-- markdownlint-disable MD041 -->
 
 <div align="center">
+  <img src="https://raw.githubusercontent.com/XopoIII/LuneBlox/main/docs/src/assets/logo.png" alt="LuneBlox logo" width="160">
 
 # LuneBlox
 
