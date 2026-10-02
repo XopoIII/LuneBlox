@@ -90,6 +90,14 @@ export default defineConfig({
 			// src/pages/404.astro says why.
 			disable404Route: true,
 			description: 'A standalone Luau runtime that runs Luau the way Roblox runs it.',
+			logo: { src: './src/assets/logo.png', alt: 'LuneBlox' },
+			favicon: '/favicon-32.png',
+			head: [
+				{ tag: 'link', attrs: { rel: 'icon', type: 'image/png', sizes: '192x192', href: '/LuneBlox/favicon.png' } },
+				{ tag: 'link', attrs: { rel: 'apple-touch-icon', href: '/LuneBlox/apple-touch-icon.png' } },
+				{ tag: 'meta', attrs: { property: 'og:image', content: 'https://xopoiii.github.io/LuneBlox/og.png' } },
+				{ tag: 'meta', attrs: { name: 'twitter:image', content: 'https://xopoiii.github.io/LuneBlox/og.png' } },
+			],
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/XopoIII/LuneBlox' }],
 			editLink: { baseUrl: 'https://github.com/XopoIII/LuneBlox/edit/main/docs/' },
 			lastUpdated: true,
