@@ -63,6 +63,12 @@ jobs:
       - name: English only
         run: sh scripts/check-english.sh
 
+      - name: Tests registered
+        run: sh scripts/check-tests-registered.sh
+
+      - name: Versions
+        run: sh scripts/check-versions.sh
+
   deny:
     name: Check dependencies
     runs-on: ubuntu-latest

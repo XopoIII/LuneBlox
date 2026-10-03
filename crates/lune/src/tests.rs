@@ -201,10 +201,12 @@ create_tests! {
 
     roblox_files_deserialize_model: "roblox/files/deserializeModel",
     roblox_files_deserialize_place: "roblox/files/deserializePlace",
+    roblox_files_multi_dom: "roblox/files/multiDom",
     roblox_files_serialize_model: "roblox/files/serializeModel",
     roblox_files_serialize_place: "roblox/files/serializePlace",
 
     roblox_instance_attributes: "roblox/instance/attributes",
+    roblox_instance_identity: "roblox/instance/identity",
     roblox_instance_new: "roblox/instance/new",
     roblox_instance_properties: "roblox/instance/properties",
     roblox_instance_tags: "roblox/instance/tags",
