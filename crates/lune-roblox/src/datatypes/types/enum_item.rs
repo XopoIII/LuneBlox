@@ -3,7 +3,7 @@ use core::fmt;
 use mlua::prelude::*;
 use rbx_dom_weak::types::EnumItem as DomEnumItem;
 
-use super::{super::*, Enum};
+use super::{super::*, Enum, enum_legacy_names::ENUM_ITEM_LEGACY_NAMES};
 
 /**
     An implementation of the [EnumItem](https://create.roblox.com/docs/reference/engine/datatypes/EnumItem) Roblox datatype.
@@ -19,17 +19,20 @@ pub struct EnumItem {
 
 impl EnumItem {
     pub(crate) fn from_enum_and_name(parent: &Enum, name: impl AsRef<str>) -> Option<Self> {
-        let enum_name = name.as_ref();
-        parent.desc.items.iter().find_map(|(name, v)| {
-            if *name == enum_name {
-                Some(Self {
-                    parent: parent.clone(),
-                    name: enum_name.to_string(),
-                    value: *v,
-                })
-            } else {
-                None
-            }
+        let name = name.as_ref();
+        let items = &parent.desc.items;
+        // An item still answers to a name it had before Roblox renamed it,
+        // while reporting the name it has now - the database only knows the latter
+        let (name, value) = items.get_key_value(name).or_else(|| {
+            let (_, _, current) = ENUM_ITEM_LEGACY_NAMES
+                .iter()
+                .find(|(enum_name, legacy, _)| *enum_name == parent.desc.name && *legacy == name)?;
+            items.get_key_value(current)
+        })?;
+        Some(Self {
+            parent: parent.clone(),
+            name: (*name).to_string(),
+            value: *value,
         })
     }
 

@@ -10,7 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- An enum item answers to the names it had before Roblox renamed it, as on Roblox:
+  `Enum.KeyCode.Unknown` is `Enum.KeyCode.None`, and reports `None` as its name. The 72 former names
+  come from Roblox's API dump (`scripts/generate_enum_legacy_names.luau`)
+
 ### Changed
+
+- The reflection database describes Roblox 741 (`rbx_reflection_database` 3.0.1, from 728), with
+  `rbx_binary` and `rbx_xml` 3.0.1. Every other dependency is at its latest compatible version
 
 - mlua 0.12.1 -> 0.12.2, with `mlua-sys` 0.13 taken from crates.io: the release carries Luau 0.740,
   so the patch that pointed `mlua-sys` at an mlua commit is gone. The vendored `luau0-src` stays

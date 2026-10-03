@@ -8,7 +8,8 @@ local db = roblox.getReflectionDatabase()
 
 local IGNORED_EMPTY_ENUMS: { string } = {
 	"AudioCaptureMode",
-	"TagReplicability",
+	"IntentReplicability",
+	"ProjectServiceOperationResult",
 }
 
 -- Make sure database enums exist + fields / properties are correct types
