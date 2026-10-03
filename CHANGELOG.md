@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The reflection database describes Roblox 741 (`rbx_reflection_database` 3.0.1, from 728), with
   `rbx_binary` and `rbx_xml` 3.0.1. Every other dependency is at its latest compatible version
 
+- Luau's fast flags follow the Roblox client 0.741, which turns on three more of the flags Luau 0.740
+  declares: `LuauCompileRecursiveAliases`, `LuauFrozenMetaButterfly` and `LuauPromoteProto`
 - mlua 0.12.1 -> 0.12.2, with `mlua-sys` 0.13 taken from crates.io: the release carries Luau 0.740,
   so the patch that pointed `mlua-sys` at an mlua commit is gone. The vendored `luau0-src` stays
 - A number with a fractional part is still truncated where an integer is expected, as on Roblox -
