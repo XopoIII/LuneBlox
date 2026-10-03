@@ -4,7 +4,7 @@ use mlua::prelude::*;
 use rand::prelude::*;
 use rbx_dom_weak::types::BrickColor as DomBrickColor;
 
-use lune_utils::TableBuilder;
+use lune_utils::{TableBuilder, Truncated};
 
 use crate::exports::LuaExportsTable;
 
@@ -28,7 +28,7 @@ impl LuaExportsTable for BrickColor {
     const EXPORT_NAME: &'static str = "BrickColor";
 
     fn create_exports_table(lua: Lua) -> LuaResult<LuaTable> {
-        type ArgsNumber = u16;
+        type ArgsNumber = Truncated<u16>;
         type ArgsName = String;
         type ArgsRgb = (f32, f32, f32);
         type ArgsColor3 = LuaUserDataRef<Color3>;
@@ -39,7 +39,7 @@ impl LuaExportsTable for BrickColor {
             // and silently ignore the remaining two, parsing `new(1, 0, 0)` as `new(1)`.
             if let Ok((r, g, b)) = ArgsRgb::from_lua_multi(args.clone(), lua) {
                 Ok(color_from_rgb(r, g, b))
-            } else if let Ok(number) = ArgsNumber::from_lua_multi(args.clone(), lua) {
+            } else if let Ok(Truncated(number)) = ArgsNumber::from_lua_multi(args.clone(), lua) {
                 Ok(color_from_number(number))
             } else if let Ok(name) = ArgsName::from_lua_multi(args.clone(), lua) {
                 Ok(color_from_name(name))
@@ -53,7 +53,7 @@ impl LuaExportsTable for BrickColor {
             }
         };
 
-        let brick_color_palette = |_: &Lua, index: u16| {
+        let brick_color_palette = |_: &Lua, Truncated(index): Truncated<u16>| {
             if index == 0 {
                 Err(LuaError::RuntimeError("Invalid index".to_string()))
             } else if let Some(number) = BRICK_COLOR_PALETTE.get((index - 1) as usize) {

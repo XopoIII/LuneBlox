@@ -6,7 +6,7 @@ use rbx_dom_weak::types::{
     Font as DomFont, FontStyle as DomFontStyle, FontWeight as DomFontWeight,
 };
 
-use lune_utils::TableBuilder;
+use lune_utils::{TableBuilder, Truncated};
 
 use crate::exports::LuaExportsTable;
 
@@ -71,15 +71,19 @@ impl LuaExportsTable for Font {
                 })
             };
 
-        let font_from_id =
-            |_: &Lua, (id, weight, style): (i32, Option<FontWeight>, Option<FontStyle>)| {
-                Ok(Font {
-                    family: format!("rbxassetid://{id}"),
-                    weight: weight.unwrap_or_default(),
-                    style: style.unwrap_or_default(),
-                    cached_id: None,
-                })
-            };
+        let font_from_id = |_: &Lua,
+                            (Truncated(id), weight, style): (
+            Truncated<i32>,
+            Option<FontWeight>,
+            Option<FontStyle>,
+        )| {
+            Ok(Font {
+                family: format!("rbxassetid://{id}"),
+                weight: weight.unwrap_or_default(),
+                style: style.unwrap_or_default(),
+                cached_id: None,
+            })
+        };
 
         let font_new =
             |_: &Lua, (family, weight, style): (String, Option<FontWeight>, Option<FontStyle>)| {

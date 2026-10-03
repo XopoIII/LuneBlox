@@ -9,6 +9,8 @@ use futures::{
 
 use mlua::prelude::*;
 
+use lune_utils::Truncated;
+
 use crate::client::stream::MaybeTlsStream;
 
 const DEFAULT_BUFFER_SIZE: usize = 1024;
@@ -87,9 +89,9 @@ impl LuaUserData for Tcp {
     }
 
     fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
-        methods.add_async_method("read", |lua, this, size: Option<usize>| {
+        methods.add_async_method("read", |lua, this, size: Option<Truncated<usize>>| {
             let this = this.clone();
-            let size = size.unwrap_or(DEFAULT_BUFFER_SIZE);
+            let size = size.map_or(DEFAULT_BUFFER_SIZE, |size| size.0);
             async move {
                 let bytes = this.read(size).await.into_lua_err()?;
                 lua.create_string(bytes)

@@ -3,7 +3,7 @@ use core::fmt;
 use mlua::prelude::*;
 use rbx_dom_weak::types::{Content as DomContent, ContentType};
 
-use lune_utils::TableBuilder;
+use lune_utils::{TableBuilder, Truncated};
 
 use crate::{
     exports::LuaExportsTable,
@@ -34,7 +34,7 @@ impl LuaExportsTable for Content {
             }
         };
 
-        let from_asset_id = |_: &Lua, asset_id: i64| {
+        let from_asset_id = |_: &Lua, Truncated(asset_id): Truncated<i64>| {
             if asset_id == 0 {
                 Ok(Self(ContentType::None, None))
             } else {

@@ -26,3 +26,16 @@ assert(
 	}).unixTimestampMillis == 1693068988892,
 	"expected DateTime.fromUniversalTime() with DateTimeValues arg with millis to return 1693068988892ms"
 )
+
+assert(
+	DateTime.fromUniversalTime({
+		year = 2023.9,
+		month = 8.5,
+		day = 26.5,
+		hour = 16.5,
+		minute = 56.5,
+		second = 28.5,
+		millisecond = 892.5,
+	}).unixTimestampMillis == 1693068988892,
+	"expected DateTime.fromUniversalTime() to truncate fractional DateTimeValues"
+)

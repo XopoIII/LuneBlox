@@ -76,6 +76,21 @@ for _, filePath in FILES do
 	end
 end
 
+-- A fractional compression level is truncated and not rejected
+for _, format: serde.CompressDecompressFormat in FORMATS do
+	local source = fs.readFile(FILES[1])
+	local compressed = serde.compress(format, source, 3.5)
+	if serde.decompress(format, compressed) ~= source then
+		stdio.ewrite(
+			string.format(
+				"Round-trip using '%s' format with a fractional level failed!\n",
+				tostring(format)
+			)
+		)
+		failed = true
+	end
+end
+
 if failed then
 	process.exit(1)
 end

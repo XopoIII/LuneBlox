@@ -4,6 +4,8 @@ use mlua::prelude::*;
 use regex::{Captures, Regex};
 use self_cell::self_cell;
 
+use lune_utils::Truncated;
+
 use super::matches::LuaMatch;
 
 type OptionalCaptures<'a> = Option<Captures<'a>>;
@@ -59,7 +61,7 @@ impl LuaCaptures {
 
 impl LuaUserData for LuaCaptures {
     fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
-        methods.add_method("get", |_, this, index: usize| {
+        methods.add_method("get", |_, this, Truncated(index): Truncated<usize>| {
             Ok(this
                 .captures()
                 .get(index)

@@ -20,6 +20,8 @@ use hyper::body::Bytes;
 
 use mlua::prelude::*;
 
+use lune_utils::Truncated;
+
 #[derive(Debug, Clone)]
 pub struct Websocket<T> {
     close_code_exists: Arc<AtomicBool>,
@@ -138,9 +140,12 @@ where
     }
 
     fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
-        methods.add_async_method("close", |_, this, code: Option<u16>| async move {
-            this.close(code).await
-        });
+        methods.add_async_method(
+            "close",
+            |_, this, code: Option<Truncated<u16>>| async move {
+                this.close(code.map(|code| code.0)).await
+            },
+        );
 
         methods.add_async_method(
             "send",

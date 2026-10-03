@@ -9,6 +9,8 @@ use std::{
 use mlua::prelude::*;
 use os_str_bytes::OsStringBytes;
 
+use crate::Truncated;
+
 // Inner (shared) struct
 
 #[derive(Debug, Default)]
@@ -240,13 +242,16 @@ impl FromLua for ProcessArgs {
 impl LuaUserData for ProcessArgs {
     fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
         methods.add_meta_method(LuaMetaMethod::Len, |_, this, (): ()| Ok(this.len()));
-        methods.add_meta_method(LuaMetaMethod::Index, |_, this, index: usize| {
-            if index == 0 {
-                Ok(None)
-            } else {
-                Ok(this.get(index - 1))
-            }
-        });
+        methods.add_meta_method(
+            LuaMetaMethod::Index,
+            |_, this, Truncated(index): Truncated<usize>| {
+                if index == 0 {
+                    Ok(None)
+                } else {
+                    Ok(this.get(index - 1))
+                }
+            },
+        );
         methods.add_meta_method(LuaMetaMethod::NewIndex, |_, _, (): ()| {
             Err::<(), _>(LuaError::runtime("ProcessArgs is read-only"))
         });

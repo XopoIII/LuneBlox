@@ -23,6 +23,7 @@ assert(captures:get(1).text == "1337")
 assert(captures:get(2).text == "125600")
 assert(captures:get(3).text == "0")
 assert(captures:get(4) == nil)
+assert(captures:get(1.5).text == "1337")
 
 assert(captures:format("$0") == "1337 125600 wow! 1984 0")
 assert(captures:format("$3 $2 $1") == "0 125600 1337")
