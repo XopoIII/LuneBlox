@@ -54,7 +54,4 @@ allow-wildcard-paths = true
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"
-allow-git = [
-	# mlua-sys is patched to mlua's own "Bump Luau to 0.740" commit (see Cargo.toml).
-	"https://github.com/mlua-rs/mlua",
-]
+allow-git = []

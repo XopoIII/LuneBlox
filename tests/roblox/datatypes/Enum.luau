@@ -13,6 +13,16 @@ assert(tostring(Enum.KeyCode.X) == "Enum.KeyCode.X")
 assert(Enum.Axis.X.Name == "X")
 assert(Enum.Axis.X.Value == 0)
 
+-- An item answers to the name it had before Roblox renamed it,
+-- and is the same item, reporting the name it has now
+
+assert(Enum.KeyCode.Unknown == Enum.KeyCode.None)
+assert(Enum.KeyCode.Unknown.Name == "None")
+assert(Enum.KeyCode.Unknown.Value == 0)
+assert(not pcall(function()
+	return Enum.KeyCode.NotAKeyCode
+end))
+
 -- Methods
 
 local foundKeyCode = false

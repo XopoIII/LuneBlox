@@ -1,5 +1,7 @@
 use mlua::prelude::*;
 
+use lune_utils::Truncated;
+
 #[derive(Debug, Default, Clone, Copy)]
 pub struct TcpConfig {
     pub tls: Option<bool>,
@@ -21,7 +23,7 @@ impl FromLua for TcpConfig {
             if let Some(tls) = tab.get::<Option<_>>("tls")? {
                 this.tls = Some(tls);
             }
-            if let Some(ttl) = tab.get::<Option<_>>("ttl")? {
+            if let Some(Truncated(ttl)) = tab.get::<Option<Truncated<u32>>>("ttl")? {
                 this.ttl = Some(ttl);
             }
 

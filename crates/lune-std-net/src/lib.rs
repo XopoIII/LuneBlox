@@ -1,6 +1,6 @@
 #![allow(clippy::cargo_common_metadata)]
 
-use lune_utils::TableBuilder;
+use lune_utils::{TableBuilder, Truncated};
 use mlua::prelude::*;
 
 pub(crate) mod body;
@@ -68,13 +68,19 @@ async fn net_http_request(lua: Lua, req: Request) -> LuaResult<Response> {
     self::client::send(req, lua).await
 }
 
-async fn net_http_serve(lua: Lua, (port, config): (u16, ServeConfig)) -> LuaResult<LuaTable> {
+async fn net_http_serve(
+    lua: Lua,
+    (Truncated(port), config): (Truncated<u16>, ServeConfig),
+) -> LuaResult<LuaTable> {
     self::server::serve(lua.clone(), port, config)
         .await?
         .into_lua_table(lua)
 }
 
-async fn net_tcp_connect(_: Lua, (host, port, config): (String, u16, TcpConfig)) -> LuaResult<Tcp> {
+async fn net_tcp_connect(
+    _: Lua,
+    (host, Truncated(port), config): (String, Truncated<u16>, TcpConfig),
+) -> LuaResult<Tcp> {
     self::client::connect_tcp(host, port, config).await
 }
 

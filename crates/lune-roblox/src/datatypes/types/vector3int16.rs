@@ -5,7 +5,7 @@ use glam::IVec3;
 use mlua::prelude::*;
 use rbx_dom_weak::types::Vector3int16 as DomVector3int16;
 
-use lune_utils::TableBuilder;
+use lune_utils::{TableBuilder, Truncated};
 
 use crate::exports::LuaExportsTable;
 
@@ -25,11 +25,13 @@ impl LuaExportsTable for Vector3int16 {
     const EXPORT_NAME: &'static str = "Vector3int16";
 
     fn create_exports_table(lua: Lua) -> LuaResult<LuaTable> {
-        let vector3int16_new = |_: &Lua, (x, y, z): (Option<i16>, Option<i16>, Option<i16>)| {
+        type Component = Option<Truncated<i16>>;
+
+        let vector3int16_new = |_: &Lua, (x, y, z): (Component, Component, Component)| {
             Ok(Vector3int16(IVec3 {
-                x: x.unwrap_or_default() as i32,
-                y: y.unwrap_or_default() as i32,
-                z: z.unwrap_or_default() as i32,
+                x: x.unwrap_or_default().0 as i32,
+                y: y.unwrap_or_default().0 as i32,
+                z: z.unwrap_or_default().0 as i32,
             }))
         };
 

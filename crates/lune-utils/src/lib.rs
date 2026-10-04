@@ -1,6 +1,7 @@
 #![allow(clippy::cargo_common_metadata)]
 
 mod table_builder;
+mod truncated;
 mod version_string;
 
 pub mod fmt;
@@ -8,6 +9,7 @@ pub mod path;
 pub mod process;
 
 pub use self::table_builder::TableBuilder;
+pub use self::truncated::Truncated;
 pub use self::version_string::get_version_string;
 
 // TODO: Remove this in the next major semver

@@ -6,6 +6,8 @@ use futures_lite::{io, prelude::*};
 
 use mlua::prelude::*;
 
+use lune_utils::Truncated;
+
 const DEFAULT_BUFFER_SIZE: usize = 1024;
 
 // Inner (plumbing) implementation
@@ -87,9 +89,9 @@ pub struct ChildReader {
 
 impl LuaUserData for ChildReader {
     fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
-        methods.add_async_method("read", |lua, this, size: Option<usize>| {
+        methods.add_async_method("read", |lua, this, size: Option<Truncated<usize>>| {
             let inner = this.inner.clone();
-            let size = size.unwrap_or(DEFAULT_BUFFER_SIZE);
+            let size = size.map_or(DEFAULT_BUFFER_SIZE, |size| size.0);
             async move {
                 let mut inner = inner.lock().await;
                 let bytes = inner.read(size).await.into_lua_err()?;

@@ -7,7 +7,7 @@ use glam::Vec3;
 use mlua::prelude::*;
 use rbx_dom_weak::types::{Color3 as DomColor3, Color3uint8 as DomColor3uint8};
 
-use lune_utils::TableBuilder;
+use lune_utils::{TableBuilder, Truncated};
 
 use crate::exports::LuaExportsTable;
 
@@ -32,11 +32,13 @@ impl LuaExportsTable for Color3 {
     const EXPORT_NAME: &'static str = "Color3";
 
     fn create_exports_table(lua: Lua) -> LuaResult<LuaTable> {
-        let color3_from_rgb = |_: &Lua, (r, g, b): (Option<u8>, Option<u8>, Option<u8>)| {
+        type Channel = Option<Truncated<u8>>;
+
+        let color3_from_rgb = |_: &Lua, (r, g, b): (Channel, Channel, Channel)| {
             Ok(Color3 {
-                r: (r.unwrap_or_default() as f32) / 255f32,
-                g: (g.unwrap_or_default() as f32) / 255f32,
-                b: (b.unwrap_or_default() as f32) / 255f32,
+                r: (r.unwrap_or_default().0 as f32) / 255f32,
+                g: (g.unwrap_or_default().0 as f32) / 255f32,
+                b: (b.unwrap_or_default().0 as f32) / 255f32,
             })
         };
 

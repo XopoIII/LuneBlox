@@ -75,8 +75,9 @@ typedefs, cross-compilation cache and REPL history live in `~/.luneblox`.
 
 When Roblox moves to a new Luau release:
 
-1. Point `[patch.crates-io] mlua-sys` in `Cargo.toml` at an mlua commit that pins it, or drop the patch
-   once mlua-sys on crates.io carries it.
+1. Bump `mlua` to the release that pins it, then re-copy `vendor/luau0-src` from the `luau0-src` crate
+   that release asks for and re-apply every fix marked `LuneBlox:` that Luau has not taken. If no
+   mlua release carries the new Luau yet, patch `mlua-sys` in `Cargo.toml` to the mlua commit that does.
 2. `luneblox run scripts/generate_roblox_fflags.luau` to regenerate the flag table from Roblox's
    published client settings, limited to the flags that Luau declares.
 3. `cargo test --workspace`.

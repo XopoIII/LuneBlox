@@ -2,7 +2,7 @@ use mlua::prelude::*;
 
 use chrono::prelude::*;
 
-use lune_utils::TableBuilder;
+use lune_utils::{TableBuilder, Truncated};
 
 use super::result::{DateTimeError, DateTimeResult};
 
@@ -80,13 +80,15 @@ impl FromLua for DateTimeValues {
 
         let value = value.as_table().unwrap();
         let values = Self {
-            year: value.get("year")?,
-            month: value.get("month")?,
-            day: value.get("day")?,
-            hour: value.get("hour")?,
-            minute: value.get("minute")?,
-            second: value.get("second")?,
-            millisecond: value.get("millisecond").unwrap_or(0),
+            year: value.get::<Truncated<_>>("year")?.0,
+            month: value.get::<Truncated<_>>("month")?.0,
+            day: value.get::<Truncated<_>>("day")?.0,
+            hour: value.get::<Truncated<_>>("hour")?.0,
+            minute: value.get::<Truncated<_>>("minute")?.0,
+            second: value.get::<Truncated<_>>("second")?.0,
+            millisecond: value
+                .get::<Truncated<_>>("millisecond")
+                .map_or(0, |millisecond| millisecond.0),
         };
 
         match values.verify() {

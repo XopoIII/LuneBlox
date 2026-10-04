@@ -4,7 +4,7 @@ use std::ops;
 use mlua::prelude::*;
 use rbx_dom_weak::types::UDim as DomUDim;
 
-use lune_utils::TableBuilder;
+use lune_utils::{TableBuilder, Truncated};
 
 use crate::exports::LuaExportsTable;
 
@@ -31,10 +31,10 @@ impl LuaExportsTable for UDim {
     const EXPORT_NAME: &'static str = "UDim";
 
     fn create_exports_table(lua: Lua) -> LuaResult<LuaTable> {
-        let udim_new = |_: &Lua, (scale, offset): (Option<f32>, Option<i32>)| {
+        let udim_new = |_: &Lua, (scale, offset): (Option<f32>, Option<Truncated<i32>>)| {
             Ok(UDim {
                 scale: scale.unwrap_or_default(),
-                offset: offset.unwrap_or_default(),
+                offset: offset.unwrap_or_default().0,
             })
         };
 

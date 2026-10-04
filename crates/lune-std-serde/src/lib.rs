@@ -3,7 +3,7 @@
 use bstr::BString;
 use mlua::prelude::*;
 
-use lune_utils::TableBuilder;
+use lune_utils::{TableBuilder, Truncated};
 
 mod compress_decompress;
 mod encode_decode;
@@ -56,9 +56,9 @@ fn serde_decode(lua: &Lua, (format, bs): (EncodeDecodeFormat, BString)) -> LuaRe
 
 async fn serde_compress(
     lua: Lua,
-    (format, bs, level): (CompressDecompressFormat, BString, Option<i32>),
+    (format, bs, level): (CompressDecompressFormat, BString, Option<Truncated<i32>>),
 ) -> LuaResult<LuaString> {
-    let bytes = compress(bs, format, level).await?;
+    let bytes = compress(bs, format, level.map(|level| level.0)).await?;
     lua.create_string(bytes)
 }
 

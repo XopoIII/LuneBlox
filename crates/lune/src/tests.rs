@@ -182,6 +182,7 @@ create_tests! {
     roblox_datatype_enum: "roblox/datatypes/Enum",
     roblox_datatype_faces: "roblox/datatypes/Faces",
     roblox_datatype_font: "roblox/datatypes/Font",
+    roblox_datatype_integer_truncation: "roblox/datatypes/IntegerTruncation",
     roblox_datatype_number_range: "roblox/datatypes/NumberRange",
     roblox_datatype_number_sequence: "roblox/datatypes/NumberSequence",
     roblox_datatype_number_sequence_keypoint: "roblox/datatypes/NumberSequenceKeypoint",

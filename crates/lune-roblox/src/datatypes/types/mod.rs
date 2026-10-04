@@ -7,6 +7,7 @@ mod color_sequence_keypoint;
 mod content;
 mod r#enum;
 mod r#enum_item;
+mod enum_legacy_names;
 mod r#enums;
 mod faces;
 mod font;

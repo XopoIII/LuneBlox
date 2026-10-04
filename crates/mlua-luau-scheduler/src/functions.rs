@@ -244,9 +244,14 @@ impl Functions {
         let exit_env = lua.create_table_from(vec![
             (
                 "exit",
-                lua.create_function(|lua, code: Option<u8>| {
+                lua.create_function(|lua, code: Option<LuaNumber>| {
                     let _span = tracing::trace_span!("Scheduler::fn_exit").entered();
-                    let code = code.unwrap_or_default();
+                    // mlua rejects a fractional number for an integer, so drop the
+                    // fraction first and let it check the range, as it used to.
+                    let code = match code {
+                        Some(code) => u8::from_lua(LuaValue::Number(code.trunc()), lua)?,
+                        None => 0,
+                    };
                     lua.set_exit_code(code);
                     Ok(())
                 })?,

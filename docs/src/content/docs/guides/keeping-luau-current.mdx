@@ -1,6 +1,6 @@
 ---
 title: Keeping Luau current
-description: A maintainer's guide to moving LuneBlox to a new Luau release - the mlua-sys patch, the vendored Luau sources, the fast flag table and the tests.
+description: A maintainer's guide to moving LuneBlox to a new Luau release - the mlua release, the vendored Luau sources, the fast flag table and the tests.
 ---
 
 import { Aside, Steps } from '@astrojs/starlight/components';
@@ -12,19 +12,28 @@ so when Roblox moves to a new Luau release, LuneBlox follows.
 
 Luau reaches the binary through three things in the repository. All three move together.
 
-### mlua-sys, patched
+### mlua
 
 LuneBlox uses [mlua](https://github.com/mlua-rs/mlua) for its Luau bindings. `mlua-sys` is the crate
-that pins which Luau is built. The crates.io release of mlua 0.12.1 pins Luau 0.736, so `Cargo.toml`
-patches `mlua-sys` to the commit on mlua's main branch that moved it to Luau 0.740:
+that pins which Luau is built: mlua 0.12.2 asks for `mlua-sys` 0.13, which asks for `luau0-src` 0.22
+and so Luau 0.740. Every crate in the workspace names the same mlua version.
+
+When Roblox is ahead of the newest mlua release, `Cargo.toml` patches `mlua-sys` to the commit on
+mlua's main branch that carries the new Luau, until a release does:
 
 ```toml
 [patch.crates-io]
-mlua-sys = { git = "https://github.com/mlua-rs/mlua", rev = "2cf6c60c65858b9ea95c14cc25dd11da984efad0" }
+mlua-sys = { git = "https://github.com/mlua-rs/mlua", rev = "<commit>" }
 ```
 
-Only `mlua-sys` is patched, not `mlua`. mlua's main branch also turns fractional-to-integer
-conversions into errors, and the Roblox datatypes rely on those conversions.
+Such a patch also needs the repository in `allow-git` of `deny.toml`.
+
+<Aside title="Integers are truncated here, not in mlua">
+Since 0.12.2 mlua rejects a number with a fractional part where a Rust integer is expected. Roblox
+truncates it, so every integer LuneBlox takes from Lua is written as `lune_utils::Truncated<T>`,
+which drops the fraction and leaves the range check to mlua. A new parameter typed as a bare integer
+would turn `UDim.new(0, 1.5)` into an error.
+</Aside>
 
 ### luau0-src, vendored
 
@@ -64,9 +73,9 @@ version. See [Fast flags](/LuneBlox/guides/fast-flags/).
 
 <Steps>
 
-1. **Point `mlua-sys` at the new Luau.** Change the `rev` of the `mlua-sys` patch in `Cargo.toml` to
-   an mlua commit that pins the new Luau. If a crates.io release of `mlua-sys` now carries it, bump
-   the dependency and drop the patch.
+1. **Move mlua to the new Luau.** If an mlua release carries it, bump `mlua` in every crate's
+   `Cargo.toml` and run `cargo update -p mlua -p mlua-sys`. If none does yet, patch `mlua-sys` in
+   `Cargo.toml` to an mlua commit that pins the new Luau, and drop the patch once a release has it.
 
 2. **Re-copy `vendor/luau0-src`.** Replace the directory with the `luau0-src` crate version the new
    `mlua-sys` asks for.
@@ -128,7 +137,8 @@ to 7 alone and release.
 
 ## Things to keep in mind
 
-- **mlua's main is not used as a whole.** Take the `mlua-sys` commit, not a newer `mlua`.
+- **Read mlua's changelog before bumping it.** A release can change what a conversion accepts, as
+  0.12.2 did for integers, and such a change shows up only when a script runs.
 - **The release profile builds `mlua-sys` at `opt-level = 3`** while the rest of the workspace uses
   `"z"`. If the crate that compiles Luau's C++ changes, the override in `Cargo.toml` has to follow it,
   or the VM silently goes back to `-Os`.

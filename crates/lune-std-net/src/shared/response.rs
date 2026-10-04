@@ -6,6 +6,8 @@ use hyper::{
 
 use mlua::prelude::*;
 
+use lune_utils::Truncated;
+
 use crate::{
     body::{ReadableBody, handle_incoming_body},
     shared::{headers::header_map_to_table, lua::lua_table_to_header_map},
@@ -101,7 +103,7 @@ impl FromLua for Response {
             })
         } else if let LuaValue::Table(tab) = value {
             // Extract status (required)
-            let status = tab.get::<u16>("status")?;
+            let Truncated(status) = tab.get::<Truncated<u16>>("status")?;
             let status = StatusCode::from_u16(status).into_lua_err()?;
 
             // Extract headers

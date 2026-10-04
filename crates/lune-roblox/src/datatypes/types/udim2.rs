@@ -7,7 +7,7 @@ use glam::Vec2;
 use mlua::prelude::*;
 use rbx_dom_weak::types::UDim2 as DomUDim2;
 
-use lune_utils::TableBuilder;
+use lune_utils::{TableBuilder, Truncated};
 
 use crate::exports::LuaExportsTable;
 
@@ -28,12 +28,13 @@ impl LuaExportsTable for UDim2 {
     const EXPORT_NAME: &'static str = "UDim2";
 
     fn create_exports_table(lua: Lua) -> LuaResult<LuaTable> {
-        let udim2_from_offset = |_: &Lua, (x, y): (Option<i32>, Option<i32>)| {
-            Ok(UDim2 {
-                x: UDim::new(0f32, x.unwrap_or_default()),
-                y: UDim::new(0f32, y.unwrap_or_default()),
-            })
-        };
+        let udim2_from_offset =
+            |_: &Lua, (x, y): (Option<Truncated<i32>>, Option<Truncated<i32>>)| {
+                Ok(UDim2 {
+                    x: UDim::new(0f32, x.unwrap_or_default().0),
+                    y: UDim::new(0f32, y.unwrap_or_default().0),
+                })
+            };
 
         let udim2_from_scale = |_: &Lua, (x, y): (Option<f32>, Option<f32>)| {
             Ok(UDim2 {
@@ -43,7 +44,12 @@ impl LuaExportsTable for UDim2 {
         };
 
         type ArgsUDims = (Option<LuaUserDataRef<UDim>>, Option<LuaUserDataRef<UDim>>);
-        type ArgsNums = (Option<f32>, Option<i32>, Option<f32>, Option<i32>);
+        type ArgsNums = (
+            Option<f32>,
+            Option<Truncated<i32>>,
+            Option<f32>,
+            Option<Truncated<i32>>,
+        );
         let udim2_new = |lua: &Lua, args: LuaMultiValue| {
             if let Ok((x, y)) = ArgsUDims::from_lua_multi(args.clone(), lua) {
                 Ok(UDim2 {
@@ -52,8 +58,8 @@ impl LuaExportsTable for UDim2 {
                 })
             } else if let Ok((sx, ox, sy, oy)) = ArgsNums::from_lua_multi(args, lua) {
                 Ok(UDim2 {
-                    x: UDim::new(sx.unwrap_or_default(), ox.unwrap_or_default()),
-                    y: UDim::new(sy.unwrap_or_default(), oy.unwrap_or_default()),
+                    x: UDim::new(sx.unwrap_or_default(), ox.unwrap_or_default().0),
+                    y: UDim::new(sy.unwrap_or_default(), oy.unwrap_or_default().0),
                 })
             } else {
                 // FUTURE: Better error message here using given arg types

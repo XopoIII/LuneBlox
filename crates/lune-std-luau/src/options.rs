@@ -3,6 +3,8 @@
 use mlua::chunk::Compiler as LuaCompiler;
 use mlua::prelude::*;
 
+use lune_utils::Truncated;
+
 const DEFAULT_DEBUG_NAME: &str = "luau.load(...)";
 
 /**
@@ -44,9 +46,9 @@ impl FromLua for LuauCompileOptions {
                 let mut options = Self::default();
 
                 let get_and_check = |name: &'static str| -> LuaResult<Option<u8>> {
-                    match t.get(name)? {
-                        Some(n @ (0..=2)) => Ok(Some(n)),
-                        Some(n) => Err(LuaError::runtime(format!(
+                    match t.get::<Option<Truncated<u8>>>(name)? {
+                        Some(Truncated(n @ (0..=2))) => Ok(Some(n)),
+                        Some(Truncated(n)) => Err(LuaError::runtime(format!(
                             "'{name}' must be one of: 0, 1, or 2 - got {n}"
                         ))),
                         None => Ok(None),

@@ -38,9 +38,11 @@ The same gates run in CI (`.github/workflows/ci.yaml`) and before each commit (`
   the author kept (`Co-Authored-By` when squashed), and adapted to LuneBlox's names.
 - **Script folders (`lune`, `.lune`) and the `@lune/*` libraries keep their names**, so Lune code runs
   unchanged. The binary, `_VERSION`, and the home, cache and state directories are `luneblox`.
-- **`mlua-sys` is patched** to mlua's own "Bump Luau to 0.740" commit until a crates.io release carries
-  it (`[patch.crates-io]` in `Cargo.toml`). mlua's main is not used as a whole: it turns
-  fractional-to-integer conversions into errors, which the Roblox datatypes rely on.
+- **An integer taken from Lua goes through `lune_utils::Truncated`.** Since 0.12.2 mlua rejects a number
+  with a fractional part where a Rust integer is expected; Roblox truncates it. A parameter or table
+  field typed as a bare `i32`, `u16`, `usize` and so on turns `UDim.new(0, 1.5)` into an error, so
+  it is written `Truncated<i32>`. The scheduler crate does not depend on `lune-utils` and truncates
+  in place.
 - **`luau0-src` is vendored** in `vendor/luau0-src` (`[patch.crates-io]`, excluded from the workspace)
   to carry fixes to Luau's own C++, each marked with a `LuneBlox:` comment. mlua builds Luau without
   `NDEBUG`, so Luau's assertions are live here: a codegen bug Roblox's release build miscompiles
@@ -108,6 +110,7 @@ hook or CI. `tests/stdio/prompt.luau` is deliberately left out of the automated 
 | Check dependencies | `cargo deny check` |
 | Run all pre-commit gates | `lefthook run pre-commit --all-files` |
 | Regenerate the fast flags | `lune run scripts/generate_roblox_fflags` |
+| Regenerate the legacy enum item names | `lune run scripts/generate_enum_legacy_names` |
 | Preview the docs site | `npm ci --prefix docs && npm run dev --prefix docs` |
 | Build the docs site (checks every internal link) | `npm run build --prefix docs` |
 | Look at an upstream pull request | `git fetch upstream pull/<n>/head:pr-<n>` |

@@ -8,14 +8,20 @@ use serde::{Deserialize, Deserializer};
 use serde_json::Value as JsonValue;
 use toml::Value as TomlValue;
 
+// How deep a value may nest before it is rejected, in either direction. This is mlua's own
+// default, written out because it is part of what `serde.encode` and `serde.decode` accept.
+const RECURSION_LIMIT: usize = 128;
+
 // NOTE: These are options for going from other format -> lua ("serializing" lua values)
 const LUA_SERIALIZE_OPTIONS: LuaSerializeOptions = LuaSerializeOptions::new()
+    .recursion_limit(RECURSION_LIMIT)
     .set_array_metatable(false)
     .serialize_none_to_null(false)
     .serialize_unit_to_null(false);
 
 // NOTE: These are options for going from lua -> other format ("deserializing" lua values)
 const LUA_DESERIALIZE_OPTIONS: LuaDeserializeOptions = LuaDeserializeOptions::new()
+    .recursion_limit(RECURSION_LIMIT)
     .sort_keys(true)
     .deny_recursive_tables(false)
     .deny_unsupported_types(true);

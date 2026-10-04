@@ -8,6 +8,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- An enum item answers to the names it had before Roblox renamed it, as on Roblox:
+  `Enum.KeyCode.Unknown` is `Enum.KeyCode.None`, and reports `None` as its name. The 72 former names
+  come from Roblox's API dump (`scripts/generate_enum_legacy_names.luau`)
+
+### Changed
+
+- The reflection database describes Roblox 741 (`rbx_reflection_database` 3.0.1, from 728), with
+  `rbx_binary` and `rbx_xml` 3.0.1. Every other dependency is at its latest compatible version
+
+- Luau's fast flags follow the Roblox client 0.741, which turns on three more of the flags Luau 0.740
+  declares: `LuauCompileRecursiveAliases`, `LuauFrozenMetaButterfly` and `LuauPromoteProto`
+- mlua 0.12.1 -> 0.12.2, with `mlua-sys` 0.13 taken from crates.io: the release carries Luau 0.740,
+  so the patch that pointed `mlua-sys` at an mlua commit is gone. The vendored `luau0-src` stays
+- A number with a fractional part is still truncated where an integer is expected, as on Roblox -
+  `UDim.new(0, 1.5)`, `Color3.fromRGB(127.5, 0, 0)`, `Vector3int16.new(1.9, 0, 0)`, a port, a
+  compression level. mlua 0.12.2 turned these into errors; `lune_utils::Truncated` keeps them
+- `serde.encode` and `serde.decode` accept values nested up to 128 levels deep and raise an error
+  past that. Encoding had no limit before and overflowed the stack on a deep enough table
+
 ## `0.10.12` - September 29th, 2026
 
 Native code no longer takes the process down on ARM64 when a function has more than 256 constants:
