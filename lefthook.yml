@@ -48,6 +48,17 @@ pre-commit:
       # 500 lines, no exceptions: a file that reaches it is split into modules, not listed.
       run: sh scripts/check-file-size.sh {staged_files}
 
+    tests-registered:
+      glob: "{tests/**/*.luau,crates/lune/src/tests.rs,scripts/check-tests-registered.sh}"
+      # A test script that is not registered never runs, and the suite is green either way.
+      run: sh scripts/check-tests-registered.sh
+
+    versions:
+      glob: "{*Cargo.toml,README.md,CHANGELOG.md,docs/src/content/docs/**/*.mdx,crates/lune/src/rt/roblox_fflags.rs,scripts/check-versions.sh}"
+      # The LuneBlox, Luau and mlua versions are each written in several places, and the docs quote
+      # the fast flag table. Nothing else compares them.
+      run: sh scripts/check-versions.sh
+
     english-only:
       # Every artefact in this repository is written in English. A single non-English word in a
       # comment is invisible to review and permanent once it lands.

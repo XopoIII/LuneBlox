@@ -29,6 +29,12 @@ its config with the reason there; it is never left to warn.
   already sets strict mode, but a file read without it - copied typedefs, a script run from elsewhere -
   falls back to nonstrict and goes unchecked. `--!nocheck` is for files that cannot be checked, such as
   the Roblox Studio scripts below.
+- Every script under `tests/` is registered in `crates/lune/src/tests.rs`, or listed in
+  `scripts/check-tests-registered.sh` with the reason it is not a test. An unregistered test never
+  runs and nothing says so.
+- The LuneBlox, Luau and mlua versions agree everywhere they are written, and the docs quote the fast
+  flag table as it is (`scripts/check-versions.sh`). A release moves the version with
+  `sh scripts/bump-version.sh <version>`, not by hand.
 
 The same gates run in CI (`.github/workflows/ci.yaml`) and before each commit (`lefthook.yml`).
 
@@ -107,6 +113,9 @@ hook or CI. `tests/stdio/prompt.luau` is deliberately left out of the automated 
 | Check type-checking modes | `sh scripts/check-strict.sh` |
 | Check file sizes | `sh scripts/check-file-size.sh` |
 | Check English | `sh scripts/check-english.sh` |
+| Check that tests are registered | `sh scripts/check-tests-registered.sh` |
+| Check versions | `sh scripts/check-versions.sh` |
+| Move to a new version | `sh scripts/bump-version.sh <version>` |
 | Check dependencies | `cargo deny check` |
 | Run all pre-commit gates | `lefthook run pre-commit --all-files` |
 | Regenerate the fast flags | `lune run scripts/generate_roblox_fflags` |
