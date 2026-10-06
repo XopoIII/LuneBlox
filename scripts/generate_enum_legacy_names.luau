@@ -9,7 +9,7 @@
 
 	Run from the repository root:
 
-		lune run scripts/generate_enum_legacy_names.luau
+		luneblox run scripts/generate_enum_legacy_names.luau
 ]]
 
 local fs = require("@lune/fs")

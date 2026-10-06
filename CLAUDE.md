@@ -118,8 +118,8 @@ hook or CI. `tests/stdio/prompt.luau` is deliberately left out of the automated 
 | Move to a new version | `sh scripts/bump-version.sh <version>` |
 | Check dependencies | `cargo deny check` |
 | Run all pre-commit gates | `lefthook run pre-commit --all-files` |
-| Regenerate the fast flags | `lune run scripts/generate_roblox_fflags` |
-| Regenerate the legacy enum item names | `lune run scripts/generate_enum_legacy_names` |
+| Regenerate the fast flags | `luneblox run scripts/generate_roblox_fflags` |
+| Regenerate the legacy enum item names | `luneblox run scripts/generate_enum_legacy_names` |
 | Preview the docs site | `npm ci --prefix docs && npm run dev --prefix docs` |
 | Build the docs site (checks every internal link) | `npm run build --prefix docs` |
 | Look at an upstream pull request | `git fetch upstream pull/<n>/head:pr-<n>` |
