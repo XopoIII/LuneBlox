@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-lune run scripts/analyze_copy_typedefs
+luneblox run scripts/analyze_copy_typedefs
 
 luau-lsp analyze \
 	--platform=standard \

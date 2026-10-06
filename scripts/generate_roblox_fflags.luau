@@ -9,7 +9,7 @@
 
 	Run from the repository root, after `cargo fetch`:
 
-		lune run scripts/generate_roblox_fflags.luau
+		luneblox run scripts/generate_roblox_fflags.luau
 ]]
 
 local fs = require("@lune/fs")
