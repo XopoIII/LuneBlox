@@ -36,9 +36,12 @@ pub fn apply_roblox_fflags() {
             return;
         }
         for (name, enabled) in ROBLOX_FFLAGS {
-            // A flag this Luau does not declare is skipped; the table is generated
-            // against the same Luau version, so this only happens after a partial update
-            let _ = Lua::set_fflag(name, *enabled);
+            // A flag this Luau does not declare fails to set. The table is generated
+            // against the same Luau version, so a failure means the table has drifted
+            // from the VM in a partial update, and that should not pass silently.
+            if Lua::set_fflag(name, *enabled).is_err() {
+                eprintln!("warning: Luau fast flag `{name}` did not apply");
+            }
         }
     });
 }
