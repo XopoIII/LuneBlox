@@ -4,10 +4,14 @@
 # release artifacts, and is used in the GitHub workflow so
 # that we can upload all artifacts to the release easier
 
+# A step that fails stops the script: a release must not go out with an archive or
+# its checksum missing
+set -euo pipefail
+
 CWD="$PWD"
 
 # We should have gotten RELEASES_DIR as the first arg to this script
-RELEASES_DIR="$1"
+RELEASES_DIR="${1:-}"
 if [ -z "$RELEASES_DIR" ]; then
     echo "Usage: $0 <RELEASES_DIR>"
     exit 1
