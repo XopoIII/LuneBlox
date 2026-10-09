@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+  # A quiet tree still changes: a new RustSec advisory against a pinned dependency, a
+  # runner image that moved, a registry that yanked a crate. Run weekly so it surfaces.
+  schedule:
+    - cron: "0 6 * * 1"
 
 defaults:
   run:
@@ -158,6 +162,15 @@ jobs:
         uses: taiki-e/install-action@v2.87.25
         with:
           tool: cargo-nextest
+
+      # Luau's C++ and the dependency graph barely move between commits; caching the
+      # target directory cuts most of the build time on every run after the first. The
+      # key keeps the two macOS targets, which share a runner image, out of each other's
+      # cache.
+      - name: Cache cargo artifacts
+        uses: Swatinem/rust-cache@v2.9.2
+        with:
+          key: ${{ matrix.cargo-target }}
 
       - name: Build
         run: |
