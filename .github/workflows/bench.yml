@@ -1,0 +1,56 @@
+name: Benchmark
+
+on:
+  workflow_dispatch:
+  # Weekly, so a Luau upgrade or a fast flag change shows up as a performance
+  # movement in the artifacts rather than as a surprise in someone's timings.
+  schedule:
+    - cron: "0 8 * * 1"
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  bench:
+    name: Benchmark - Linux x86_64
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+        with:
+          submodules: true
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      # Same reason as in ci.yaml: Luau's C++ barely moves between runs
+      - name: Cache cargo artifacts
+        uses: Swatinem/rust-cache@v2.9.2
+        with:
+          key: bench-x86_64-unknown-linux-gnu
+
+      - name: Build binary
+        run: |
+          cargo build \
+          --locked --all-features \
+          --release
+
+      - name: Run benchmarks (JIT, the default)
+        run: ./target/release/luneblox run scripts/benchmark.luau | tee bench-jit.txt
+
+      # Roblox clients mostly run interpreted code; both numbers matter
+      - name: Run benchmarks (interpreted)
+        run: LUNE_LUAU_JIT=0 ./target/release/luneblox run scripts/benchmark.luau | tee bench-interpreted.txt
+
+      - name: Upload results
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: benchmark-results
+          path: |
+            bench-jit.txt
+            bench-interpreted.txt
