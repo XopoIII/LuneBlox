@@ -35,15 +35,26 @@ pub fn apply_roblox_fflags() {
         if std::env::var_os("LUNE_ROBLOX_FFLAGS").is_some_and(|value| value == "0") {
             return;
         }
-        for (name, enabled) in ROBLOX_FFLAGS {
-            // A flag this Luau does not declare fails to set. The table is generated
-            // against the same Luau version, so a failure means the table has drifted
-            // from the VM in a partial update, and that should not pass silently.
-            if Lua::set_fflag(name, *enabled).is_err() {
-                eprintln!("warning: Luau fast flag `{name}` did not apply");
-            }
+        // The table is generated against the same Luau version and holds only flags the
+        // runtime links, so a failure means the table has drifted from the VM in a
+        // partial update, and that should not pass silently.
+        for name in set_fflags(ROBLOX_FFLAGS) {
+            eprintln!("warning: Luau fast flag `{name}` did not apply");
         }
     });
+}
+
+/**
+    Sets each flag to its value and returns the names of the flags Luau did not take.
+
+    Luau takes a flag only when the code that declares it is linked into this binary.
+*/
+fn set_fflags(flags: &[(&'static str, bool)]) -> Vec<&'static str> {
+    flags
+        .iter()
+        .filter(|(name, enabled)| Lua::set_fflag(name, *enabled).is_err())
+        .map(|(name, _)| *name)
+        .collect()
 }
 
 /**
@@ -437,4 +448,44 @@ fn strip_shebang(mut contents: Vec<u8>) -> Vec<u8> {
         contents.drain(..first_newline_idx);
     }
     contents
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ROBLOX_FFLAGS, set_fflags};
+
+    // Fails on any target where a flag in the table is declared in Luau code that the
+    // linker left out of the binary; `scripts/generate_roblox_fflags.luau` lists such
+    // sources as unlinked. This test binary links the whole runtime, as the CLI does.
+    #[test]
+    fn every_roblox_fflag_applies() {
+        // The table is not empty: the fast flags guide documents this entry
+        assert!(ROBLOX_FFLAGS.contains(&("DebugCodegenOptSize", true)));
+        assert_eq!(set_fflags(ROBLOX_FFLAGS), Vec::<&str>::new());
+    }
+
+    #[test]
+    fn roblox_fflags_are_sorted_and_unique() {
+        for pair in ROBLOX_FFLAGS.windows(2) {
+            assert!(pair[0].0 < pair[1].0, "{} before {}", pair[0].0, pair[1].0);
+        }
+    }
+
+    // `LuauCallFeedback` is in the table with this value, so setting it changes nothing.
+    #[test]
+    fn a_flag_luau_does_not_register_is_reported() {
+        assert!(ROBLOX_FFLAGS.contains(&("LuauCallFeedback", true)));
+        assert_eq!(
+            set_fflags(&[
+                ("LuauCallFeedback", true),
+                ("LuneBloxNoSuchFlag", true),
+                // Declared in Luau's Ast/src/PrettyPrinter.cpp, which the runtime does not link
+                ("LuauPrettyPrintVisualizeIndexerAccess", true),
+            ]),
+            vec![
+                "LuneBloxNoSuchFlag",
+                "LuauPrettyPrintVisualizeIndexerAccess"
+            ]
+        );
+    }
 }

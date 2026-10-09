@@ -1,7 +1,9 @@
 --!strict
 --[[
 	Generates `crates/lune/src/rt/roblox_fflags.rs`: the Luau fast flags that the live
-	Roblox client sets, limited to the flags the Luau version Lune builds against declares.
+	Roblox client sets, limited to the flags the Luau version Lune builds against declares
+	in code the runtime links. It also rewrites the lines of the fast flags guide that quote
+	the table, so `scripts/check-versions.sh` stays green after a regeneration.
 
 	Luau ships new runtime and compiler work behind flags that default to off, and Roblox
 	turns them on from its servers. Without this, Lune runs the same Luau source as Roblox
@@ -20,6 +22,17 @@ local serde = require("@lune/serde")
 local SETTINGS_URL = "https://clientsettingscdn.roblox.com/v2/settings/application/PCDesktopClient"
 local VERSION_URL = "https://clientsettingscdn.roblox.com/v2/client-version/WindowsPlayer"
 local OUTPUT = "crates/lune/src/rt/roblox_fflags.rs"
+local GUIDE = "docs/src/content/docs/guides/fast-flags.mdx"
+
+-- Sources that are compiled into Luau's static libraries but never linked into the runtime:
+-- nothing the runtime calls refers to them, so the linker leaves their object files out, and
+-- a flag declared there is not registered and cannot be set. Each entry is a path below the
+-- Luau source directory. The `every_roblox_fflag_applies` test in
+-- `crates/lune/src/rt/runtime.rs` fails when this list is missing an entry.
+local UNLINKED_SOURCES: { [string]: boolean } = {
+	-- Prints an AST back as source; only Luau's own analysis and CLI tools call it
+	["Ast/src/PrettyPrinter.cpp"] = true,
+}
 
 -- Find the Luau sources cargo resolved for mlua-sys
 local metadata = process.exec("cargo", { "metadata", "--format-version", "1" })
@@ -35,13 +48,16 @@ for _, package in serde.decode("json", metadata.stdout).packages do
 end
 assert(luauDir, "luau0-src is not in the dependency graph")
 
--- Every boolean flag Luau declares, dynamic or not
+-- Every boolean flag Luau declares in a source the runtime links, dynamic or not
 local declared: { [string]: boolean } = {}
-local function scan(dir: string)
+local function scan(dir: string, relative: string)
 	for _, name in fs.readDir(dir) do
 		local path = `{dir}/{name}`
+		local relativePath = if relative == "" then name else `{relative}/{name}`
 		if fs.isDir(path) then
-			scan(path)
+			scan(path, relativePath)
+		elseif UNLINKED_SOURCES[relativePath] then
+			continue
 		elseif string.match(name, "%.cpp$") or string.match(name, "%.h$") then
 			local source = fs.readFile(path)
 			for flag in string.gmatch(source, "LUAU_FASTFLAGVARIABLE%(%s*([%w_]+)") do
@@ -53,7 +69,7 @@ local function scan(dir: string)
 		end
 	end
 end
-scan(luauDir :: string)
+scan(luauDir :: string, "")
 
 local settings = serde.decode("json", net.request(SETTINGS_URL).body).applicationSettings
 local clientVersion = serde.decode("json", net.request(VERSION_URL).body).version
@@ -85,6 +101,27 @@ end
 contents ..= "];\n"
 
 fs.writeFile(OUTPUT, contents)
-print(
+
+-- The guide quotes the table's header, its size and this script's output
+local summary =
 	`Wrote {#flags} flags ({enabledCount} enabled) for Roblox {clientVersion} and Luau 0.{luauVersion}`
+local function requote(text: string, pattern: string, replacement: string): string
+	-- A function replacement is taken as it is; a string one would read `%` as a capture
+	local result, count = string.gsub(text, pattern, function()
+		return replacement
+	end)
+	assert(count == 1, `{GUIDE} should quote '{replacement}' exactly once, found {count}`)
+	return result
+end
+local guide = fs.readFile(GUIDE)
+guide = requote(
+	guide,
+	"Luau fast flags as the Roblox client [%d%.]+ sets them",
+	`Luau fast flags as the Roblox client {clientVersion} sets them`
 )
+guide = requote(guide, "It holds %d+ flags%.", `It holds {#flags} flags.`)
+guide =
+	requote(guide, "Wrote %d+ flags %(%d+ enabled%) for Roblox [%d%.]+ and Luau 0%.%d+", summary)
+fs.writeFile(GUIDE, guide)
+
+print(summary)
