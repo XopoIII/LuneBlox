@@ -37,9 +37,11 @@ fi
 rm -rf staging
 rm -rf release.zip
 
-# Create new staging dir to work in and copy the binary into that
+# Create new staging dir to work in and copy the binary into that.
+# The license travels with the binary, so the terms reach whoever unpacks the zip.
 mkdir -p staging
 cp "$TARGET_DIR/$BIN_NAME$BIN_EXT" staging/
+cp "LICENSE.txt" staging/
 cd staging
 
 # Zip the staging dir up

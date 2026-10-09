@@ -42,6 +42,12 @@ for DIR in * ; do
 	fi
 done
 
+# Checksums for every archive, so a download can be verified byte for byte.
+# This script runs on Ubuntu, where sha256sum always exists.
+echo ""
+echo "Generating checksums..."
+sha256sum -- *.zip > SHA256SUMS.txt
+
 # Finally, print out verbose info about the releases dir again,
 # so that anyone inspecting the script output can see that the
 # zipped releases have been moved out successfully
