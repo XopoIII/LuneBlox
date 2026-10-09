@@ -54,7 +54,15 @@ task.defer(function()
 	task.wait(0.05)
 	nested1()
 end)
-task.wait(0.25)
+-- Four waits in a row take at least 0.2 seconds, so the flag is not set halfway through.
+-- After that the flag is polled against a deadline rather than read after one fixed wait:
+-- a busy machine stretches the four waits, and a fixed 0.25 seconds left them 0.05 to spare
+task.wait(0.1)
+assert(not flag4, "Defer should not finish nesting early")
+local deadline = os.clock() + 5
+while not flag4 and os.clock() < deadline do
+	task.wait(0.05)
+end
 assert(flag4, "Defer should work with nesting")
 
 -- Varargs should get passed correctly
