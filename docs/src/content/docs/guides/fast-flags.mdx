@@ -32,7 +32,7 @@ Luau fast flags as the Roblox client 0.741.0.7411058 sets them, limited to the
 flags Luau 0.740 declares.
 ```
 
-It holds 33 flags. A few of them:
+It holds 32 flags. A few of them:
 
 | Flag | Value |
 |---|---|
@@ -98,7 +98,7 @@ luneblox run scripts/generate_roblox_fflags.luau
 ```
 
 ```text
-Wrote 33 flags (32 enabled) for Roblox 0.741.0.7411058 and Luau 0.740
+Wrote 32 flags (31 enabled) for Roblox 0.741.0.7411058 and Luau 0.740
 ```
 
 The script does this:
@@ -106,16 +106,36 @@ The script does this:
 1. Runs `cargo metadata` to find the Luau sources the build uses (the `luau0-src` package). Cargo must
    be installed and the dependencies fetched.
 2. Scans those sources for every flag declared with `LUAU_FASTFLAGVARIABLE` or
-   `LUAU_DYNAMIC_FASTFLAGVARIABLE`.
+   `LUAU_DYNAMIC_FASTFLAGVARIABLE`, leaving out the sources the script lists as never linked into
+   the runtime.
 3. Downloads Roblox's published client settings for the desktop client, and the current Windows
    player version.
 4. Keeps the settings named `FFlag<name>` or `DFFlag<name>` whose name Luau declares and whose value
    is `True` or `False`.
 5. Writes them, sorted by name, to `crates/lune/src/rt/roblox_fflags.rs`.
+6. Rewrites the lines of this page that quote the table: the header, the number of flags and the
+   output above.
 
 Limiting the table to flags that this Luau declares is what makes it safe: Roblox's settings include
-flags for Luau versions older and newer than the one built here. A flag that the running Luau does not
-know is skipped when the table is applied.
+flags for Luau versions older and newer than the one built here.
+
+Declaring a flag is not enough for it to be set. Luau registers a flag only when the source file that
+declares it is linked into the binary, and the runtime does not link all of Luau: nothing in it calls
+the AST pretty printer, for one, so the linker leaves that file out. The script lists such files as
+`UNLINKED_SOURCES` and ignores the flags they declare. `LuauPrettyPrintVisualizeIndexerAccess` is one:
+the Roblox client sets it, and it is not in the table.
+
+A flag in the table that fails to set is reported on stderr when the table is applied, and the rest of
+the table is still applied:
+
+```text
+warning: Luau fast flag `LuauExample` did not apply
+```
+
+No release prints this. One test sets every flag in the table and fails if one does not take, and
+another runs a script through the built binary and fails if anything reaches stderr. The warning is
+for a tree where the table and the Luau sources have moved apart. The fix is to regenerate the table,
+or to add the file that declares the flag to `UNLINKED_SOURCES` if the runtime does not link it.
 
 The file is generated. Do not edit it by hand; rerun the script and rebuild.
 

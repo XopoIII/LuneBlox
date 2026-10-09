@@ -28,7 +28,6 @@ pub(crate) const ROBLOX_FFLAGS: &[(&str, bool)] = &[
     ("LuauNewPointerEncode", true),
     ("LuauNoDuplicateBinaryPrefix", true),
     ("LuauPcallOptimize", true),
-    ("LuauPrettyPrintVisualizeIndexerAccess", true),
     ("LuauPromoteProto", true),
     ("LuauSelfIsSelfAndAlwaysSelf", true),
     ("LuauSingleTypeOptionalPackReturnsAttributeParens", true),
