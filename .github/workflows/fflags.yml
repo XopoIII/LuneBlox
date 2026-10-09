@@ -3,17 +3,22 @@ name: Roblox fast flags
 on:
   workflow_dispatch:
   # The live Roblox client moves without a commit here, and with it the fast flags it
-  # sets. Regenerate the table weekly and open a pull request when it has drifted.
+  # sets. Regenerate the table weekly and fail when a flag has moved.
   schedule:
     - cron: "0 7 * * 1"
 
+# Nothing is pushed and nothing is opened: the default token of this repository may not
+# open pull requests, and issues are turned off. A failed run is the report - it reaches
+# the owner as a notification, and its summary carries the diff and what to run.
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 defaults:
   run:
     shell: bash
+
+env:
+  TABLE: crates/lune/src/rt/roblox_fflags.rs
 
 jobs:
   drift:
@@ -35,31 +40,46 @@ jobs:
       - name: Regenerate the fast flags
         run: luneblox run scripts/generate_roblox_fflags.luau
 
+      # The header names the client build, which moves every week. Only the rows are
+      # flags: compare those, so a new build that sets the same flags stays green.
       - name: Check for drift
-        id: drift
         run: |
-          if git diff --quiet crates/lune/src/rt/roblox_fflags.rs; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
+          rows() {
+            grep '^    ("' || true
+          }
+          committed="$(git show "HEAD:$TABLE" | rows)"
+          regenerated="$(rows < "$TABLE")"
+          if [ -z "$regenerated" ]; then
+            echo "::error::The generator wrote a table with no flags"
+            exit 1
           fi
-
-      # A fixed branch name: repeated drift updates the same pull request instead of
-      # piling up new ones
-      - name: Open a pull request with the new flags
-        if: steps.drift.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -B bot/roblox-fflags
-          git add crates/lune/src/rt/roblox_fflags.rs
-          git commit -m "Update the Roblox fast flags to the live client"
-          git push -f origin bot/roblox-fflags
-          if ! gh pr view bot/roblox-fflags --json number > /dev/null 2>&1; then
-            gh pr create \
-              --title "Update the Roblox fast flags to the live client" \
-              --body "The weekly drift check regenerated \`crates/lune/src/rt/roblox_fflags.rs\` and the table moved. Review the diff; merge to track the live client." \
-              --head bot/roblox-fflags
+          if [ "$committed" = "$regenerated" ]; then
+            echo "The live Roblox client sets the same flags as the committed table." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
           fi
+          {
+            echo "## The live Roblox client's Luau fast flags have moved"
+            echo ""
+            echo "Rows of \`$TABLE\`, committed against regenerated:"
+            echo ""
+            echo '```diff'
+            diff -u <(printf '%s\n' "$committed") <(printf '%s\n' "$regenerated") | tail -n +3 || true
+            echo '```'
+            echo ""
+            echo "To take the change, on a branch from \`main\`:"
+            echo ""
+            echo '```sh'
+            echo "rokit install"
+            echo "luneblox run scripts/generate_roblox_fflags.luau"
+            echo "sh scripts/check-versions.sh"
+            echo "cargo nextest run --workspace --all-features"
+            echo '```'
+            echo ""
+            echo "The generator rewrites the table and the lines of the fast flags guide that quote it."
+            echo "A flag that fails \`every_roblox_fflag_applies\` is declared in a source the runtime does"
+            echo "not link: add that source to \`UNLINKED_SOURCES\` in the generator and regenerate."
+            echo "A new flag changes how scripts compile and run, so it goes out in a release with a"
+            echo "changelog entry. This run stays red each week until the table matches the client."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::The live Roblox client's fast flags differ from $TABLE; see the run summary"
+          exit 1
