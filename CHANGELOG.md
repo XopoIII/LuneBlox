@@ -8,6 +8,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## `0.10.14` - October 9th, 2026
+
+Scripts run exactly as in 0.10.13: the same Luau, the same fast flags in effect, the same libraries.
+What moves is around them - a fast flag table that can no longer disagree with the binary unnoticed,
+and release archives that carry their license and can be checked against a checksum.
+
+### Added
+
+- A fast flag in the table that Luau does not take is reported on stderr when the flags are applied:
+  ``warning: Luau fast flag `<name>` did not apply``. It was skipped silently before. No flag in this
+  release's table fails, so nothing is printed; a test sets every flag in the table, and another runs
+  a script through the built binary and fails if anything reaches stderr
+- Each release carries `SHA256SUMS.txt`, with the SHA-256 checksum of every archive
+- `scripts/benchmark.luau`, seven small VM kernels that print a median time each, for comparing two
+  builds or two sets of fast flags on the same machine
+
+### Changed
+
+- The fast flag table holds 32 flags, from 33. `LuauPrettyPrintVisualizeIndexerAccess` is gone from
+  it: Luau declares the flag in its AST pretty printer, which the runtime does not link, so the flag
+  was never registered and setting it never took effect - in 0.10.13 as well. The 32 flags that did
+  take effect are unchanged, and are still those of the Roblox client 0.741. The generator
+  (`scripts/generate_roblox_fflags.luau`) now leaves out flags declared in sources the runtime does
+  not link
+- Each release archive holds `LICENSE.txt` next to the binary. It held the binary alone before
+- The release scripts stop at the first failed step, so a release cannot go out with an archive, a
+  license or a checksum missing
+
 ## `0.10.13` - October 4th, 2026
 
 Every dependency moves to its latest release - mlua 0.12.2 from crates.io, the Roblox 741 reflection
