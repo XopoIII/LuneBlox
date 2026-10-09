@@ -3,6 +3,6 @@ lefthook = "evilmartians/lefthook@2.1.17"
 luau-lsp = "JohnnyMorganz/luau-lsp@1.70.1"
 # The last released LuneBlox: it runs this repository's own scripts (scripts/*.luau) before the tree
 # is built. It is not the binary the tree builds.
-luneblox = "XopoIII/LuneBlox@0.10.13"
+luneblox = "XopoIII/LuneBlox@0.10.14"
 selene = "Kampfkarren/selene@0.32.0"
 stylua = "JohnnyMorganz/StyLua@2.5.2"

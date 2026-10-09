@@ -8,6 +8,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## `0.10.15` - October 9th, 2026
+
+The Roblox client moved to 0.742 and turned on three more of the fast flags Luau 0.740 declares.
+LuneBlox takes them. One changes what a script compiled at optimization level 2 can print; the
+other two change what happens when memory runs out and how foreign bytecode is loaded. Luau itself,
+mlua and the libraries are those of 0.10.14.
+
+### Changed
+
+- The fast flag table holds 35 flags, from 32, and follows the Roblox client 0.742. The 32 flags of
+  0.10.14 keep their values. The three new ones, all on:
+  - `LuauCompileNoFoldVectorEqW` (compiler, constant folding). Two vector constants that differ only
+    in a fourth component are no longer compared at compile time. The VM keeps three components, so
+    such vectors are equal when the script runs, and the compiler said otherwise:
+    `vector.create(1, 2, 3, 4) == vector.create(1, 2, 3, 5)` was folded to `false` and is now `true`,
+    as it always was without the fold. Only code compiled at optimization level 2 folds
+    `vector.create` at all - a script with `--!optimize 2`, or `luau.compile` with
+    `optimizationLevel = 2` - so a script run at the default level 1 compiles to the same bytecode
+    as before. `crates/lune/tests/fflag_effect.rs` pins this through the built binary, with the
+    flags on and off
+  - `LuauTableRobustOom` (VM, tables). A table that changes size allocates its new array and hash
+    parts first and switches to them only when both exist, so an allocation that fails halfway
+    leaves the table as it was; a hash part too large for its size field raises `table overflow`
+    before anything is allocated; and freezing a table that holds metamethods skips its lookup
+    shortcut when there is no memory for it, where it raised an error before. What a table holds,
+    the order it is traversed in and the errors a script sees are unchanged while memory lasts
+  - `LuauLoadRemapOptionalUserdata` (VM, bytecode loader). The type annotations bytecode carries for
+    native code generation keep their "optional" bit when a tagged userdata type is mapped to the
+    host's. The compiler in LuneBlox is never given userdata type names, so it writes no such
+    annotation: this is reached only by bytecode compiled elsewhere and passed to `luau.load`
+
+### Fixed
+
+- The test that checks TLS against seven public servers (`tests/net/request/https`) no longer
+  fails a build when one of them is briefly unavailable: an answer of 408, 429 or 5xx, or a request
+  that could not be sent, is asked for again, four requests in all. Every server still has to answer
+  ok, and any other status fails on the first answer; `tests/net/request/retry` pins both against a
+  local server. The Microsoft server asked is now the sign-in metadata endpoint, which answers in
+  about a second, where the Azure updates feed took seven and answered 503 to one build
+
 ## `0.10.14` - October 9th, 2026
 
 Scripts run exactly as in 0.10.13: the same Luau, the same fast flags in effect, the same libraries.

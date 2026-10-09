@@ -125,6 +125,7 @@ create_tests! {
     net_request_methods: "net/request/methods",
     net_request_query: "net/request/query",
     net_request_redirect: "net/request/redirect",
+    net_request_retry: "net/request/retry",
 
     net_serve_addresses: "net/serve/addresses",
     net_serve_handles: "net/serve/handles",
