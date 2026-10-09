@@ -3,12 +3,15 @@
 # This script is used to zip up the built binary for release,
 # and is used in the GitHub workflow to create a release artifact
 
+# A step that fails stops the script: a release must not be built from half an archive
+set -euo pipefail
+
 BIN_NAME="luneblox"
 BIN_EXT=""
 CWD="$PWD"
 
 # We should have gotten TARGET_TRIPLE as the first arg to this script
-TARGET_TRIPLE="$1"
+TARGET_TRIPLE="${1:-}"
 if [ -z "$TARGET_TRIPLE" ]; then
     echo "Usage: $0 <TARGET_TRIPLE>"
     exit 1
