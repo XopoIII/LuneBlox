@@ -125,7 +125,7 @@ local kernels: { Kernel } = {
 	{
 		name = "method calls via __index",
 		run = function()
-			local object = (setmetatable({ value = 1 }, MethodTable) :: any)
+			local object = setmetatable({ value = 1 }, MethodTable) :: any
 			local total = 0
 			for _ = 1, 100_000 do
 				total += object:double()
