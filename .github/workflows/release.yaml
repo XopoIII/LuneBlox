@@ -112,6 +112,8 @@ jobs:
           name: ${{ needs.init.outputs.version }}
           tag_name: v${{ needs.init.outputs.version }}
           fail_on_unmatched_files: true
-          files: ./releases/*.zip
+          files: |
+            ./releases/*.zip
+            ./releases/SHA256SUMS.txt
           # Published, not drafted: rokit installs from releases it can see
           draft: false
