@@ -29,17 +29,24 @@ Releases are published to GitHub only. Nothing goes to crates.io.
 Each [release](https://github.com/XopoIII/LuneBlox/releases/latest) carries one zip file per target,
 named `luneblox-<version>-<os>-<arch>.zip`:
 
-| Target | Archive for 0.10.13 |
+| Target | Archive for 0.10.14 |
 |---|---|
-| Linux x86_64 | `luneblox-0.10.13-linux-x86_64.zip` |
-| Linux aarch64 | `luneblox-0.10.13-linux-aarch64.zip` |
-| macOS x86_64 | `luneblox-0.10.13-macos-x86_64.zip` |
-| macOS aarch64 | `luneblox-0.10.13-macos-aarch64.zip` |
-| Windows x86_64 | `luneblox-0.10.13-windows-x86_64.zip` |
-| Windows aarch64 | `luneblox-0.10.13-windows-aarch64.zip` |
+| Linux x86_64 | `luneblox-0.10.14-linux-x86_64.zip` |
+| Linux aarch64 | `luneblox-0.10.14-linux-aarch64.zip` |
+| macOS x86_64 | `luneblox-0.10.14-macos-x86_64.zip` |
+| macOS aarch64 | `luneblox-0.10.14-macos-aarch64.zip` |
+| Windows x86_64 | `luneblox-0.10.14-windows-x86_64.zip` |
+| Windows aarch64 | `luneblox-0.10.14-windows-aarch64.zip` |
 
-The archive holds a single file, `luneblox` (`luneblox.exe` on Windows). Unzip it and put it in a
-directory on your `PATH`.
+The archive holds the binary, `luneblox` (`luneblox.exe` on Windows), and `LICENSE.txt`. Unzip it and
+put the binary in a directory on your `PATH`.
+
+The release also carries `SHA256SUMS.txt`, with the SHA-256 checksum of each archive. To check a
+download, run this in the directory that holds it:
+
+```sh
+sha256sum --check --ignore-missing SHA256SUMS.txt
+```
 
 ## From source
 
