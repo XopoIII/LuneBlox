@@ -1,0 +1,65 @@
+name: Roblox fast flags
+
+on:
+  workflow_dispatch:
+  # The live Roblox client moves without a commit here, and with it the fast flags it
+  # sets. Regenerate the table weekly and open a pull request when it has drifted.
+  schedule:
+    - cron: "0 7 * * 1"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  drift:
+    name: Check for fast flag drift
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+
+      # The generator shells out to `cargo metadata` to find the Luau sources
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      # rokit.toml carries the last released LuneBlox, which runs the generator
+      - name: Install Tooling
+        uses: CompeyDev/setup-rokit@v0.2.1
+
+      - name: Regenerate the fast flags
+        run: luneblox run scripts/generate_roblox_fflags.luau
+
+      - name: Check for drift
+        id: drift
+        run: |
+          if git diff --quiet crates/lune/src/rt/roblox_fflags.rs; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # A fixed branch name: repeated drift updates the same pull request instead of
+      # piling up new ones
+      - name: Open a pull request with the new flags
+        if: steps.drift.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B bot/roblox-fflags
+          git add crates/lune/src/rt/roblox_fflags.rs
+          git commit -m "Update the Roblox fast flags to the live client"
+          git push -f origin bot/roblox-fflags
+          if ! gh pr view bot/roblox-fflags --json number > /dev/null 2>&1; then
+            gh pr create \
+              --title "Update the Roblox fast flags to the live client" \
+              --body "The weekly drift check regenerated \`crates/lune/src/rt/roblox_fflags.rs\` and the table moved. Review the diff; merge to track the live client." \
+              --head bot/roblox-fflags
+          fi
