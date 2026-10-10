@@ -8,6 +8,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## `0.10.16` - October 10th, 2026
+
+A maintenance release. Luau, its fast flag table, mlua and what the libraries do are those of
+0.10.15: a script runs as it did.
+
+### Changed
+
+- Twenty crates move to their newest compatible releases in `Cargo.lock`, among them `hyper` 1.12.0,
+  `zstd` 0.14.1, `toml` 1.1.8, `smallvec` 1.16.3 and `zerocopy` 0.8.62. No manifest changes, so no
+  crate crosses a version its dependents did not already allow. `glam` 0.34 and `zip` 9 are breaking
+  releases and stay where they are
+- The tools and actions the repository builds and checks itself with are the newest releases:
+  lefthook 2.2.1, the released LuneBlox that runs `scripts/`, `actions/setup-node` 7.1.0,
+  `actions/download-artifact` 8.0.2, `actions/upload-artifact` 7.0.2 and `taiki-e/install-action`
+  2.87.27
+- The documentation site is built with Astro 7.3.8, Starlight 0.42.6 and starlight-links-validator
+  0.27.0
+
+### Fixed
+
+- The documentation site was built with a `postcss-selector-parser` that could be made to spend
+  quadratic time on a selector. It is overridden to 7.1.6, which fixes that. The parser runs when
+  the site is built and was never part of the runtime
+
 ## `0.10.15` - October 9th, 2026
 
 The Roblox client moved to 0.742 and turned on three more of the fast flags Luau 0.740 declares.
