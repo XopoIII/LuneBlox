@@ -1534,7 +1534,6 @@ dependencies = [
  "blocking",
  "clap",
  "console",
- "dialoguer",
  "directories",
  "futures-lite",
  "lune-std",
@@ -1574,7 +1573,6 @@ version = "0.3.5"
 dependencies = [
  "async-channel",
  "async-fs",
- "async-lock",
  "lune-std-datetime",
  "lune-std-fs",
  "lune-std-luau",
@@ -1589,7 +1587,6 @@ dependencies = [
  "mlua",
  "mlua-luau-scheduler",
  "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -1633,7 +1630,6 @@ dependencies = [
  "async-lock",
  "async-net",
  "async-tungstenite",
- "blocking",
  "bstr",
  "form_urlencoded",
  "futures",
@@ -1724,7 +1720,6 @@ dependencies = [
 name = "lune-std-stdio"
 version = "0.3.5"
 dependencies = [
- "async-io",
  "async-lock",
  "blocking",
  "dialoguer",
