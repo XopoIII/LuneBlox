@@ -42,3 +42,20 @@ for _, keyCode in Enum.KeyCode:GetEnumItems() do
 	end
 end
 assert(foundKeyCodeX, "GetEnumItems did not contain X for Enum.KeyCode")
+
+for _, keyCode in Enum.KeyCode:GetEnumItems() do
+	assert(
+		Enum.KeyCode:FromValue(keyCode.Value) == keyCode,
+		"FromValue did not return the KeyCode from its value"
+	)
+	assert(
+		Enum.KeyCode:FromName(keyCode.Name) == keyCode,
+		"FromName did not return the KeyCode from its name"
+	)
+end
+
+assert(Enum.KeyCode:FromName("NotAKeyCode") == nil, "FromName should return nil for an unknown name")
+assert(Enum.KeyCode:FromValue(-1) == nil, "FromValue should return nil for a negative value")
+assert(Enum.KeyCode:FromValue(1e9) == nil, "FromValue should return nil for an unknown value")
+assert(Enum.KeyCode:FromValue(Enum.KeyCode.X.Value + 0.5) == Enum.KeyCode.X, "FromValue should truncate")
+assert(Enum.KeyCode:FromName("Unknown") == Enum.KeyCode.None, "FromName should accept a legacy name")

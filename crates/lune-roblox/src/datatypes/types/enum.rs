@@ -1,5 +1,6 @@
 use core::fmt;
 
+use lune_utils::Truncated;
 use mlua::prelude::*;
 use rbx_reflection::EnumDescriptor;
 
@@ -36,6 +37,15 @@ impl LuaUserData for Enum {
                     value: *value,
                 })
                 .collect::<Vec<_>>())
+        });
+        methods.add_method("FromName", |_, this, name: LuaBorrowedStr| {
+            Ok(EnumItem::from_enum_and_name(this, &*name))
+        });
+        // A value no item has, negative ones included, finds nothing, as on Roblox
+        methods.add_method("FromValue", |_, this, Truncated(value): Truncated<i64>| {
+            Ok(u32::try_from(value)
+                .ok()
+                .and_then(|value| EnumItem::from_enum_and_value(this, value)))
         });
         methods.add_meta_method(LuaMetaMethod::Index, |_, this, name: String| {
             match EnumItem::from_enum_and_name(this, &name) {
