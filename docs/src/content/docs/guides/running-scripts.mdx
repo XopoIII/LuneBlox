@@ -1,6 +1,6 @@
 ---
 title: Running scripts
-description: How luneblox finds a script, what it passes to it, how stdin and exit codes work, and how the REPL and native code generation behave.
+description: How luneblox finds a script, what it passes to it, how stdin and exit codes work, how the REPL and native code generation behave, and how to collect line coverage.
 ---
 
 import { Aside } from '@astrojs/starlight/components';
@@ -117,7 +117,8 @@ end
 ```
 
 `process.args` is a read-only table of strings. It does not include `luneblox`, `run` or the script
-path. Environment variables are in `process.env`. See [process](/LuneBlox/reference/process/).
+path, nor flags written before the path, such as [`--coverage`](#line-coverage), which are
+`luneblox`'s own. Environment variables are in `process.env`. See [process](/LuneBlox/reference/process/).
 
 ## Reading the script from stdin
 
@@ -217,6 +218,27 @@ code generation off.
 
 Whatever the setting, a chunk loaded with `luau.load` is compiled to native code only when its
 `codegenEnabled` option is set. See [luau](/LuneBlox/reference/luau/).
+
+## Line coverage
+
+`--coverage` writes which lines ran, and how often, to an [LCOV](https://github.com/linux-test-project/lcov)
+file that coverage tools and editors read. It goes before the script path:
+
+```sh
+luneblox run --coverage tests
+luneblox run --coverage=coverage/lcov.info tests
+```
+
+With no file named, the report is `lcov.info` in the current directory. A file in a directory that
+does not exist creates the directory.
+
+The report covers the script, every module it requires, and every chunk it loads with `luau.load`,
+which is listed under its `debugName`. A file required more than once is one record. Paths inside the
+current directory are written relative to it.
+
+The report is written when the script ends, also when it ends with an error, so a test run that
+fails still says what it reached. Chunks are compiled to count every statement, as
+`luau --coverage` does, so a run with coverage can be slower than one without.
 
 ## Fast flags
 

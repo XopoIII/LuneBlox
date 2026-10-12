@@ -24,13 +24,14 @@ version.
 ## run
 
 ```text
-luneblox run <SCRIPT_PATH> [SCRIPT_ARGS]...
+luneblox run [--coverage[=FILE]] <SCRIPT_PATH> [SCRIPT_ARGS]...
 ```
 
 Runs a script file.
 
 | Argument | Meaning |
 |---|---|
+| `--coverage[=FILE]` | Writes line coverage to an LCOV file, `lcov.info` by default. See [Line coverage](/LuneBlox/guides/running-scripts/#line-coverage). |
 | `SCRIPT_PATH` | A script name or the path to a file. `-` reads the script from stdin. |
 | `SCRIPT_ARGS` | Everything after the script path. Stored in `process.args`. |
 
@@ -41,7 +42,7 @@ luneblox run build --release --target web
 
 ### Arguments go to the script
 
-`run` takes no flags of its own. Everything after the script path is passed to the script untouched,
+`run`'s own flags go before the script path. Everything after it is passed to the script untouched,
 including words that start with `-`:
 
 ```sh

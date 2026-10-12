@@ -1,5 +1,5 @@
 use std::env::set_current_dir;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use anyhow::Result;
@@ -12,13 +12,18 @@ use crate::Runtime;
 
 const ARGS: &[&str] = &["Foo", "Bar"];
 
+fn enter_workspace_dir() -> Result<PathBuf> {
+    // We need to change the current directory to the workspace root since
+    // we are in a sub-crate and tests would run relative to the sub-crate
+    let workspace_dir_str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../");
+    let workspace_dir = clean_path(PathBuf::from(workspace_dir_str));
+    set_current_dir(&workspace_dir)?;
+    Ok(workspace_dir)
+}
+
 fn run_test(path: &str) -> Result<ExitCode> {
     async_io::block_on(async {
-        // We need to change the current directory to the workspace root since
-        // we are in a sub-crate and tests would run relative to the sub-crate
-        let workspace_dir_str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../");
-        let workspace_dir = clean_path(PathBuf::from(workspace_dir_str));
-        set_current_dir(&workspace_dir)?;
+        let workspace_dir = enter_workspace_dir()?;
 
         // Disable styling for stdout and stderr since
         // some tests rely on output not being styled
@@ -32,6 +37,77 @@ fn run_test(path: &str) -> Result<ExitCode> {
         let script_values = rt.run_file(script_path).await?;
 
         Ok(ExitCode::from(script_values.status()))
+    })
+}
+
+// The LCOV record of a source file, from its name to the end of the record
+fn lcov_record<'a>(lcov: &'a str, name: &str) -> &'a str {
+    let start = lcov
+        .find(&format!("SF:{name}\n"))
+        .unwrap_or_else(|| panic!("no record for {name} in:\n{lcov}"));
+    let end = lcov[start..]
+        .find("end_of_record")
+        .expect("record has an end");
+    &lcov[start..start + end]
+}
+
+#[test]
+fn coverage_disabled() -> Result<()> {
+    let rt = Runtime::new()?;
+    assert!(rt.coverage_lcov().is_none());
+    Ok(())
+}
+
+#[cfg(feature = "std-luau")]
+#[test]
+fn coverage_lcov() -> Result<()> {
+    async_io::block_on(async {
+        enter_workspace_dir()?;
+
+        let mut rt = Runtime::new()?.with_jit(true).with_coverage(true);
+        assert!(rt.run_file("tests/coverage/main.luau").await?.success());
+
+        let lcov = rt.coverage_lcov().expect("coverage is enabled");
+        let dir = Path::new("tests").join("coverage");
+
+        // The script, with its loop run three times
+        let main = lcov_record(&lcov, &dir.join("main.luau").display().to_string());
+        assert!(main.contains("FNDA:1,<main>\n"), "{main}");
+        assert!(main.contains("DA:7,3\n"), "{main}");
+
+        // A module it requires, with a function it calls and one it does not
+        let module = lcov_record(&lcov, &dir.join("module.luau").display().to_string());
+        assert!(module.contains("FNDA:3,double:4\n"), "{module}");
+        assert!(module.contains("FNDA:0,unused:8\n"), "{module}");
+        assert!(module.contains("DA:5,3\n"), "{module}");
+        assert!(module.contains("DA:9,0\n"), "{module}");
+        assert!(module.contains("LF:6\nLH:5\n"), "{module}");
+
+        // A chunk it loads using luau.load, with an if statement not taken
+        let loaded = lcov_record(&lcov, "loaded");
+        assert!(loaded.contains("DA:2,1\n"), "{loaded}");
+        assert!(loaded.contains("DA:3,0\n"), "{loaded}");
+        assert!(loaded.contains("DA:5,1\n"), "{loaded}");
+
+        Ok(())
+    })
+}
+
+// A failing test run is when coverage matters most, so it is kept when the script errors
+#[test]
+fn coverage_of_a_script_that_errors() -> Result<()> {
+    async_io::block_on(async {
+        let mut rt = Runtime::new()?.with_coverage(true);
+        let values = rt
+            .run_custom("fails", "local value = 1\nerror(\"boom\")\nvalue += 1\n")
+            .await?;
+        assert!(!values.success());
+
+        let lcov = rt.coverage_lcov().expect("coverage is enabled");
+        let fails = lcov_record(&lcov, "fails");
+        assert!(fails.contains("DA:2,1\n"), "{fails}");
+        assert!(fails.contains("DA:3,0\n"), "{fails}");
+        Ok(())
     })
 }
 
@@ -112,6 +188,7 @@ create_tests! {
     luau_codegen_far_constant: "luau/codegen_far_constant",
     luau_collect: "luau/collect",
     luau_compile: "luau/compile",
+    luau_coverage_script: "coverage/main",
     luau_load: "luau/load",
     luau_options: "luau/options",
     luau_safeenv: "luau/safeenv",
