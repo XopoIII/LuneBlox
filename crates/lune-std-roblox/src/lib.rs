@@ -21,7 +21,7 @@ use roblox_install::RobloxStudio;
 
 const TYPEDEFS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/types/init.luau"));
 
-const TYPEDEF_SUBMODULES: [(&str, &str); 2] = [
+const TYPEDEF_SUBMODULES: [(&str, &str); 3] = [
     (
         "database",
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/types/database.luau")),
@@ -29,6 +29,10 @@ const TYPEDEF_SUBMODULES: [(&str, &str); 2] = [
     (
         "instance",
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/types/instance.luau")),
+    ),
+    (
+        "studio",
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/types/studio.luau")),
     ),
 ];
 
