@@ -152,12 +152,12 @@ export type ServeConfig = {
 
 	* `ip` - The IP address that the web server is listening on
 	* `port` - The port that the web server is listening on
-	* `stop` - A function to gracefully shut down the web server
+	* `stop` - A method to gracefully shut down the web server
 ]=]
 export type ServeHandle = {
 	ip: string,
 	port: number,
-	stop: () -> (),
+	stop: (self: ServeHandle) -> (),
 }
 
 --[=[
