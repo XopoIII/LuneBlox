@@ -53,6 +53,10 @@ local roblox = {}
 	If reading a place file from a file path is desired, `fs.readFile`
 	can be used and the resulting string may be passed to this function.
 
+	The place's instances stay in memory while any of them is held, and are
+	freed once none is: destroying its root frees them at once, dropping every
+	reference frees them after the next garbage collection.
+
 	### Example usage
 
 	```lua
@@ -78,6 +82,10 @@ end
 	This function accepts a string of contents, *not* a file path.
 	If reading a model file from a file path is desired, `fs.readFile`
 	can be used and the resulting string may be passed to this function.
+
+	The model's instances stay in memory while any of them is held, and are
+	freed once none is: destroying every instance returned frees them at once,
+	dropping every reference frees them after the next garbage collection.
 
 	### Example usage
 

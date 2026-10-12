@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use mlua::prelude::*;
 
 use super::{Instance, dom_registry::DomId};
@@ -103,4 +105,22 @@ pub(crate) fn rekey_cache_after_transfer(
         }
     }
     Ok(())
+}
+
+/**
+    Returns the ids of the doms that instances still alive in lua live in.
+
+    An entry whose userdata was collected is gone from the weak cache, so a dom
+    only lua had dropped is missing from the result once the garbage collector
+    has run.
+*/
+pub(crate) fn live_dom_ids(lua: &Lua) -> LuaResult<HashSet<DomId>> {
+    let mut live = HashSet::new();
+    for pair in instance_cache(lua)?.pairs::<LuaString, LuaAnyUserData>() {
+        let (_, ud) = pair?;
+        if let Ok(inst) = ud.borrow::<Instance>() {
+            live.insert(inst.dom_id);
+        }
+    }
+    Ok(live)
 }
