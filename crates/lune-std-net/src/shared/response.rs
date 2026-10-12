@@ -102,8 +102,10 @@ impl FromLua for Response {
                 decompressed: false,
             })
         } else if let LuaValue::Table(tab) = value {
-            // Extract status (required)
-            let Truncated(status) = tab.get::<Truncated<u16>>("status")?;
+            // Extract status (optional, defaults to 200)
+            let status = tab
+                .get::<Option<Truncated<u16>>>("status")?
+                .map_or(200, |Truncated(status)| status);
             let status = StatusCode::from_u16(status).into_lua_err()?;
 
             // Extract headers
