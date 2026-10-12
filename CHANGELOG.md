@@ -8,6 +8,60 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## `0.10.17` - October 12th, 2026
+
+What Lune 0.11.0 brought that LuneBlox did not have yet, without its one break: enum items with a
+stable identity, `Enum:FromName` and `Enum:FromValue`, a web server that answers a table without a
+status, and line coverage from an upstream pull request still open. A place or model a script parses
+and drops is freed, which upstream does not do yet. Luau, its fast flag table and mlua are those of
+0.10.16.
+
+### Added
+
+- `luneblox run --coverage[=FILE]` writes the line coverage of the script, the modules it requires
+  and the chunks it loads with `luau.load` to an LCOV file, `lcov.info` by default. Flags for `run`
+  go before the script path. The report is written also when the script errors ([#421])
+- `Enum:FromName` and `Enum:FromValue` in `roblox`. `FromValue` truncates a fractional value and
+  finds nothing for a negative one; `FromName` accepts an item's former names ([#423])
+
+### Changed
+
+- An `EnumItem` and an `Enum` keep one identity: two reads of `Enum.KeyCode.X` are the same userdata,
+  so it works as a table key and with `rawequal`, as on Roblox. A former name gives the same userdata
+  as the current one: `rawequal(Enum.KeyCode.Unknown, Enum.KeyCode.None)` ([#420])
+- A property or method added with `roblox.implementProperty` or `roblox.implementMethod` is found
+  before a child of the same name, which shadowed it before ([#412])
+- The `net.serve` handle's `stop` is declared as a method and documented as `handle:stop()`, the way
+  Lune 0.11.0 calls it. `handle.stop()` keeps working: Lune 0.11.0 made it an error, and LuneBlox
+  runs code written for either release
+- `glam` 0.34 and `zip` 9, the two breaking releases 0.10.16 held back. `blocking`, `async-io`,
+  `async-lock`, `serde_json` and `dialoguer` leave the crates whose code never used them
+- The typedefs declare `net.http`, `net.ws` and the `ip` and `port` of a server handle, say what
+  `Regex:captures` returns, and where `roblox.getAuthCookie` reads the cookie from ([#199], [#264],
+  [#321]). The Studio path functions' typedefs move to `roblox/studio.luau`, which `luneblox setup`
+  writes with the others
+- `lune_utils::jit`, an alias of `lune_utils::process::ProcessJitEnablement`, is removed, as upstream
+  removed it
+
+### Fixed
+
+- A place or model returned by `roblox.deserializePlace` or `roblox.deserializeModel` is freed once
+  the script holds none of its instances and the garbage collector has run. It stayed in memory until
+  its root was destroyed, so a script parsing files in a loop grew without bound: 0.10.15 held
+  200 MB after parsing a 130 KB place 400 times, where it now holds what one parse does ([#415])
+- `net.serve` answers a response table without `status` with 200. It answered with a silent 500
+  ([#416])
+
+[#199]: https://github.com/lune-org/lune/issues/199
+[#264]: https://github.com/lune-org/lune/issues/264
+[#321]: https://github.com/lune-org/lune/issues/321
+[#412]: https://github.com/lune-org/lune/issues/412
+[#415]: https://github.com/lune-org/lune/issues/415
+[#416]: https://github.com/lune-org/lune/issues/416
+[#420]: https://github.com/lune-org/lune/issues/420
+[#421]: https://github.com/lune-org/lune/pull/421
+[#423]: https://github.com/lune-org/lune/pull/423
+
 ## `0.10.16` - October 10th, 2026
 
 A maintenance release. Luau, its fast flag table, mlua and what the libraries do are those of
