@@ -3,7 +3,7 @@ use core::fmt;
 use mlua::prelude::*;
 use rbx_dom_weak::types::EnumItem as DomEnumItem;
 
-use super::{super::*, Enum, enum_legacy_names::ENUM_ITEM_LEGACY_NAMES};
+use super::{super::*, Enum, enum_legacy_names::ENUM_ITEM_LEGACY_NAMES, enum_to_lua};
 
 /**
     An implementation of the [EnumItem](https://create.roblox.com/docs/reference/engine/datatypes/EnumItem) Roblox datatype.
@@ -68,7 +68,9 @@ impl LuaUserData for EnumItem {
     fn add_fields<F: LuaUserDataFields<Self>>(fields: &mut F) {
         fields.add_field_method_get("Name", |_, this| Ok(this.name.clone()));
         fields.add_field_method_get("Value", |_, this| Ok(this.value));
-        fields.add_field_method_get("EnumType", |_, this| Ok(this.parent.clone()));
+        fields.add_field_method_get("EnumType", |lua, this| {
+            enum_to_lua(lua, this.parent.clone())
+        });
     }
 
     fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
@@ -116,5 +118,47 @@ impl From<DomEnumItem> for EnumItem {
     fn from(value: DomEnumItem) -> Self {
         EnumItem::from_enum_name_and_value(value.ty, value.value)
             .expect("cannot convert rbx_type::EnumItem with unknown type into EnumItem")
+    }
+}
+
+/*
+    Userdata interning
+
+    Enum items are interned in the same way as instances, so that two reads
+    of the same enum item give the *same* userdata - matching Roblox, and
+    making enum items work correctly as table keys and with rawequal.
+*/
+const ENUM_ITEM_CACHE_KEY: &str = "__lune_roblox_enum_item_cache";
+
+/**
+    Converts an enum item into its canonical lua userdata, creating and caching
+    it the first time and returning the same userdata on subsequent calls.
+
+    # Errors
+
+    Errors if creating the userdata or accessing the interning cache fails.
+*/
+pub(crate) fn enum_item_to_lua(lua: &Lua, item: EnumItem) -> LuaResult<LuaValue> {
+    let cache = interning_cache(lua, ENUM_ITEM_CACHE_KEY)?;
+    let key = item.to_string();
+    if let Ok(LuaValue::UserData(existing)) = cache.get::<LuaValue>(key.as_str()) {
+        return Ok(LuaValue::UserData(existing));
+    }
+    let userdata = lua.create_userdata(item)?;
+    cache.set(key, &userdata)?;
+    Ok(LuaValue::UserData(userdata))
+}
+
+/**
+    Converts an optional enum item into lua, returning [`LuaValue::Nil`] for [`None`].
+
+    # Errors
+
+    Errors if creating the userdata or accessing the interning cache fails.
+*/
+pub(crate) fn opt_enum_item_to_lua(lua: &Lua, item: Option<EnumItem>) -> LuaResult<LuaValue> {
+    match item {
+        Some(item) => enum_item_to_lua(lua, item),
+        None => Ok(LuaValue::Nil),
     }
 }
