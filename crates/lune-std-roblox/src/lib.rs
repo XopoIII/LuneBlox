@@ -8,8 +8,8 @@ use mlua_luau_scheduler::LuaSpawnExt;
 use lune_roblox::{
     document::{Document, DocumentError, DocumentFormat, DocumentKind},
     instance::{
-        Instance, instance_to_lua, instances_to_lua, register_custom_class,
-        registry::InstanceRegistry,
+        Instance, free_unreferenced_doms, instance_to_lua, instances_to_lua, register_custom_class,
+        registry::InstanceRegistry, track_parsed_dom,
     },
     reflection::Database as ReflectionDatabase,
 };
@@ -21,7 +21,7 @@ use roblox_install::RobloxStudio;
 
 const TYPEDEFS: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/types/init.luau"));
 
-const TYPEDEF_SUBMODULES: [(&str, &str); 2] = [
+const TYPEDEF_SUBMODULES: [(&str, &str); 3] = [
     (
         "database",
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/types/database.luau")),
@@ -29,6 +29,10 @@ const TYPEDEF_SUBMODULES: [(&str, &str); 2] = [
     (
         "instance",
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/types/instance.luau")),
+    ),
+    (
+        "studio",
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/types/studio.luau")),
     ),
 ];
 
@@ -88,6 +92,7 @@ pub fn module(lua: Lua) -> LuaResult<LuaTable> {
 }
 
 async fn deserialize_place(lua: Lua, contents: LuaString) -> LuaResult<LuaValue> {
+    free_unreferenced_doms(&lua)?;
     let bytes = contents.as_bytes().to_vec();
     let fut = lua.spawn_blocking(move || {
         let doc = Document::from_bytes(bytes, DocumentKind::Place)?;
@@ -95,10 +100,13 @@ async fn deserialize_place(lua: Lua, contents: LuaString) -> LuaResult<LuaValue>
         Ok::<_, DocumentError>(data_model)
     });
     let data_model = fut.await.into_lua_err()?;
-    instance_to_lua(&lua, data_model)
+    let value = instance_to_lua(&lua, data_model)?;
+    track_parsed_dom(&lua, &data_model);
+    Ok(value)
 }
 
 async fn deserialize_model(lua: Lua, contents: LuaString) -> LuaResult<LuaValue> {
+    free_unreferenced_doms(&lua)?;
     let bytes = contents.as_bytes().to_vec();
     let fut = lua.spawn_blocking(move || {
         let doc = Document::from_bytes(bytes, DocumentKind::Model)?;
@@ -106,7 +114,12 @@ async fn deserialize_model(lua: Lua, contents: LuaString) -> LuaResult<LuaValue>
         Ok::<_, DocumentError>(instance_array)
     });
     let instance_array = fut.await.into_lua_err()?;
-    instances_to_lua(&lua, instance_array)
+    let first = instance_array.first().copied();
+    let value = instances_to_lua(&lua, instance_array)?;
+    if let Some(first) = first {
+        track_parsed_dom(&lua, &first);
+    }
+    Ok(value)
 }
 
 async fn serialize_place(

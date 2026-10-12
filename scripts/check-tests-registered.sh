@@ -30,6 +30,7 @@ for file in $(git ls-files 'tests/*.luau'); do
 		roblox/rbx-test-files/*) continue ;;
 		# Modules that tests require: helpers, shared data, and the targets of the require tests.
 		fs/utils | net/request/util | task/fcheck | roblox/instance/query/tree) continue ;;
+		coverage/module) continue ;;
 		serde/json/source | serde/jsonc/source | serde/toml/source) continue ;;
 		require/modules/* | require/tests/modules/*) continue ;;
 		require/tests/module | require/tests/multi.ext.file) continue ;;

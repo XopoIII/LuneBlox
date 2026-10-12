@@ -95,7 +95,7 @@ export type ServeRequest = {
 
 	This is a dictionary that may contain one or more of the following values:
 
-	* `status` - The status code for the request, in the range `100` -> `599`
+	* `status` - The status code for the request, in the range `100` -> `599`. Will be `200` if not specified
 	* `headers` - A table of key-value pairs representing headers
 	* `body` - The response body
 ]=]
@@ -146,10 +146,18 @@ export type ServeConfig = {
 	@interface ServeHandle
 	@within Net
 
-	A handle to a currently running web server, containing a single `stop` function to gracefully shut down the web server.
+	A handle to a currently running web server.
+
+	This contains the following values:
+
+	* `ip` - The IP address that the web server is listening on
+	* `port` - The port that the web server is listening on
+	* `stop` - A method to gracefully shut down the web server
 ]=]
 export type ServeHandle = {
-	stop: () -> (),
+	ip: string,
+	port: number,
+	stop: (self: ServeHandle) -> (),
 }
 
 --[=[
@@ -304,6 +312,59 @@ function tcp.connect(host: string, port: number, config: (true | TcpConfig)?): T
 end
 
 --[=[
+	HTTP primitives for the `net` library
+
+	Provides the `request` and `serve` functions for sending HTTP requests and
+	creating HTTP servers.
+]=]
+local http = {}
+
+--[=[
+	Sends an HTTP request using the given url and / or parameters, and returns a dictionary that describes the response received.
+
+	Only throws an error if a miscellaneous network or I/O error occurs, never for unsuccessful status codes.
+
+	@param config The URL or request config to use
+	@return A dictionary representing the response for the request
+]=]
+function http.request(config: string | FetchParams): FetchResponse
+	return nil :: any
+end
+
+--[=[
+	Creates an HTTP server that listens on the given `port`.
+
+	This will ***not*** block and will keep listening for requests on the given `port`
+	until the `stop` method on the returned `ServeHandle` has been called.
+
+	@param port The port to use for the server
+	@param handlerOrConfig The handler function or config to use for the server
+]=]
+function http.serve(port: number, handlerOrConfig: ServeHttpHandler | ServeConfig): ServeHandle
+	return nil :: any
+end
+
+--[=[
+	Web socket primitives for the `net` library
+
+	Provides the `connect` function for connecting to web socket servers.
+]=]
+local ws = {}
+
+--[=[
+	Connects to a web socket at the given URL.
+
+	Throws an error if the server at the given URL does not support
+	web sockets, or if a miscellaneous network or I/O error occurs.
+
+	@param url The URL to connect to
+	@return A web socket handle
+]=]
+function ws.connect(url: string): WebSocket
+	return nil :: any
+end
+
+--[=[
 	@class Net
 
 	Built-in library for network access
@@ -348,7 +409,9 @@ end
 ]=]
 local net = {}
 
+net.http = http
 net.tcp = tcp
+net.ws = ws
 
 --[=[
 	@within Net

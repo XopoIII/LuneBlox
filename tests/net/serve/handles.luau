@@ -13,7 +13,7 @@ end)
 -- Stopping is not guaranteed to happen instantly since it is async, but
 -- it should happen on the next yield, so we wait the minimum amount here
 
-handle.stop()
+handle:stop()
 task.wait()
 
 -- Sending a request to the stopped server should now error
@@ -37,6 +37,9 @@ end
 --[[
 	Trying to *stop* the server again should error, and
 	also mention that the server has already been stopped
+
+	Stopping is called with a dot here and with a colon above: the function
+	is bound to its handle, so both forms of call reach the same server
 
 	Note that we cast pcall to any because of a
 	Luau limitation where it throws a type error for

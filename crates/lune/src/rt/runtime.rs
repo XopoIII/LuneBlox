@@ -4,58 +4,22 @@ use std::{
     ffi::OsString,
     path::PathBuf,
     sync::{
-        Arc, Once,
+        Arc,
         atomic::{AtomicBool, Ordering},
     },
 };
 
 use async_fs as fs;
 use lune_utils::{
-    path::{LuauModulePath, constants::FILE_CHUNK_PREFIX},
+    coverage::{COVERAGE_LEVEL, Coverage},
+    path::{LuauModulePath, clean_path_and_make_absolute, constants::FILE_CHUNK_PREFIX},
     process::{ProcessArgs, ProcessEnv, ProcessJitEnablement},
 };
+use mlua::chunk::Compiler as LuaCompiler;
 use mlua::prelude::*;
 use mlua_luau_scheduler::{Functions, Scheduler};
 
-use super::{RuntimeError, RuntimeResult, roblox_fflags::ROBLOX_FFLAGS};
-
-/**
-    Sets Luau's fast flags the way the live Roblox client sets them, once per process.
-
-    Luau ships new compiler and VM work behind flags that default to off, and Roblox
-    turns them on remotely, so the same Luau source runs differently here and there
-    unless the flags match. `LUNE_ROBLOX_FFLAGS=0` keeps Luau's own defaults instead.
-
-    [`Runtime::new`] calls this; anything that compiles Luau without a runtime, such as
-    building a standalone binary, should call it first.
-*/
-pub fn apply_roblox_fflags() {
-    static APPLY: Once = Once::new();
-    APPLY.call_once(|| {
-        if std::env::var_os("LUNE_ROBLOX_FFLAGS").is_some_and(|value| value == "0") {
-            return;
-        }
-        // The table is generated against the same Luau version and holds only flags the
-        // runtime links, so a failure means the table has drifted from the VM in a
-        // partial update, and that should not pass silently.
-        for name in set_fflags(ROBLOX_FFLAGS) {
-            eprintln!("warning: Luau fast flag `{name}` did not apply");
-        }
-    });
-}
-
-/**
-    Sets each flag to its value and returns the names of the flags Luau did not take.
-
-    Luau takes a flag only when the code that declares it is linked into this binary.
-*/
-fn set_fflags(flags: &[(&'static str, bool)]) -> Vec<&'static str> {
-    flags
-        .iter()
-        .filter(|(name, enabled)| Lua::set_fflag(name, *enabled).is_err())
-        .map(|(name, _)| *name)
-        .collect()
-}
+use super::{RuntimeError, RuntimeResult, fflags::apply_roblox_fflags};
 
 /**
     Values returned by running a Lune runtime until completion.
@@ -107,6 +71,7 @@ pub struct Runtime {
     args: ProcessArgs,
     env: ProcessEnv,
     jit: ProcessJitEnablement,
+    coverage: bool,
 }
 
 impl Runtime {
@@ -183,6 +148,7 @@ impl Runtime {
             args,
             env,
             jit,
+            coverage: false,
         })
     }
 
@@ -227,6 +193,28 @@ impl Runtime {
     {
         self.jit = jit_status.into();
         self
+    }
+
+    /**
+        Enables or disables collecting line coverage.
+
+        When enabled, the coverage of the script that is run, the modules it requires, and
+        the chunks it loads using `luau.load` is collected - see [`Runtime::coverage_lcov`].
+    */
+    #[must_use]
+    pub fn with_coverage(mut self, enabled: bool) -> Self {
+        self.coverage = enabled;
+        self
+    }
+
+    /**
+        Returns the line coverage collected so far as an LCOV tracefile,
+        or `None` if coverage was not enabled using [`Runtime::with_coverage`].
+    */
+    #[must_use]
+    pub fn coverage_lcov(&self) -> Option<String> {
+        let coverage = self.lua.app_data_ref::<Coverage>()?;
+        Some(coverage.to_lcov())
     }
 
     /**
@@ -314,8 +302,9 @@ impl Runtime {
         chunk_name: impl AsRef<str>,
         chunk_contents: impl AsRef<[u8]>,
     ) -> RuntimeResult<RuntimeReturnValues> {
-        let chunk_name = format!("={}", chunk_name.as_ref());
-        self.run_inner(chunk_name, chunk_contents).await
+        let file_name = chunk_name.as_ref().to_string();
+        let chunk_name = format!("={file_name}");
+        self.run_inner(chunk_name, file_name, chunk_contents).await
     }
 
     /**
@@ -367,13 +356,18 @@ impl Runtime {
 
         let module_name = format!("{FILE_CHUNK_PREFIX}{module_path}");
         let module_contents = strip_shebang(contents);
+        let file_name = clean_path_and_make_absolute(module_path.target())
+            .display()
+            .to_string();
 
-        self.run_inner(module_name, module_contents).await
+        self.run_inner(module_name, file_name, module_contents)
+            .await
     }
 
     async fn run_inner(
         &mut self,
         chunk_name: impl AsRef<str>,
+        file_name: String,
         chunk_contents: impl AsRef<[u8]>,
     ) -> RuntimeResult<RuntimeReturnValues> {
         // Add error callback to format errors nicely + store status
@@ -410,11 +404,23 @@ impl Runtime {
         // Enable / disable the JIT as requested, before loading anything
         self.lua.enable_jit(self.jit.enabled());
 
+        // Compile everything loaded from now on to collect coverage, if requested,
+        // keeping any coverage collected by previous runs of this same runtime
+        if self.coverage {
+            self.lua
+                .set_compiler(LuaCompiler::new().set_coverage_level(COVERAGE_LEVEL));
+            if self.lua.app_data_ref::<Coverage>().is_none() {
+                self.lua.set_app_data(Coverage::default());
+            }
+        }
+
         // Load our "main" thread
         let main = self
             .lua
             .load(chunk_contents.as_ref())
-            .set_name(chunk_name.as_ref());
+            .set_name(chunk_name.as_ref())
+            .into_function()?;
+        Coverage::track(&self.lua, file_name, &main);
 
         // Run it on our scheduler until it and any other spawned threads complete
         let main_thread_id = self.sched.push_thread_back(main, ())?;
@@ -448,44 +454,4 @@ fn strip_shebang(mut contents: Vec<u8>) -> Vec<u8> {
         contents.drain(..first_newline_idx);
     }
     contents
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{ROBLOX_FFLAGS, set_fflags};
-
-    // Fails on any target where a flag in the table is declared in Luau code that the
-    // linker left out of the binary; `scripts/generate_roblox_fflags.luau` lists such
-    // sources as unlinked. This test binary links the whole runtime, as the CLI does.
-    #[test]
-    fn every_roblox_fflag_applies() {
-        // The table is not empty: the fast flags guide documents this entry
-        assert!(ROBLOX_FFLAGS.contains(&("DebugCodegenOptSize", true)));
-        assert_eq!(set_fflags(ROBLOX_FFLAGS), Vec::<&str>::new());
-    }
-
-    #[test]
-    fn roblox_fflags_are_sorted_and_unique() {
-        for pair in ROBLOX_FFLAGS.windows(2) {
-            assert!(pair[0].0 < pair[1].0, "{} before {}", pair[0].0, pair[1].0);
-        }
-    }
-
-    // `LuauCallFeedback` is in the table with this value, so setting it changes nothing.
-    #[test]
-    fn a_flag_luau_does_not_register_is_reported() {
-        assert!(ROBLOX_FFLAGS.contains(&("LuauCallFeedback", true)));
-        assert_eq!(
-            set_fflags(&[
-                ("LuauCallFeedback", true),
-                ("LuneBloxNoSuchFlag", true),
-                // Declared in Luau's Ast/src/PrettyPrinter.cpp, which the runtime does not link
-                ("LuauPrettyPrintVisualizeIndexerAccess", true),
-            ]),
-            vec![
-                "LuneBloxNoSuchFlag",
-                "LuauPrettyPrintVisualizeIndexerAccess"
-            ]
-        );
-    }
 }

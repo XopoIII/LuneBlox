@@ -1,9 +1,10 @@
 use core::fmt;
 
+use lune_utils::Truncated;
 use mlua::prelude::*;
 use rbx_reflection::EnumDescriptor;
 
-use super::{super::*, EnumItem};
+use super::{super::*, EnumItem, enum_item_to_lua, opt_enum_item_to_lua};
 
 /**
     An implementation of the [Enum](https://create.roblox.com/docs/reference/engine/datatypes/Enum) Roblox datatype.
@@ -25,21 +26,32 @@ impl Enum {
 impl LuaUserData for Enum {
     fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
         // Methods
-        methods.add_method("GetEnumItems", |_, this, ()| {
-            Ok(this
-                .desc
-                .items
-                .iter()
-                .map(|(name, value)| EnumItem {
-                    parent: this.clone(),
-                    name: name.to_string(),
-                    value: *value,
-                })
-                .collect::<Vec<_>>())
+        methods.add_method("GetEnumItems", |lua, this, ()| {
+            let items = this.desc.items.iter().map(|(name, value)| EnumItem {
+                parent: this.clone(),
+                name: name.to_string(),
+                value: *value,
+            });
+            items
+                .map(|item| enum_item_to_lua(lua, item))
+                .collect::<LuaResult<Vec<_>>>()
         });
-        methods.add_meta_method(LuaMetaMethod::Index, |_, this, name: String| {
+        methods.add_method("FromName", |lua, this, name: LuaBorrowedStr| {
+            opt_enum_item_to_lua(lua, EnumItem::from_enum_and_name(this, &*name))
+        });
+        // A value no item has, negative ones included, finds nothing, as on Roblox
+        methods.add_method(
+            "FromValue",
+            |lua, this, Truncated(value): Truncated<i64>| {
+                let item = u32::try_from(value)
+                    .ok()
+                    .and_then(|value| EnumItem::from_enum_and_value(this, value));
+                opt_enum_item_to_lua(lua, item)
+            },
+        );
+        methods.add_meta_method(LuaMetaMethod::Index, |lua, this, name: String| {
             match EnumItem::from_enum_and_name(this, &name) {
-                Some(item) => Ok(item),
+                Some(item) => enum_item_to_lua(lua, item),
                 None => Err(LuaError::RuntimeError(format!(
                     "The enum item '{}' does not exist for enum '{}'",
                     name, this.desc.name
@@ -68,4 +80,32 @@ impl From<&'static EnumDescriptor<'static>> for Enum {
     fn from(value: &'static EnumDescriptor<'static>) -> Self {
         Self { desc: value }
     }
+}
+
+/*
+    Userdata interning
+
+    Enums are interned in the same way as enum items and instances, so that
+    two reads of the same enum give the *same* userdata - matching Roblox,
+    and making enums work correctly as table keys and with rawequal.
+*/
+const ENUM_CACHE_KEY: &str = "__lune_roblox_enum_cache";
+
+/**
+    Converts an enum into its canonical lua userdata, creating and caching
+    it the first time and returning the same userdata on subsequent calls.
+
+    # Errors
+
+    Errors if creating the userdata or accessing the interning cache fails.
+*/
+pub(crate) fn enum_to_lua(lua: &Lua, r#enum: Enum) -> LuaResult<LuaValue> {
+    let cache = interning_cache(lua, ENUM_CACHE_KEY)?;
+    let key = r#enum.to_string();
+    if let Ok(LuaValue::UserData(existing)) = cache.get::<LuaValue>(key.as_str()) {
+        return Ok(LuaValue::UserData(existing));
+    }
+    let userdata = lua.create_userdata(r#enum)?;
+    cache.set(key, &userdata)?;
+    Ok(LuaValue::UserData(userdata))
 }

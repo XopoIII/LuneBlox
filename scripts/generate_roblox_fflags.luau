@@ -28,7 +28,7 @@ local GUIDE = "docs/src/content/docs/guides/fast-flags.mdx"
 -- nothing the runtime calls refers to them, so the linker leaves their object files out, and
 -- a flag declared there is not registered and cannot be set. Each entry is a path below the
 -- Luau source directory. The `every_roblox_fflag_applies` test in
--- `crates/lune/src/rt/runtime.rs` fails when this list is missing an entry.
+-- `crates/lune/src/rt/fflags.rs` fails when this list is missing an entry.
 local UNLINKED_SOURCES: { [string]: boolean } = {
 	-- Prints an AST back as source; only Luau's own analysis and CLI tools call it
 	["Ast/src/PrettyPrinter.cpp"] = true,

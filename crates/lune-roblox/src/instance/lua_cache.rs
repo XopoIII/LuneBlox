@@ -1,6 +1,9 @@
+use std::collections::HashSet;
+
 use mlua::prelude::*;
 
 use super::{Instance, dom_registry::DomId};
+use crate::shared::userdata::interning_cache;
 use rbx_dom_weak::types::Ref as DomRef;
 
 /*
@@ -19,15 +22,7 @@ use rbx_dom_weak::types::Ref as DomRef;
 const INSTANCE_CACHE_KEY: &str = "__lune_roblox_instance_cache";
 
 fn instance_cache(lua: &Lua) -> LuaResult<LuaTable> {
-    if let Ok(cache) = lua.named_registry_value::<LuaTable>(INSTANCE_CACHE_KEY) {
-        return Ok(cache);
-    }
-    let cache = lua.create_table()?;
-    let meta = lua.create_table()?;
-    meta.set("__mode", "v")?;
-    cache.set_metatable(Some(meta))?;
-    lua.set_named_registry_value(INSTANCE_CACHE_KEY, &cache)?;
-    Ok(cache)
+    interning_cache(lua, INSTANCE_CACHE_KEY)
 }
 
 fn instance_cache_key(inst: Instance) -> String {
@@ -110,4 +105,22 @@ pub(crate) fn rekey_cache_after_transfer(
         }
     }
     Ok(())
+}
+
+/**
+    Returns the ids of the doms that instances still alive in lua live in.
+
+    An entry whose userdata was collected is gone from the weak cache, so a dom
+    only lua had dropped is missing from the result once the garbage collector
+    has run.
+*/
+pub(crate) fn live_dom_ids(lua: &Lua) -> LuaResult<HashSet<DomId>> {
+    let mut live = HashSet::new();
+    for pair in instance_cache(lua)?.pairs::<LuaString, LuaAnyUserData>() {
+        let (_, ud) = pair?;
+        if let Ok(inst) = ud.borrow::<Instance>() {
+            live.insert(inst.dom_id);
+        }
+    }
+    Ok(live)
 }

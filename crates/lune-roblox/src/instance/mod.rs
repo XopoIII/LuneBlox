@@ -43,7 +43,11 @@ mod hierarchy;
 mod properties;
 
 #[cfg(feature = "mlua")]
+mod dom_lifetime;
+#[cfg(feature = "mlua")]
 mod lua_cache;
+#[cfg(feature = "mlua")]
+pub use dom_lifetime::{free_unreferenced_doms, track_parsed_dom};
 #[cfg(feature = "mlua")]
 pub(crate) use lua_cache::rekey_cache_after_transfer;
 #[cfg(feature = "mlua")]

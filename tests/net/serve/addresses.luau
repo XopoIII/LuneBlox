@@ -20,7 +20,7 @@ local handle = net.serve(PORT, {
 local response = net.request(`{LOCALHOST}:{PORT}`).body
 assert(response ~= nil, "Invalid response from server")
 
-handle.stop()
+handle:stop()
 
 -- Attempting to serve with a malformed IP address should throw an error
 

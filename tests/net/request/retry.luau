@@ -78,7 +78,7 @@ local passed, failure = pcall(function()
 	assert(waited < 2, `waited {waited} s, expected about 0.3`)
 end)
 
-handle.stop()
+handle:stop()
 task.wait()
 if not passed then
 	error(failure, 0)

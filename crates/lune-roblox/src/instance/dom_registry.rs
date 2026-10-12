@@ -189,3 +189,24 @@ pub fn drop_if_empty(dom_id: DomId) {
         }
     }
 }
+
+/**
+    Removes the dom with the given id, whatever it holds.
+
+    The shared default scratch dom is never removed this way; orphans created
+    with `Instance.new` live there for the life of the process.
+*/
+pub fn remove(dom_id: DomId) {
+    let mut reg = lock();
+    if reg.default_id != Some(dom_id) {
+        reg.doms.remove(&dom_id);
+    }
+}
+
+/**
+    Returns whether a dom with the given id is still registered.
+*/
+#[must_use]
+pub fn contains(dom_id: DomId) -> bool {
+    lock().doms.contains_key(&dom_id)
+}

@@ -1134,9 +1134,9 @@ dependencies = [
 
 [[package]]
 name = "glam"
-version = "0.33.12"
+version = "0.34.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37bfe73dc8ec21f54d181e5a60554327ec3f1c600c455a75ccbfc65d2106a6c4"
+checksum = "fc148d4ddd3930c52f9e5ae79b89805c6f07e9ff417e7b083e0348cea60a5aba"
 
 [[package]]
 name = "hashbrown"
@@ -1526,7 +1526,7 @@ dependencies = [
 
 [[package]]
 name = "lune"
-version = "0.10.16"
+version = "0.10.17"
 dependencies = [
  "anyhow",
  "async-fs",
@@ -1534,7 +1534,6 @@ dependencies = [
  "blocking",
  "clap",
  "console",
- "dialoguer",
  "directories",
  "futures-lite",
  "lune-std",
@@ -1574,7 +1573,6 @@ version = "0.3.5"
 dependencies = [
  "async-channel",
  "async-fs",
- "async-lock",
  "lune-std-datetime",
  "lune-std-fs",
  "lune-std-luau",
@@ -1589,7 +1587,6 @@ dependencies = [
  "mlua",
  "mlua-luau-scheduler",
  "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -1633,7 +1630,6 @@ dependencies = [
  "async-lock",
  "async-net",
  "async-tungstenite",
- "blocking",
  "bstr",
  "form_urlencoded",
  "futures",
@@ -1724,7 +1720,6 @@ dependencies = [
 name = "lune-std-stdio"
 version = "0.3.5"
 dependencies = [
- "async-io",
  "async-lock",
  "blocking",
  "dialoguer",
@@ -3796,9 +3791,9 @@ dependencies = [
 
 [[package]]
 name = "zip"
-version = "8.6.0"
+version = "9.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d04a6b5381502aa6087c94c669499eb1602eb9c5e8198e534de571f7154809b"
+checksum = "9e2fc56a6707efb066c40aead2409ebb1224e6dde24a074e9fbc78ced500507b"
 dependencies = [
  "bzip2",
  "crc32fast",
@@ -3806,9 +3801,10 @@ dependencies = [
  "flate2",
  "indexmap",
  "memchr",
+ "nix",
  "typed-path",
  "zopfli",
- "zstd 0.13.3",
+ "zstd 0.14.1",
 ]
 
 [[package]]

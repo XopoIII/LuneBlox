@@ -132,11 +132,12 @@ The request table:
 The response table may set `status` (100 to 599), `headers` and `body` (a string or buffer). All
 three are optional.
 
-The script keeps running while the server is listening. Call `handle.stop()` to shut it down - with
-a dot, not a colon. Calling `stop` a second time throws.
+The script keeps running while the server is listening. Call `handle:stop()` to shut it down;
+`handle.stop()`, as scripts written for earlier releases call it, works too. Calling `stop` a second
+time throws.
 
 ```luau
-handle.stop()
+handle:stop()
 ```
 
 A handler may yield. It can call `net.request`, `fs.readFile` or `task.wait` and other requests are

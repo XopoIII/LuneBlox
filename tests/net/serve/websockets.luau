@@ -68,4 +68,4 @@ assert(
 )
 
 -- Stop the server to end the test
-handle.stop()
+handle:stop()
