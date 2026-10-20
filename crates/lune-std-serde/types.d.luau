@@ -108,6 +108,10 @@ local serde = {}
 
 	Base64 and hex encoding accept strings and buffers.
 
+	JSON writes a buffer the way Roblox's `HttpService:JSONEncode` does, as
+	`{"m":null,"t":"buffer","base64":"..."}`, or with `zbase64` and the bytes
+	compressed with zstd when that is shorter. A game reads it back as a buffer.
+
 	@param format The format to use
 	@param value The value to encode
 	@param pretty If the encoded string should be human-readable, including things such as newlines and spaces. Only supported for json and toml formats, and defaults to false
@@ -124,6 +128,10 @@ end
 	Decodes the given string using the given format into a lua value.
 
 	See [`EncodeDecodeFormat`] for a list of supported formats.
+
+	JSON and JSONC read an object Roblox's `HttpService:JSONEncode` wrote for a
+	buffer, with `base64` or `zbase64`, as a buffer - one stored in a `DataStore`
+	and fetched through Open Cloud, for example.
 
 	@param format The format to use
 	@param encoded The string or buffer to decode

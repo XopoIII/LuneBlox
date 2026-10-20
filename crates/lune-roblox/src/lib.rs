@@ -37,6 +37,7 @@ fn create_all_exports(lua: Lua) -> LuaResult<Vec<(&'static str, LuaValue)>> {
         export::<NumberSequence>(lua.clone())?,
         export::<NumberSequenceKeypoint>(lua.clone())?,
         export::<PhysicalProperties>(lua.clone())?,
+        export::<Random>(lua.clone())?,
         export::<Ray>(lua.clone())?,
         export::<Rect>(lua.clone())?,
         export::<UDim>(lua.clone())?,

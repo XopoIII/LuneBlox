@@ -8,6 +8,7 @@ use lune_utils::{TableBuilder, Truncated};
 mod compress_decompress;
 mod encode_decode;
 mod hash;
+mod json_buffer;
 
 pub use self::compress_decompress::{CompressDecompressFormat, compress, decompress};
 pub use self::encode_decode::{EncodeDecodeConfig, EncodeDecodeFormat, decode, encode};

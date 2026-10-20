@@ -19,7 +19,9 @@ use mlua::chunk::Compiler as LuaCompiler;
 use mlua::prelude::*;
 use mlua_luau_scheduler::{Functions, Scheduler};
 
-use super::{RuntimeError, RuntimeResult, fflags::apply_roblox_fflags};
+use super::{
+    RuntimeError, RuntimeResult, fflags::apply_roblox_fflags, utf8::inject_utf8_graphemes,
+};
 
 /**
     Values returned by running a Lune runtime until completion.
@@ -96,6 +98,9 @@ impl Runtime {
         let co = lua.globals().get::<LuaTable>("coroutine")?;
         co.set("resume", fns.resume.clone())?;
         co.set("wrap", fns.wrap.clone())?;
+
+        // Roblox adds utf8.graphemes to Luau's utf8 library
+        inject_utf8_graphemes(&lua)?;
 
         // Inject all the globals that are enabled
         #[cfg(any(

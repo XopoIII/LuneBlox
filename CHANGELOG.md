@@ -8,6 +8,61 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## `0.10.18` - October 20th, 2026
+
+What the open issues of Lune asked for that a Roblox-faithful runtime should have: Roblox's `Random`,
+`utf8.graphemes`, and buffers in JSON the way a game writes them. Errors that named nothing now say
+what happened - a `require` in a standalone binary, a prompt with no terminal - and `fs.metadata`
+on a socket or FIFO no longer ends the script with status 0. `rustls` moves past four advisories.
+Luau, its fast flag table and mlua are those of 0.10.17.
+
+### Added
+
+- `Random` in `roblox`: `Random.new(seed?)`, `NextInteger`, `NextNumber`, `NextUnitVector`,
+  `Shuffle` and `Clone` ([#46]). It is the PCG32 generator of Luau's `math.random`, seeded the same
+  way, so `Random.new(seed)` gives what `math.random` gives after `math.randomseed(seed)`; whether
+  it gives what a live Roblox client gives for a seed is not verified. Without a seed it starts
+  from a random state. `NextInteger` takes ranges wider than `math.random` does, and raises
+  `interval is empty` when `max` is below `min`. `Shuffle` raises an error on a frozen table or one
+  with holes
+- `serde.encode("json", ...)` writes a buffer as Roblox's `HttpService:JSONEncode` does:
+  `{"m":null,"t":"buffer","base64":"..."}`, or `zbase64` with the bytes compressed with zstd when
+  that is shorter. `serde.decode` reads both forms back as a buffer from JSON and JSONC, so a
+  buffer a game stored in a DataStore decodes here ([#254]). A buffer was an error before. An
+  object with any other key stays a table
+- `utf8.graphemes(s, i?, j?)`, which Roblox adds to Luau's `utf8` library: an iterator over the
+  grapheme clusters of `s`, giving the first and last byte of each, so a letter with its combining
+  marks, a flag or a joined emoji is one step ([#237]). `i` and `j` narrow it as in `string.sub`;
+  invalid UTF-8 is an error
+
+### Changed
+
+- `tostring` on a `DateTime` gives its RFC 3339 string, on a response from `net.request` its status
+  (`200 OK`), and on a request in a `net.serve` handler its method and path (`GET /some/path`).
+  `print` shows them as `<DateTime(...)>`, `<Response(200 OK)>` and `<Request(GET /some/path)>`,
+  where it showed only the type name ([#334])
+- `stdio.prompt` with no terminal to ask in raises `stdio.prompt needs a terminal`, saying whether
+  stderr or the keyboard is missing. It raised a bare `IO error: not a terminal`, which did not name
+  the prompt. A redirected stdin still prompts on the keyboard, through `/dev/tty`
+- `require` of a file from a binary made with `luneblox build`, or from any chunk that is not a
+  file, says that only a script run from a file can require files and that a standalone binary's
+  modules must be bundled into its script. It said `require is not supported in this context`
+  ([#338]). The standard libraries are required by name and keep working
+
+### Fixed
+
+- `fs.metadata` on a socket, a FIFO or a device file raises an error naming the path. It panicked,
+  which ended the script where it stood and exited with status 0, as if it had finished
+- `rustls` 0.23.46, from 0.23.45, which `net` uses for TLS. It fixes four advisories
+  (RUSTSEC-2026-0346 to 0349), among them a downgrade of later connections to classical key
+  exchange by an unauthenticated server hello
+
+[#46]: https://github.com/lune-org/lune/issues/46
+[#237]: https://github.com/lune-org/lune/issues/237
+[#254]: https://github.com/lune-org/lune/issues/254
+[#334]: https://github.com/lune-org/lune/issues/334
+[#338]: https://github.com/lune-org/lune/issues/338
+
 ## `0.10.17` - October 12th, 2026
 
 What Lune 0.11.0 brought that LuneBlox did not have yet, without its one break: enum items with a

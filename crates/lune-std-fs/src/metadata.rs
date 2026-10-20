@@ -47,16 +47,22 @@ impl FromStr for FsMetadataKind {
     }
 }
 
-impl From<StdFileType> for FsMetadataKind {
-    fn from(value: StdFileType) -> Self {
+impl TryFrom<StdFileType> for FsMetadataKind {
+    type Error = &'static str;
+
+    /**
+        A socket, a FIFO or a device file is none of the kinds a script
+        can be told about, so it is an error rather than a guess.
+    */
+    fn try_from(value: StdFileType) -> Result<Self, Self::Error> {
         if value.is_file() {
-            Self::File
+            Ok(Self::File)
         } else if value.is_dir() {
-            Self::Dir
+            Ok(Self::Dir)
         } else if value.is_symlink() {
-            Self::Symlink
+            Ok(Self::Symlink)
         } else {
-            panic!("Encountered unknown filesystem filetype")
+            Err("not a file, a directory or a symlink")
         }
     }
 }
@@ -133,18 +139,20 @@ impl IntoLua for FsMetadata {
     }
 }
 
-impl From<StdMetadata> for FsMetadata {
-    fn from(value: StdMetadata) -> Self {
+impl TryFrom<StdMetadata> for FsMetadata {
+    type Error = &'static str;
+
+    fn try_from(value: StdMetadata) -> Result<Self, Self::Error> {
         let file_type = value.file_type();
-        Self {
-            kind: file_type.into(),
+        Ok(Self {
+            kind: file_type.try_into()?,
             exists: true,
             size: file_type.is_file().then_some(value.len()),
             created_at: system_time_to_timestamp(value.created()),
             modified_at: system_time_to_timestamp(value.modified()),
             accessed_at: system_time_to_timestamp(value.accessed()),
             permissions: Some(FsPermissions::from(value.permissions())),
-        }
+        })
     }
 }
 

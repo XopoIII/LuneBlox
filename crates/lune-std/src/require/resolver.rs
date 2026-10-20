@@ -72,8 +72,13 @@ impl RequireResolver {
 }
 
 impl LuaRequire for RequireResolver {
-    fn is_require_allowed(&self, chunk_name: &str) -> bool {
-        chunk_name.starts_with(FILE_CHUNK_PREFIX)
+    // Every chunk may call require, so that `reset` can say why a chunk
+    // that is not a file cannot require one. Refusing here gives Luau's
+    // "require is not supported in this context", which names nothing.
+    // Modules registered by name, the standard libraries among them, never
+    // get here.
+    fn is_require_allowed(&self, _chunk_name: &str) -> bool {
+        true
     }
 
     fn reset(&mut self, chunk_name: &str) -> Result<(), LuaNavigateError> {
@@ -89,9 +94,12 @@ impl LuaRequire for RequireResolver {
 
             self.navigate_to(rel, abs)
         } else {
-            Err(LuaNavigateError::Other(LuaError::runtime(
-                "cannot reset require state from non-file chunk",
-            )))
+            let chunk_name = chunk_name.trim_start_matches(['=', '@']);
+            Err(LuaNavigateError::Other(LuaError::runtime(format!(
+                "cannot require a file from '{chunk_name}': only a script run from a file can \
+                 require files. A binary made with `luneblox build` holds only the script it was \
+                 built from, so bundle the modules it requires into that script first"
+            ))))
         }
     }
 

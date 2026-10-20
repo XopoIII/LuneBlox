@@ -93,8 +93,10 @@ pull request, and the build fails on a dead internal link.
 
 ## The prompt trap
 
-`stdio.prompt` does not degrade when stdin is not a TTY - it throws `IO error: not a terminal`, and under
-some runners blocks with nothing printed. Anything that prompts must not be reached from a test, a git
+`stdio.prompt` does not degrade without a terminal. When stderr is not one it raises
+`stdio.prompt needs a terminal` at once; when stderr is a terminal it reads the keyboard, through
+`/dev/tty` if stdin is redirected, so under a runner that hands the process a pseudo-terminal it
+blocks with nothing printed. Anything that prompts must not be reached from a test, a git
 hook or CI. `tests/stdio/prompt.luau` is deliberately left out of the automated suite for this reason.
 
 ## Commands

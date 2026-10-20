@@ -154,4 +154,12 @@ impl LuaUserData for Response {
         });
         fields.add_field_method_get("body", |lua, this| lua.create_string(this.body()));
     }
+
+    fn add_methods<M: LuaUserDataMethods<Self>>(methods: &mut M) {
+        methods.add_meta_method(LuaMetaMethod::ToString, |_, this, ()| {
+            Ok(format!("{} {}", this.status_code(), this.status_message())
+                .trim_end()
+                .to_string())
+        });
+    }
 }

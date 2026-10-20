@@ -155,6 +155,7 @@ create_tests! {
     global_pcall: "globals/pcall",
     global_type: "globals/type",
     global_typeof: "globals/typeof",
+    global_utf8_graphemes: "globals/utf8Graphemes",
     global_warn: "globals/warn",
 }
 
@@ -266,6 +267,7 @@ create_tests! {
     roblox_datatype_number_sequence: "roblox/datatypes/NumberSequence",
     roblox_datatype_number_sequence_keypoint: "roblox/datatypes/NumberSequenceKeypoint",
     roblox_datatype_physical_properties: "roblox/datatypes/PhysicalProperties",
+    roblox_datatype_random: "roblox/datatypes/Random",
     roblox_datatype_ray: "roblox/datatypes/Ray",
     roblox_datatype_rect: "roblox/datatypes/Rect",
     roblox_datatype_udim: "roblox/datatypes/UDim",
@@ -341,6 +343,7 @@ create_tests! {
     serde_encoding_hex: "serde/encoding/hex",
     serde_compression_files: "serde/compression/files",
     serde_compression_roundtrip: "serde/compression/roundtrip",
+    serde_json_buffer: "serde/json/buffer",
     serde_json_decode: "serde/json/decode",
     serde_json_encode: "serde/json/encode",
     serde_jsonc_decode: "serde/jsonc/decode",
