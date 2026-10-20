@@ -13,8 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 What the open issues of Lune asked for that a Roblox-faithful runtime should have: Roblox's `Random`,
 `utf8.graphemes`, and buffers in JSON the way a game writes them. Errors that named nothing now say
 what happened - a `require` in a standalone binary, a prompt with no terminal - and `fs.metadata`
-on a socket or FIFO no longer ends the script with status 0. Luau, its fast flag table and mlua are
-those of 0.10.17.
+on a socket or FIFO no longer ends the script with status 0. `rustls` moves past four advisories.
+Luau, its fast flag table and mlua are those of 0.10.17.
 
 ### Added
 
@@ -53,6 +53,9 @@ those of 0.10.17.
 
 - `fs.metadata` on a socket, a FIFO or a device file raises an error naming the path. It panicked,
   which ended the script where it stood and exited with status 0, as if it had finished
+- `rustls` 0.23.46, from 0.23.45, which `net` uses for TLS. It fixes four advisories
+  (RUSTSEC-2026-0346 to 0349), among them a downgrade of later connections to classical key
+  exchange by an unauthenticated server hello
 
 [#46]: https://github.com/lune-org/lune/issues/46
 [#237]: https://github.com/lune-org/lune/issues/237
