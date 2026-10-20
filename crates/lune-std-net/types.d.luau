@@ -56,6 +56,8 @@ export type FetchParams = {
 	* `statusMessage` - The canonical status message for the returned status code, such as `"Not Found"` for status code 404
 	* `headers` - A table of key-value pairs representing headers
 	* `body` - The request body, or an empty string if one was not given
+
+	`tostring` on a response gives its status, such as `"404 Not Found"`.
 ]=]
 export type FetchResponse = {
 	ok: boolean,
@@ -78,6 +80,8 @@ export type FetchResponse = {
 	* `method` - The HTTP method verb, such as `"GET"`, `"POST"`, `"PATCH"`, `"PUT"`, or `"DELETE"`. Will always be uppercase
 	* `headers` - A table of key-value pairs representing headers
 	* `body` - The request body, or an empty string if one was not given
+
+	`tostring` on a request gives its method and path, such as `"GET /some/path"`.
 ]=]
 export type ServeRequest = {
 	path: string,

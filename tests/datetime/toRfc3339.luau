@@ -4,6 +4,10 @@ local DateTime = require("@lune/datetime")
 local now = DateTime.now()
 local nowRfc = now:toRfc3339()
 
+-- tostring gives the same string
+
+assert(tostring(now) == nowRfc, "tostring of a DateTime should be its RFC 3339 string")
+
 -- Make sure we have separator characters, T to separate date & time, + or Z to separate timezone
 
 local dateTimeSplitIdx = string.find(nowRfc, "T")

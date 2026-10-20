@@ -140,6 +140,8 @@ end
 	- `2000-01-31T12:34:56+05:00`
 	- `1970-01-01T00:00:00.055Z`
 
+	`tostring` on a `DateTime` gives the same string.
+
 	@return string -- The RFC 3339 formatted string
 ]=]
 function DateTime.toRfc3339(self: DateTime): string

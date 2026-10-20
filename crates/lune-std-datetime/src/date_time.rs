@@ -253,6 +253,9 @@ impl LuaUserData for DateTime {
                 Ok(matches!(this.cmp(&other), Ordering::Less | Ordering::Equal))
             },
         );
+        methods.add_meta_method(LuaMetaMethod::ToString, |_, this: &Self, ()| {
+            Ok(this.to_rfc_3339())
+        });
         // Normal methods
         methods.add_method("toIsoDate", |_, this, ()| Ok(this.to_rfc_3339())); // FUTURE: Remove this rfc3339 alias method
         methods.add_method("toRfc3339", |_, this, ()| Ok(this.to_rfc_3339()));

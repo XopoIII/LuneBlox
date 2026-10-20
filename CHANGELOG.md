@@ -27,6 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `tostring` on a `DateTime` gives its RFC 3339 string, on a response from `net.request` its status
+  (`200 OK`), and on a request in a `net.serve` handler its method and path (`GET /some/path`).
+  `print` shows them as `<DateTime(...)>`, `<Response(200 OK)>` and `<Request(GET /some/path)>`,
+  where it showed only the type name ([#334])
 - `stdio.prompt` with no terminal to ask in raises `stdio.prompt needs a terminal`, saying whether
   stderr or the keyboard is missing. It raised a bare `IO error: not a terminal`, which did not name
   the prompt. A redirected stdin still prompts on the keyboard, through `/dev/tty`
@@ -42,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 [#46]: https://github.com/lune-org/lune/issues/46
 [#254]: https://github.com/lune-org/lune/issues/254
+[#334]: https://github.com/lune-org/lune/issues/334
 [#338]: https://github.com/lune-org/lune/issues/338
 
 ## `0.10.17` - October 12th, 2026

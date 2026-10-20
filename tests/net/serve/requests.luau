@@ -19,6 +19,10 @@ local handle = net.serve(PORT, function(request)
 	assert(type(request.query.key2) == "string")
 
 	assert(request.path == "/some/path")
+	assert(
+		tostring(request) == "GET /some/path",
+		"tostring of a request should be its method and path"
+	)
 	assert(request.query.key[1] == "param1")
 	assert(request.query.key[2] == "param2")
 	assert(request.query.key2 == "param3")
@@ -35,6 +39,9 @@ local thread = task.delay(1, function()
 end)
 
 -- Serve should respond to requests we send, and keep responding until we stop it
+
+local first = net.request(URL .. "/some/path?key=param1&key=param2&key2=param3")
+assert(tostring(first) == "200 OK", "tostring of a response should be its status")
 
 for _ = 1, 100 do
 	local response = net.request(URL .. "/some/path?key=param1&key=param2&key2=param3").body
