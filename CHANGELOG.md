@@ -8,7 +8,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## `0.10.18` - October 20th, 2026
+
+What the open issues of Lune asked for that a Roblox-faithful runtime should have: Roblox's `Random`,
+`utf8.graphemes`, and buffers in JSON the way a game writes them. Errors that named nothing now say
+what happened - a `require` in a standalone binary, a prompt with no terminal - and `fs.metadata`
+on a socket or FIFO no longer ends the script with status 0. Luau, its fast flag table and mlua are
+those of 0.10.17.
 
 ### Added
 
