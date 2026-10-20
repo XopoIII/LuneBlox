@@ -132,9 +132,13 @@ print(part.Transparency) --> 0, the default
 
 The datatypes are fields of the library, named as on Roblox: `Axes`, `BrickColor`, `CFrame`,
 `Color3`, `ColorSequence`, `ColorSequenceKeypoint`, `Content`, `Enum`, `Faces`, `Font`,
-`NumberRange`, `NumberSequence`, `NumberSequenceKeypoint`, `PhysicalProperties`, `Ray`, `Rect`,
-`Region3`, `Region3int16`, `UDim`, `UDim2`, `Vector2`, `Vector2int16`, `Vector3` and
+`NumberRange`, `NumberSequence`, `NumberSequenceKeypoint`, `PhysicalProperties`, `Random`, `Ray`,
+`Rect`, `Region3`, `Region3int16`, `UDim`, `UDim2`, `Vector2`, `Vector2int16`, `Vector3` and
 `Vector3int16`. `typeof` returns the datatype's name for their values.
+
+`Random` is a generator a script keeps for itself, never a property. `Random.new(seed)` steps the
+same PCG32 generator as `math.random`: after `math.randomseed(seed)`, `math.random()` and
+`math.random(min, max)` give what `NextNumber()` and `NextInteger(min, max)` give.
 
 A child can also be reached by indexing its parent with its name, such as `game.Workspace`. Prefer
 `FindFirstChild` for names you do not control, since a name can clash with a property.

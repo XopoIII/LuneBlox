@@ -10,6 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- `Random` in `roblox`: `Random.new(seed?)`, `NextInteger`, `NextNumber`, `NextUnitVector`,
+  `Shuffle` and `Clone` ([#46]). It is the PCG32 generator of Luau's `math.random`, seeded the same
+  way, so `Random.new(seed)` gives what `math.random` gives after `math.randomseed(seed)`; whether
+  it gives what a live Roblox client gives for a seed is not verified. Without a seed it starts
+  from a random state. `NextInteger` takes ranges wider than `math.random` does, and raises
+  `interval is empty` when `max` is below `min`. `Shuffle` raises an error on a frozen table or one
+  with holes
+
 ### Changed
 
 - `stdio.prompt` with no terminal to ask in raises `stdio.prompt needs a terminal`, saying whether
@@ -25,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `fs.metadata` on a socket, a FIFO or a device file raises an error naming the path. It panicked,
   which ended the script where it stood and exited with status 0, as if it had finished
 
+[#46]: https://github.com/lune-org/lune/issues/46
 [#338]: https://github.com/lune-org/lune/issues/338
 
 ## `0.10.17` - October 12th, 2026

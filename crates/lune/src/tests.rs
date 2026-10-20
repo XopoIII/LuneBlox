@@ -266,6 +266,7 @@ create_tests! {
     roblox_datatype_number_sequence: "roblox/datatypes/NumberSequence",
     roblox_datatype_number_sequence_keypoint: "roblox/datatypes/NumberSequenceKeypoint",
     roblox_datatype_physical_properties: "roblox/datatypes/PhysicalProperties",
+    roblox_datatype_random: "roblox/datatypes/Random",
     roblox_datatype_ray: "roblox/datatypes/Ray",
     roblox_datatype_rect: "roblox/datatypes/Rect",
     roblox_datatype_udim: "roblox/datatypes/UDim",
