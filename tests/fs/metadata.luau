@@ -5,6 +5,7 @@ local TEMP_DIR_PATH = "bin/"
 local TEMP_FILE_PATH = TEMP_DIR_PATH .. "metadata_test"
 
 local fs = require("@lune/fs")
+local process = require("@lune/process")
 local task = require("@lune/task")
 local utils = require("./utils")
 
@@ -74,6 +75,26 @@ assert(typeof(metaAfter.createdAt) == "DateTime", "File metadata createdAt is no
 ]]
 assert(metaAfter.permissions ~= nil, "File metadata permissions are missing")
 assert(not metaAfter.permissions.readOnly, "File metadata permissions are readonly")
+
+--[[
+	1. A FIFO is neither a file nor a directory
+	2. Reading its metadata should raise an error, not stop the process
+]]
+if process.os ~= "windows" then
+	local FIFO_PATH = TEMP_DIR_PATH .. "metadata_test_fifo"
+	if fs.metadata(FIFO_PATH).exists then
+		fs.removeFile(FIFO_PATH)
+	end
+	local made = process.exec("mkfifo", { FIFO_PATH })
+	assert(made.ok, "mkfifo failed: " .. made.stderr)
+	local ok, err = pcall(fs.metadata, FIFO_PATH)
+	fs.removeFile(FIFO_PATH)
+	assert(not ok, "FIFO metadata should raise an error")
+	assert(
+		string.find(tostring(err), "not a file, a directory or a symlink", 1, true),
+		"FIFO metadata error was unexpected: " .. tostring(err)
+	)
+end
 
 -- Finally, clean up after us for any subsequent tests
 

@@ -8,6 +8,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+- `fs.metadata` on a socket, a FIFO or a device file raises an error naming the path. It panicked,
+  which ended the script where it stood and exited with status 0, as if it had finished
+
 ## `0.10.17` - October 12th, 2026
 
 What Lune 0.11.0 brought that LuneBlox did not have yet, without its one break: enum items with a

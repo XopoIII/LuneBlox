@@ -90,9 +90,10 @@ async fn fs_remove_dir(_: Lua, path: String) -> LuaResult<()> {
 }
 
 async fn fs_metadata(_: Lua, path: String) -> LuaResult<FsMetadata> {
-    match fs::metadata(path).await {
+    match fs::metadata(&path).await {
         Err(e) if e.kind() == IoErrorKind::NotFound => Ok(FsMetadata::not_found()),
-        Ok(meta) => Ok(FsMetadata::from(meta)),
+        Ok(meta) => FsMetadata::try_from(meta)
+            .map_err(|e| LuaError::runtime(format!("Failed to read metadata of '{path}': {e}"))),
         Err(e) => Err(e.into()),
     }
 }
