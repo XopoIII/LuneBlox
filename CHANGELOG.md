@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- `stdio.prompt` with no terminal to ask in raises `stdio.prompt needs a terminal`, saying whether
+  stderr or the keyboard is missing. It raised a bare `IO error: not a terminal`, which did not name
+  the prompt. A redirected stdin still prompts on the keyboard, through `/dev/tty`
+
 ### Fixed
 
 - `fs.metadata` on a socket, a FIFO or a device file raises an error naming the path. It panicked,

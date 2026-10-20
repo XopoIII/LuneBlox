@@ -1,4 +1,8 @@
-use std::{fmt, str::FromStr};
+use std::{
+    fmt,
+    io::{IsTerminal, stderr},
+    str::FromStr,
+};
 
 use dialoguer::{Confirm, Input, MultiSelect, Select, theme::ColorfulTheme};
 use mlua::prelude::*;
@@ -171,7 +175,31 @@ impl IntoLua for PromptResult {
     }
 }
 
+/**
+    Makes sure a prompt has a terminal to be answered in.
+
+    dialoguer draws on stderr and reads keys from stdin, or from `/dev/tty`
+    when stdin is redirected, so `echo x | luneblox run script` still asks
+    the keyboard. Without either it fails with a bare "not a terminal" or
+    "No such device or address", which does not say what was being done.
+*/
+fn ensure_terminal() -> LuaResult<()> {
+    if !stderr().is_terminal() {
+        return Err(LuaError::runtime(
+            "stdio.prompt needs a terminal, and stderr is not one",
+        ));
+    }
+    #[cfg(unix)]
+    if !std::io::stdin().is_terminal() && std::fs::File::open("/dev/tty").is_err() {
+        return Err(LuaError::runtime(
+            "stdio.prompt needs a terminal, and neither stdin nor /dev/tty is one",
+        ));
+    }
+    Ok(())
+}
+
 pub fn prompt(options: PromptOptions) -> LuaResult<PromptResult> {
+    ensure_terminal()?;
     let theme = ColorfulTheme::default();
     match options.kind {
         PromptKind::Text => {
