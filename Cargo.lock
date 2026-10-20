@@ -1532,6 +1532,7 @@ dependencies = [
  "async-fs",
  "async-io",
  "blocking",
+ "bstr",
  "clap",
  "console",
  "directories",

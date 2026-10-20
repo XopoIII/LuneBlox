@@ -155,6 +155,7 @@ create_tests! {
     global_pcall: "globals/pcall",
     global_type: "globals/type",
     global_typeof: "globals/typeof",
+    global_utf8_graphemes: "globals/utf8Graphemes",
     global_warn: "globals/warn",
 }
 

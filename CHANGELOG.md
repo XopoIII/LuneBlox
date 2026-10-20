@@ -24,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that is shorter. `serde.decode` reads both forms back as a buffer from JSON and JSONC, so a
   buffer a game stored in a DataStore decodes here ([#254]). A buffer was an error before. An
   object with any other key stays a table
+- `utf8.graphemes(s, i?, j?)`, which Roblox adds to Luau's `utf8` library: an iterator over the
+  grapheme clusters of `s`, giving the first and last byte of each, so a letter with its combining
+  marks, a flag or a joined emoji is one step ([#237]). `i` and `j` narrow it as in `string.sub`;
+  invalid UTF-8 is an error
 
 ### Changed
 
@@ -45,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   which ended the script where it stood and exited with status 0, as if it had finished
 
 [#46]: https://github.com/lune-org/lune/issues/46
+[#237]: https://github.com/lune-org/lune/issues/237
 [#254]: https://github.com/lune-org/lune/issues/254
 [#334]: https://github.com/lune-org/lune/issues/334
 [#338]: https://github.com/lune-org/lune/issues/338
