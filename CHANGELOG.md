@@ -15,11 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `stdio.prompt` with no terminal to ask in raises `stdio.prompt needs a terminal`, saying whether
   stderr or the keyboard is missing. It raised a bare `IO error: not a terminal`, which did not name
   the prompt. A redirected stdin still prompts on the keyboard, through `/dev/tty`
+- `require` of a file from a binary made with `luneblox build`, or from any chunk that is not a
+  file, says that only a script run from a file can require files and that a standalone binary's
+  modules must be bundled into its script. It said `require is not supported in this context`
+  ([#338]). The standard libraries are required by name and keep working
 
 ### Fixed
 
 - `fs.metadata` on a socket, a FIFO or a device file raises an error naming the path. It panicked,
   which ended the script where it stood and exited with status 0, as if it had finished
+
+[#338]: https://github.com/lune-org/lune/issues/338
 
 ## `0.10.17` - October 12th, 2026
 
