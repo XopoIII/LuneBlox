@@ -8,6 +8,8 @@ use serde::{Deserialize, Deserializer};
 use serde_json::Value as JsonValue;
 use toml::Value as TomlValue;
 
+use crate::json_buffer::{buffers_to_tables, json_to_lua};
+
 // How deep a value may nest before it is rejected, in either direction. This is mlua's own
 // default, written out because it is part of what `serde.encode` and `serde.decode` accept.
 const RECURSION_LIMIT: usize = 128;
@@ -240,6 +242,7 @@ pub fn encode(value: LuaValue, lua: &Lua, config: EncodeDecodeConfig) -> LuaResu
             HEXLOWER.encode(bytes.as_ref()).into_bytes()
         }
         EncodeDecodeFormat::Json | EncodeDecodeFormat::JsonC => {
+            let value = buffers_to_tables(lua, value)?;
             let serialized: JsonValue = lua.from_value_with(value, LUA_DESERIALIZE_OPTIONS)?;
             if config.pretty {
                 serde_json::to_vec_pretty(&serialized).into_lua_err()?
@@ -297,14 +300,18 @@ pub fn decode(
         }
         EncodeDecodeFormat::Json => {
             let value: JsonValue = serde_json::from_slice(bytes).into_lua_err()?;
-            lua.to_value_with(&value, LUA_SERIALIZE_OPTIONS)
+            json_to_lua(lua, &value, &|v| {
+                lua.to_value_with(v, LUA_SERIALIZE_OPTIONS)
+            })
         }
         EncodeDecodeFormat::JsonC => {
             let string: String = String::from_utf8(bytes.to_vec()).into_lua_err()?;
             let value: JsonValue =
                 jsonc_parser::parse_to_serde_value(&string, &jsonc_parser::ParseOptions::default())
                     .into_lua_err()?;
-            lua.to_value_with(&value, LUA_SERIALIZE_OPTIONS)
+            json_to_lua(lua, &value, &|v| {
+                lua.to_value_with(v, LUA_SERIALIZE_OPTIONS)
+            })
         }
         EncodeDecodeFormat::Yaml => {
             let string: String = String::from_utf8(bytes.to_vec()).into_lua_err()?;

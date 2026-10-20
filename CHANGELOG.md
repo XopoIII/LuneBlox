@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   from a random state. `NextInteger` takes ranges wider than `math.random` does, and raises
   `interval is empty` when `max` is below `min`. `Shuffle` raises an error on a frozen table or one
   with holes
+- `serde.encode("json", ...)` writes a buffer as Roblox's `HttpService:JSONEncode` does:
+  `{"m":null,"t":"buffer","base64":"..."}`, or `zbase64` with the bytes compressed with zstd when
+  that is shorter. `serde.decode` reads both forms back as a buffer from JSON and JSONC, so a
+  buffer a game stored in a DataStore decodes here ([#254]). A buffer was an error before. An
+  object with any other key stays a table
 
 ### Changed
 
@@ -36,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   which ended the script where it stood and exited with status 0, as if it had finished
 
 [#46]: https://github.com/lune-org/lune/issues/46
+[#254]: https://github.com/lune-org/lune/issues/254
 [#338]: https://github.com/lune-org/lune/issues/338
 
 ## `0.10.17` - October 12th, 2026

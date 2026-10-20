@@ -342,6 +342,7 @@ create_tests! {
     serde_encoding_hex: "serde/encoding/hex",
     serde_compression_files: "serde/compression/files",
     serde_compression_roundtrip: "serde/compression/roundtrip",
+    serde_json_buffer: "serde/json/buffer",
     serde_json_decode: "serde/json/decode",
     serde_json_encode: "serde/json/encode",
     serde_jsonc_decode: "serde/jsonc/decode",
