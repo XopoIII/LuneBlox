@@ -21,6 +21,8 @@ those of 0.10.18.
   distrusted emSign intermediates, whose private keys are now known (RUSTSEC-2026-0382). Lune 0.11.1
   ships the same fix; its other one, fractional numbers passed to `roblox` constructors, has been in
   LuneBlox since 0.10.13
+- `webpki-roots` 1.0.10, from 1.0.9, the root certificates `net` trusts. It drops `emSign ECC Root
+  CA - G3`, the root those distrusted intermediates chain to (RUSTSEC-2026-0381)
 
 ## `0.10.18` - October 20th, 2026
 
