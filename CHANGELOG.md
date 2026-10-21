@@ -23,6 +23,8 @@ those of 0.10.18.
   LuneBlox since 0.10.13
 - `webpki-roots` 1.0.10, from 1.0.9, the root certificates `net` trusts. It drops `emSign ECC Root
   CA - G3`, the root those distrusted intermediates chain to (RUSTSEC-2026-0381)
+- The documentation site is built with Vite 8.3.5, from 8.3.1. Vite runs when the site is built and
+  was never part of the runtime
 
 ## `0.10.18` - October 20th, 2026
 
