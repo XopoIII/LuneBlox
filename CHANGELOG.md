@@ -8,6 +8,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## `0.10.19` - October 21st, 2026
+
+A security release. The certificate checks behind `net` reject chains through intermediates whose
+private keys are public. Nothing else changes: Luau, its fast flag table, mlua and the libraries are
+those of 0.10.18.
+
+### Fixed
+
+- `rustls-webpki` 0.103.16, from 0.103.15, which checks the certificates of every TLS connection
+  `net.request`, `net.socket` and `net.tcp` make. It no longer accepts a certificate path through the
+  distrusted emSign intermediates, whose private keys are now known (RUSTSEC-2026-0382). Lune 0.11.1
+  ships the same fix; its other one, fractional numbers passed to `roblox` constructors, has been in
+  LuneBlox since 0.10.13
+
 ## `0.10.18` - October 20th, 2026
 
 What the open issues of Lune asked for that a Roblox-faithful runtime should have: Roblox's `Random`,
