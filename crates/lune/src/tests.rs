@@ -249,8 +249,11 @@ create_tests! {
     regex_replace: "regex/replace",
 }
 
+// The Enum global exists only when the roblox library is built in
 #[cfg(feature = "std-roblox")]
 create_tests! {
+    global_enum: "globals/Enum",
+
     roblox_datatype_axes: "roblox/datatypes/Axes",
     roblox_datatype_brick_color: "roblox/datatypes/BrickColor",
     roblox_datatype_cframe: "roblox/datatypes/CFrame",

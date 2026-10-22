@@ -10,6 +10,10 @@ globals:
       - type: any
       - required: false
         type: string
+  # Roblox's Enum. Its enums and their items come from the reflection database at run time, so
+  # selene is not given their names and accepts any use of it.
+  Enum:
+    any: true
   warn:
     args:
       - type: "..."

@@ -36,12 +36,12 @@ game runs.
 
 LuneBlox closes both gaps:
 
-| | Lune 0.10.5 | LuneBlox 0.10.19 |
+| | Lune 0.10.5 | LuneBlox 0.11.0 |
 |---|---|---|
 | Luau | 0.709 | 0.740, the version Roblox runs |
 | Luau's fast flags | Luau's defaults | set as the live Roblox client sets them (`crates/lune/src/rt/roblox_fflags.rs`) |
 | Luau's C++ built with | `-Os` (the workspace's size profile reached it) | `-O3` |
-| `_VERSION` | `Lune 0.10.5+709` | `LuneBlox 0.10.19+740` |
+| `_VERSION` | `Lune 0.10.5+709` | `LuneBlox 0.11.0+740` |
 
 ## Performance
 
@@ -56,7 +56,8 @@ optimisation, so native timings here are what Roblox gets rather than the best t
 ## Where it comes from
 
 LuneBlox is built from [Lune](https://github.com/lune-org/lune) and keeps its whole interface: the same
-`@lune/*` libraries, the same task scheduler, the same Roblox datatypes and place/model files. The
+`@lune/*` libraries, the same task scheduler, the same Roblox datatypes and place/model files. On top
+of Lune's globals, every script has Roblox's `Enum`, as a Roblox client has it. The
 documentation covers the command line, every library and what differs from Lune:
 <https://xopoiii.github.io/LuneBlox/>.
 

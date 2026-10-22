@@ -118,7 +118,6 @@ local Instance = roblox.Instance
 local Vector3 = roblox.Vector3
 local CFrame = roblox.CFrame
 local BrickColor = roblox.BrickColor
-local Enum = roblox.Enum
 
 local part = Instance.new("Part")
 part.Anchored = true
@@ -135,6 +134,10 @@ The datatypes are fields of the library, named as on Roblox: `Axes`, `BrickColor
 `NumberRange`, `NumberSequence`, `NumberSequenceKeypoint`, `PhysicalProperties`, `Random`, `Ray`,
 `Rect`, `Region3`, `Region3int16`, `UDim`, `UDim2`, `Vector2`, `Vector2int16`, `Vector3` and
 `Vector3int16`. `typeof` returns the datatype's name for their values.
+
+`Enum` is also a global, as on Roblox, so a script reaches `Enum.PartType.Ball` without the library.
+The global and `roblox.Enum` are the same value, and an item read through one is the same item as
+through the other. Like the library, the typedefs leave it as `any`.
 
 `Random` is a generator a script keeps for itself, never a property. `Random.new(seed)` steps the
 same PCG32 generator as `math.random`: after `math.randomseed(seed)`, `math.random()` and

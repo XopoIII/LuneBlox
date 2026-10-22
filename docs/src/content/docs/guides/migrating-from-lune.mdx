@@ -65,7 +65,7 @@ It rewrites `aliases.lune` to `~/.luneblox/.typedefs/<version>/`. The alias name
 
 ```luau
 --!strict
-print(_VERSION) --> LuneBlox 0.10.19+740
+print(_VERSION) --> LuneBlox 0.11.0+740
 ```
 
 Lune 0.10.5 prints `Lune 0.10.5+709`. Code that parses `_VERSION` and expects it to start with `Lune `
@@ -137,6 +137,22 @@ The `close` method on a web socket closes the socket. In Lune 0.10.5 it always e
 `Socket has been closed`.
 
 ## New in LuneBlox
+
+### The `Enum` global
+
+Since 0.11.0 every script has Roblox's `Enum`, as a Roblox client has it, with no `require`:
+
+```luau
+--!strict
+print(Enum.KeyCode.ButtonA.Name) --> ButtonA
+print(Enum.KeyCode.ButtonA.EnumType == Enum.KeyCode) --> true
+print(#Enum.UserInputState:GetEnumItems()) --> 5
+```
+
+It is the same value as `require("@lune/roblox").Enum`, so an item read through either is the same
+item, and code that compares `Enum` items behaves as it does in a game. Run `luneblox setup` again so
+that luau-lsp knows the global. A script that defined its own `Enum` global keeps it: a global
+assigned by a script hides the built-in one.
 
 ### `luau.collect`
 

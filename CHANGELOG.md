@@ -8,6 +8,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## `0.11.0` - October 22nd, 2026
+
+Roblox's `Enum` is a global, as a Roblox client has it, so a spec of game code can name
+`Enum.KeyCode.ButtonA` and compare items the way the code under test does, without the `roblox`
+library. A new global is a minor release: a script that read an `Enum` global it never set sees one
+now. Luau, its fast flag table, mlua and the libraries are those of 0.10.19.
+
+### Added
+
+- `Enum` as a global in every script, whenever the `roblox` library is built in (the `roblox`
+  feature of `lune-std`, `std-roblox` of `lune`; both are on by default). It is the userdata
+  `require("@lune/roblox").Enum` gives, so the two are `rawequal`, and every enum and item read
+  through one is the same userdata as through the other: `Enum.KeyCode.ButtonA ==
+  roblox.Enum.KeyCode.ButtonA`, a property set from one reads back as the other's item. It has
+  every enum of the reflection database, with `Name`, `Value`, `EnumType`, `GetEnumItems`,
+  `FromName` and `FromValue`, and an unknown enum or item raises the library's error
+  (`The enum item 'X' does not exist for enum 'KeyCode'`). A custom environment given to
+  `luau.load` gets it with the other globals unless `injectGlobals` is `false`
+- `luneblox setup` adds `Enum` and `warn` to `globals` in `.luaurc`, the globals LuneBlox has that
+  luau-lsp's standard platform does not declare, so a strict script that uses either no longer
+  reports `Unknown global`. luau-lsp types a name listed there as `any`, which is how far the
+  typedefs went for `roblox.Enum` already. Names already in `globals` are kept
+
 ## `0.10.19` - October 21st, 2026
 
 A security release. The certificate checks behind `net` reject chains through intermediates whose

@@ -58,6 +58,17 @@ pub fn typedef_submodules() -> Vec<(&'static str, String)> {
 }
 
 /**
+    Creates the `Enum` global, the same userdata that the `roblox` library exports as `Enum`.
+
+    # Errors
+
+    Errors when out of memory.
+*/
+pub fn enum_global(lua: &Lua) -> LuaResult<LuaValue> {
+    lune_roblox::enums(lua)
+}
+
+/**
     Creates the `roblox` standard library module.
 
     # Errors

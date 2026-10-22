@@ -97,6 +97,25 @@ fn add_values_to_luaurc(luaurc: &mut JsonValue) {
             map.insert(alias, dir);
             luaurc.insert(field, JsonValue::Object(map));
         }
+
+        // The globals luau-lsp does not know, which it then takes as `any`
+        let names = lune_std::LuneStandardGlobal::ALL
+            .iter()
+            .filter(|global| !global.is_luau_builtin())
+            .map(|global| JsonValue::String(global.name().to_string()))
+            .collect::<Vec<_>>();
+        if !names.is_empty() {
+            let globals = luaurc
+                .entry("globals")
+                .or_insert_with(|| JsonValue::Array(Vec::new()));
+            if let JsonValue::Array(globals) = globals {
+                for name in names {
+                    if !globals.contains(&name) {
+                        globals.push(name);
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -179,5 +198,34 @@ mod tests {
 
         assert!(!dir.path().join("roblox.luau").exists());
         assert!(dir.path().join("roblox").join("init.luau").is_file());
+    }
+
+    #[test]
+    fn declares_the_globals_luau_does_not_know() {
+        let mut luaurc = serde_json::json!({});
+        add_values_to_luaurc(&mut luaurc);
+
+        assert_eq!(luaurc["globals"], serde_json::json!(["Enum", "warn"]));
+    }
+
+    #[test]
+    fn keeps_declared_globals_and_adds_each_once() {
+        let mut luaurc = serde_json::json!({ "globals": ["warn", "game"] });
+        add_values_to_luaurc(&mut luaurc);
+        add_values_to_luaurc(&mut luaurc);
+
+        assert_eq!(
+            luaurc["globals"],
+            serde_json::json!(["warn", "game", "Enum"])
+        );
+    }
+
+    #[test]
+    fn leaves_globals_alone_when_not_a_list() {
+        let mut luaurc = serde_json::json!({ "globals": "custom" });
+        add_values_to_luaurc(&mut luaurc);
+
+        assert_eq!(luaurc["globals"], serde_json::json!("custom"));
+        assert!(luaurc["aliases"]["lune"].is_string());
     }
 }

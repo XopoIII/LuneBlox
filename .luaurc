@@ -6,6 +6,7 @@
   "lintErrors": true,
   "typeErrors": true,
   "globals": [
+    "Enum",
     "warn"
   ],
   "aliases": {
