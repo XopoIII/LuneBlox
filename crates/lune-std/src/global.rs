@@ -7,6 +7,8 @@ use mlua::prelude::*;
 */
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum LuneStandardGlobal {
+    #[cfg(feature = "roblox")]
+    Enum,
     GTable,
     Print,
     Require,
@@ -19,6 +21,8 @@ impl LuneStandardGlobal {
         All available standard globals.
     */
     pub const ALL: &'static [Self] = &[
+        #[cfg(feature = "roblox")]
+        Self::Enum,
         Self::GTable,
         Self::Print,
         Self::Require,
@@ -32,12 +36,29 @@ impl LuneStandardGlobal {
     #[must_use]
     pub fn name(&self) -> &'static str {
         match self {
+            #[cfg(feature = "roblox")]
+            Self::Enum => "Enum",
             Self::GTable => "_G",
             Self::Print => "print",
             Self::Require => "require",
             Self::Version => "_VERSION",
             Self::Warn => "warn",
         }
+    }
+
+    /**
+        Whether Luau's type checker knows the global without being told.
+
+        luau-lsp on its standard platform does not know the others, so
+        `luneblox setup` lists them under `globals` in `.luaurc`, which
+        the type checker reads as globals of type `any`.
+    */
+    #[must_use]
+    pub fn is_luau_builtin(&self) -> bool {
+        matches!(
+            self,
+            Self::GTable | Self::Print | Self::Require | Self::Version
+        )
     }
 
     /**
@@ -51,6 +72,8 @@ impl LuneStandardGlobal {
     #[allow(unreachable_patterns)]
     pub fn create(&self, lua: Lua) -> LuaResult<LuaValue> {
         let res = match self {
+            #[cfg(feature = "roblox")]
+            Self::Enum => crate::globals::enums::create(lua),
             Self::GTable => crate::globals::g_table::create(lua),
             Self::Print => crate::globals::print::create(lua),
             Self::Require => crate::globals::require::create(lua),
@@ -72,6 +95,8 @@ impl FromStr for LuneStandardGlobal {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let low = s.trim().to_ascii_lowercase();
         Ok(match low.as_str() {
+            #[cfg(feature = "roblox")]
+            "enum" => Self::Enum,
             "_g" => Self::GTable,
             "print" => Self::Print,
             "require" => Self::Require,

@@ -42,3 +42,28 @@ impl fmt::Display for Enums {
         write!(f, "Enum")
     }
 }
+
+/*
+    Userdata interning
+
+    There is one `Enum` per Lua state, as on Roblox: the `roblox` library's
+    `Enum` and the `Enum` global are the same userdata, so they are `rawequal`.
+*/
+const ENUMS_KEY: &str = "__lune_roblox_enums";
+
+/**
+    Gives the `Enum` singleton as its canonical lua userdata, creating
+    it the first time and returning the same userdata on every later call.
+
+    # Errors
+
+    Errors if creating the userdata or storing it in the registry fails.
+*/
+pub(crate) fn enums_to_lua(lua: &Lua) -> LuaResult<LuaValue> {
+    if let Ok(existing) = lua.named_registry_value::<LuaAnyUserData>(ENUMS_KEY) {
+        return Ok(LuaValue::UserData(existing));
+    }
+    let userdata = lua.create_userdata(Enums)?;
+    lua.set_named_registry_value(ENUMS_KEY, &userdata)?;
+    Ok(LuaValue::UserData(userdata))
+}

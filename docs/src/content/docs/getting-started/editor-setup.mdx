@@ -20,7 +20,7 @@ The `@lune/*` libraries are built into the binary, so an editor cannot see them 
    ```
 
    ```text
-   Type definitions for Lune v0.10.19 have been set up successfully.
+   Type definitions for Lune v0.11.0 have been set up successfully.
    You may need to restart your editor for the changes to take effect.
    ```
 
@@ -35,7 +35,7 @@ The `@lune/*` libraries are built into the binary, so an editor cannot see them 
 One Luau module per library, under a directory named after the LuneBlox version:
 
 ```text
-~/.luneblox/.typedefs/0.10.19/
+~/.luneblox/.typedefs/0.11.0/
   fs.luau
   luau.luau
   net.luau
@@ -59,22 +59,34 @@ a file and a directory with the same name make the require ambiguous.
 This location is always under your home directory. `LUNEBLOX_CACHE` and the XDG variables do not move
 it.
 
-### The alias in .luaurc
+### The alias and the globals in .luaurc
 
-Setup reads `.luaurc` in the current directory, creates it when it does not exist, and sets one key:
+Setup reads `.luaurc` in the current directory, creates it when it does not exist, and sets two keys:
 
 ```json
 {
   "aliases": {
-    "lune": "~/.luneblox/.typedefs/0.10.19/"
-  }
+    "lune": "~/.luneblox/.typedefs/0.11.0/"
+  },
+  "globals": [
+    "Enum",
+    "warn"
+  ]
 }
 ```
 
-Other keys and other aliases are kept. The file is written back as indented JSON.
+Other keys and other aliases are kept, and so are the names already in `globals`; a name is added
+only once. A `globals` that is not a list is left as it is. The file is written back as indented
+JSON.
 
 With the alias in place, `require("@lune/fs")` resolves to `fs.luau` in that directory for the
 language server. At run time `luneblox` ignores the alias and serves the built-in library.
+
+`globals` names the globals LuneBlox adds that luau-lsp does not know on its standard platform:
+Roblox's `Enum` and `warn`. The type checker takes a name listed there as a global of type `any`, so a
+strict script can write `Enum.KeyCode.ButtonA` without an `Unknown global` error. That is as far as
+the typedefs go for `Enum`: they describe neither its enums nor their items, just as they do not for
+`require("@lune/roblox").Enum`.
 
 <Aside type="caution" title=".luaurc must be plain JSON">
 Setup parses `.luaurc` as strict JSON. A file with comments or trailing commas fails with
@@ -131,7 +143,7 @@ Or set it for the whole project in `.luaurc`:
 {
   "languageMode": "strict",
   "aliases": {
-    "lune": "~/.luneblox/.typedefs/0.10.19/"
+    "lune": "~/.luneblox/.typedefs/0.11.0/"
   }
 }
 ```

@@ -40,6 +40,7 @@ pub(crate) use r#enum::enum_to_lua;
 pub use r#enum_item::EnumItem;
 pub(crate) use r#enum_item::{enum_item_to_lua, opt_enum_item_to_lua};
 pub use r#enums::Enums;
+pub(crate) use r#enums::enums_to_lua;
 pub use faces::Faces;
 pub use font::Font;
 pub use number_range::NumberRange;

@@ -52,7 +52,7 @@ fn create_all_exports(lua: Lua) -> LuaResult<Vec<(&'static str, LuaValue)>> {
         // Classes
         export::<Instance>(lua.clone())?,
         // Singletons
-        ("Enum", Enums.into_lua(&lua)?),
+        ("Enum", enums_to_lua(&lua)?),
     ])
 }
 
@@ -77,4 +77,19 @@ pub fn module(lua: Lua) -> LuaResult<LuaTable> {
     TableBuilder::new(lua)?
         .with_values(exports)?
         .build_readonly()
+}
+
+/**
+    Gives the `Enum` singleton, the same userdata that [`module`] exports as `Enum`.
+
+    Every call for the same Lua state gives the same userdata, so an enum or an item
+    reached through it is `rawequal` to the one reached through the module.
+
+    # Errors
+
+    Errors when out of memory.
+*/
+#[cfg(feature = "mlua")]
+pub fn enums(lua: &Lua) -> LuaResult<LuaValue> {
+    datatypes::types::enums_to_lua(lua)
 }

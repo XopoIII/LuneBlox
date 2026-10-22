@@ -1,3 +1,5 @@
+#[cfg(feature = "roblox")]
+pub mod enums;
 pub mod g_table;
 pub mod print;
 pub mod require;
