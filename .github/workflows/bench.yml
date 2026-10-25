@@ -30,7 +30,7 @@ jobs:
 
       # Same reason as in ci.yaml: Luau's C++ barely moves between runs
       - name: Cache cargo artifacts
-        uses: Swatinem/rust-cache@v2.9.2
+        uses: Swatinem/rust-cache@v2.9.3
         with:
           key: bench-x86_64-unknown-linux-gnu
 
