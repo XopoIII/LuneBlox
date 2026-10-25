@@ -51,8 +51,9 @@ mod tests {
     // sources as unlinked. This test binary links the whole runtime, as the CLI does.
     #[test]
     fn every_roblox_fflag_applies() {
-        // The table is not empty: the fast flags guide documents this entry
-        assert!(ROBLOX_FFLAGS.contains(&("DebugCodegenOptSize", true)));
+        // The table is not empty: the fast flags guide documents this entry, which Roblox
+        // turned off with client 0.744
+        assert!(ROBLOX_FFLAGS.contains(&("DebugCodegenOptSize", false)));
         assert_eq!(set_fflags(ROBLOX_FFLAGS), Vec::<&str>::new());
     }
 

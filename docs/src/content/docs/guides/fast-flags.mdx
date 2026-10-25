@@ -28,15 +28,15 @@ The table is the file `crates/lune/src/rt/roblox_fflags.rs`. Its header says wha
 from:
 
 ```text
-Luau fast flags as the Roblox client 0.742.0.7421053 sets them, limited to the
+Luau fast flags as the Roblox client 0.744.0.7441080 sets them, limited to the
 flags Luau 0.740 declares.
 ```
 
-It holds 35 flags. A few of them:
+It holds 38 flags. A few of them:
 
 | Flag | Value |
 |---|---|
-| `DebugCodegenOptSize` | `true` |
+| `DebugCodegenOptSize` | `false` |
 | `LuauCallFeedback` | `true` |
 | `LuauCodegenPropagateFallbackTags` | `false` |
 | `LuauCompileIifeInline` | `true` |
@@ -72,12 +72,18 @@ The variable is all or nothing. There is no setting for a single flag.
 
 ## DebugCodegenOptSize
 
-Roblox sets `DebugCodegenOptSize`, so LuneBlox sets it too. The flag skips a native code optimization.
+`DebugCodegenOptSize` skips a native code optimization: block linearization, and constant
+propagation along the chains it builds. Roblox set it until client 0.744, which turned it off, and
+LuneBlox follows: since 0.11.2 the table holds it as `false`, and native code gets the optimization
+again. On an Apple M1, a Luau networking library's generated modules fired a thousand events 13 to
+36% faster natively, and decoded them 19 to 38% faster; interpreted code did not move.
 
 <Aside title="What this means for native benchmarks">
-Native code timings measured with the Roblox flags are what Roblox gets, not the best the VM can do.
-To see the native code generator at its fastest, run with `LUNE_ROBLOX_FFLAGS=0` - and remember that
-this also turns every other Roblox flag back to Luau's default.
+Native code timings measured with the Roblox flags are what Roblox gets. A native timing taken on
+LuneBlox 0.11.1 or earlier carries `DebugCodegenOptSize`, so it reads slower than the same code
+runs today. To see the native code generator with Luau's own defaults, run with
+`LUNE_ROBLOX_FFLAGS=0` - and remember that this also turns every other Roblox flag back to Luau's
+default.
 </Aside>
 
 ## Standalone executables
@@ -98,7 +104,7 @@ luneblox run scripts/generate_roblox_fflags.luau
 ```
 
 ```text
-Wrote 35 flags (34 enabled) for Roblox 0.742.0.7421053 and Luau 0.740
+Wrote 38 flags (36 enabled) for Roblox 0.744.0.7441080 and Luau 0.740
 ```
 
 The script does this:

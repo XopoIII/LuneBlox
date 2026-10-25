@@ -8,6 +8,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## `0.11.2` - October 25th, 2026
+
+The Roblox client moved to 0.744 and turned `DebugCodegenOptSize` off, so native code gets back the
+optimization the flag skipped; LuneBlox follows. The macOS binaries are built with a newer compiler,
+which made 0.11.1's interpreter about a third slower than the source allows. Luau itself, mlua and the
+libraries are those of 0.11.1.
+
+### Changed
+
+- The fast flag table holds 38 flags, from 35, and follows the Roblox client 0.744. The flags of
+  0.11.1 keep their values but one:
+  - `DebugCodegenOptSize` (native code generation) goes from `true` to `false`. With it on, the code
+    generator skipped block linearization and the constant propagation along the chains it builds.
+    On an Apple M1, a Luau networking library's generated modules (BlinkBlox 1.3.4) fired a thousand
+    events 13 to 36% faster natively and decoded them 19 to 38% faster: `Entities` fired in 1.58 ms
+    from 2.47 and `Booleans` decoded in 1.75 from 2.81, two release builds that differ only in the
+    table, in ABBA order. Interpreted code did not move. A native timing taken on 0.11.1 or earlier
+    reads slower than the same code runs now
+- Three flags are new, all on, none of them changing what a script computes:
+  - `LuauCodegenA64ForgLoopArray` (native code, ARM64). A generic `for` over a table walks its array
+    part in native code instead of calling out for each step
+  - `LuauCodegenX64IntSpillRestore` (native code, x86-64). The register allocator no longer restores
+    an integer from a stack slot that holds it as a double, a fix for code it generated wrong
+  - `LuauBufferCage` (VM, buffers). Buffers are allocated through a cage allocator when the host sets
+    one with `lua_setbuffercage`. LuneBlox sets none, so buffers are allocated as before; the flag is
+    on so that the table is the client's
+- The macOS binaries are built on GitHub's `macos-26` image, with Apple Clang 21, from `macos-15`'s
+  Xcode 16.4 and Clang 17, which compiles Luau's C++. 0.11.1's macOS aarch64 binary ran interpreted
+  code about 30% slower than the same source built with Clang 21: those modules fired a thousand
+  booleans in 15.8 ms interpreted where a local build took 11.0, with the same flags and the same
+  `cargo` arguments. CI tests on the same image. The Linux binaries stay on Ubuntu 22.04 for the
+  glibc they link against, and were not measured
+
 ## `0.11.1` - October 25th, 2026
 
 A fix to `luneblox setup`, and a dependency's security fix. Luau, its fast flag table, mlua and the
