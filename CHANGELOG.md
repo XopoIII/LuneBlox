@@ -8,6 +8,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## `0.11.1` - October 25th, 2026
+
+A fix to `luneblox setup`, and a dependency's security fix. Luau, its fast flag table, mlua and the
+libraries are those of 0.11.0.
+
+### Fixed
+
+- `luneblox setup` no longer puts `Enum` and `warn` in `.luaurc`'s `globals` in a project that loads
+  the Roblox types, and takes them out where 0.11.0 put them. luau-lsp types a name listed there as
+  `any` over what any definitions declare, so on the Roblox platform, luau-lsp's default, the entry
+  hid the Roblox types: `local n: number = Enum.KeyCode.A` was an error without it and nothing with
+  it. Setup now adds the two names only where `.vscode/settings.json` sets
+  `"luau-lsp.platform.type": "standard"` or `"luau-lsp.types.roblox": false`, and elsewhere removes
+  them, with the key if nothing else is in it; other names in `globals` are kept. The settings are read
+  line by line, so comments and trailing commas are fine. It prints which it did. A project that runs
+  setup on every check no longer finds `.luaurc` changed afterwards
+- `ctutils` 0.4.5, from 0.4.3, which `digest` uses under `serde`'s hashing and the `roblox` library's
+  types. Its masks and `u128` comparisons were not constant-time (RUSTSEC-2026-0385)
+
 ## `0.11.0` - October 22nd, 2026
 
 Roblox's `Enum` is a global, as a Roblox client has it, so a spec of game code can name

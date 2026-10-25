@@ -8,6 +8,7 @@ use thiserror::Error;
 use serde_json::Value as JsonValue;
 
 const LUAURC_PATH: &str = ".luaurc";
+const VSCODE_SETTINGS_PATH: &str = ".vscode/settings.json";
 
 /// Set up type definitions for your editor
 #[derive(Debug, Clone, Parser)]
@@ -21,7 +22,9 @@ impl SetupCommand {
 
         let mut luaurc = read_or_create_luaurc().await?;
 
-        add_values_to_luaurc(&mut luaurc);
+        let settings = fs::read_to_string(VSCODE_SETTINGS_PATH).await.ok();
+        let declare_globals = !roblox_types_on(settings.as_deref());
+        add_values_to_luaurc(&mut luaurc, declare_globals);
 
         write_luaurc(luaurc).await?;
 
@@ -30,9 +33,51 @@ impl SetupCommand {
             \nYou may need to restart your editor for the changes to take effect.",
             lune_version()
         );
+        if declare_globals {
+            println!("Enum and warn are declared in .luaurc's globals: the Roblox types are off.");
+        } else {
+            println!(
+                "Enum and warn are left out of .luaurc's globals: the Roblox types declare them."
+            );
+        }
 
         Ok(ExitCode::SUCCESS)
     }
+}
+
+/// Whether luau-lsp loads the Roblox types in this project, by its Visual Studio Code settings. The
+/// Roblox platform is luau-lsp's default, so it does unless the settings pick the standard platform
+/// or turn the Roblox types off. Where it does, they declare `Enum` and `warn` with their types, and a
+/// name listed in `.luaurc`'s `globals` would replace that with `any`.
+fn roblox_types_on(settings: Option<&str>) -> bool {
+    let Some(settings) = settings else {
+        return true;
+    };
+    setting_value(settings, "luau-lsp.platform.type") != Some("\"standard\"")
+        && setting_value(settings, "luau-lsp.types.roblox") != Some("false")
+}
+
+/// The value written after `"key":`, as it appears in the file. Read line by line rather than parsed:
+/// Visual Studio Code's settings allow comments and trailing commas, and a line commented out is
+/// skipped.
+fn setting_value<'a>(settings: &'a str, key: &str) -> Option<&'a str> {
+    let quoted = format!("\"{key}\"");
+    settings
+        .lines()
+        .map(str::trim_start)
+        .filter(|line| !line.starts_with("//"))
+        .find_map(|line| {
+            let after = &line[line.find(&quoted)? + quoted.len()..];
+            let value = after.trim_start().strip_prefix(':')?.trim_start();
+            let end = if let Some(string) = value.strip_prefix('"') {
+                string.find('"')? + 2
+            } else {
+                value
+                    .find(|c: char| c == ',' || c == '}' || c.is_whitespace())
+                    .unwrap_or(value.len())
+            };
+            Some(&value[..end])
+        })
 }
 
 #[derive(Debug, Clone, Copy, Error)]
@@ -78,7 +123,7 @@ async fn write_luaurc(luaurc: JsonValue) -> Result<(), SetupError> {
     }
 }
 
-fn add_values_to_luaurc(luaurc: &mut JsonValue) {
+fn add_values_to_luaurc(luaurc: &mut JsonValue, declare_globals: bool) {
     if let JsonValue::Object(luaurc) = luaurc {
         let field = String::from("aliases");
         let alias = String::from("lune");
@@ -98,13 +143,14 @@ fn add_values_to_luaurc(luaurc: &mut JsonValue) {
             luaurc.insert(field, JsonValue::Object(map));
         }
 
-        // The globals luau-lsp does not know, which it then takes as `any`
+        // The globals luau-lsp does not know without the Roblox types, which it then takes as `any`.
+        // With them, the same names are taken out again: listed, they would hide the Roblox types.
         let names = lune_std::LuneStandardGlobal::ALL
             .iter()
             .filter(|global| !global.is_luau_builtin())
             .map(|global| JsonValue::String(global.name().to_string()))
             .collect::<Vec<_>>();
-        if !names.is_empty() {
+        if declare_globals && !names.is_empty() {
             let globals = luaurc
                 .entry("globals")
                 .or_insert_with(|| JsonValue::Array(Vec::new()));
@@ -114,6 +160,13 @@ fn add_values_to_luaurc(luaurc: &mut JsonValue) {
                         globals.push(name);
                     }
                 }
+            }
+        } else if !declare_globals
+            && let Some(JsonValue::Array(globals)) = luaurc.get_mut("globals")
+        {
+            globals.retain(|name| !names.contains(name));
+            if globals.is_empty() {
+                luaurc.shift_remove("globals");
             }
         }
     }
@@ -203,7 +256,7 @@ mod tests {
     #[test]
     fn declares_the_globals_luau_does_not_know() {
         let mut luaurc = serde_json::json!({});
-        add_values_to_luaurc(&mut luaurc);
+        add_values_to_luaurc(&mut luaurc, true);
 
         assert_eq!(luaurc["globals"], serde_json::json!(["Enum", "warn"]));
     }
@@ -211,8 +264,8 @@ mod tests {
     #[test]
     fn keeps_declared_globals_and_adds_each_once() {
         let mut luaurc = serde_json::json!({ "globals": ["warn", "game"] });
-        add_values_to_luaurc(&mut luaurc);
-        add_values_to_luaurc(&mut luaurc);
+        add_values_to_luaurc(&mut luaurc, true);
+        add_values_to_luaurc(&mut luaurc, true);
 
         assert_eq!(
             luaurc["globals"],
@@ -223,9 +276,72 @@ mod tests {
     #[test]
     fn leaves_globals_alone_when_not_a_list() {
         let mut luaurc = serde_json::json!({ "globals": "custom" });
-        add_values_to_luaurc(&mut luaurc);
+        add_values_to_luaurc(&mut luaurc, true);
+        add_values_to_luaurc(&mut luaurc, false);
 
         assert_eq!(luaurc["globals"], serde_json::json!("custom"));
         assert!(luaurc["aliases"]["lune"].is_string());
+    }
+
+    #[test]
+    fn adds_no_globals_where_the_roblox_types_declare_them() {
+        let mut luaurc = serde_json::json!({ "languageMode": "strict" });
+        add_values_to_luaurc(&mut luaurc, false);
+
+        assert!(luaurc.get("globals").is_none());
+        assert!(luaurc["aliases"]["lune"].is_string());
+    }
+
+    #[test]
+    fn takes_out_the_globals_where_the_roblox_types_declare_them() {
+        let mut luaurc = serde_json::json!({
+            "languageMode": "strict",
+            "globals": ["Enum", "warn"],
+            "lint": { "*": true },
+        });
+        add_values_to_luaurc(&mut luaurc, false);
+
+        assert!(luaurc.get("globals").is_none());
+        let keys = luaurc.as_object().unwrap().keys().collect::<Vec<_>>();
+        assert_eq!(keys, ["languageMode", "lint", "aliases"]);
+    }
+
+    #[test]
+    fn keeps_other_globals_when_taking_ours_out() {
+        let mut luaurc = serde_json::json!({ "globals": ["game", "Enum", "warn"] });
+        add_values_to_luaurc(&mut luaurc, false);
+
+        assert_eq!(luaurc["globals"], serde_json::json!(["game"]));
+    }
+
+    #[test]
+    fn takes_the_roblox_types_as_on_by_default() {
+        assert!(roblox_types_on(None));
+        assert!(roblox_types_on(Some("{}")));
+        assert!(roblox_types_on(Some(
+            r#"{ "luau-lsp.platform.type": "roblox" }"#
+        )));
+    }
+
+    #[test]
+    fn reads_the_roblox_types_as_off_from_either_setting() {
+        assert!(!roblox_types_on(Some(
+            r#"{ "luau-lsp.platform.type": "standard" }"#
+        )));
+        assert!(!roblox_types_on(Some(
+            "{\n  \"luau-lsp.types.roblox\": false,\n  \"luau-lsp.sourcemap.enabled\": false\n}"
+        )));
+        assert!(roblox_types_on(Some(
+            r#"{ "luau-lsp.types.roblox": true }"#
+        )));
+    }
+
+    #[test]
+    fn reads_settings_with_comments_and_skips_a_commented_line() {
+        let settings = "{\n  // the scripts are not Roblox's\n  \"luau-lsp.platform.type\": \"standard\", // here\n}\n";
+        assert!(!roblox_types_on(Some(settings)));
+
+        let commented = "{\n  // \"luau-lsp.platform.type\": \"standard\",\n  \"luau-lsp.platform.type\": \"roblox\",\n}\n";
+        assert!(roblox_types_on(Some(commented)));
     }
 }
