@@ -133,12 +133,13 @@ jobs:
             runner-os: ubuntu-22.04-arm
             cargo-target: aarch64-unknown-linux-gnu
 
+          # The image the release builds on (release.yaml), so CI tests the compiler that ships
           - name: macOS x86_64
-            runner-os: macos-15
+            runner-os: macos-26
             cargo-target: x86_64-apple-darwin
 
           - name: macOS aarch64
-            runner-os: macos-15
+            runner-os: macos-26
             cargo-target: aarch64-apple-darwin
 
     name: CI - ${{ matrix.name }}

@@ -52,13 +52,18 @@ jobs:
             artifact-name: luneblox-${{ needs.init.outputs.version }}-linux-aarch64
             cargo-target: aarch64-unknown-linux-gnu
 
+          # macos-26 for its Apple Clang 21, which compiles Luau's C++. macos-15's Xcode 16.4 has
+          # Clang 17, and 0.11.1's macOS aarch64 binary built there ran interpreted code about 30%
+          # slower than the same source built with Clang 21: on an M1, BlinkBlox's generated modules
+          # fired a thousand booleans in 15.8 ms to 11.0, with the same flags and the same cargo
+          # arguments. The x86_64 binary is cross-compiled on the same arm64 image.
           - name: macOS x86_64
-            runner-os: macos-15
+            runner-os: macos-26
             artifact-name: luneblox-${{ needs.init.outputs.version }}-macos-x86_64
             cargo-target: x86_64-apple-darwin
 
           - name: macOS aarch64
-            runner-os: macos-15
+            runner-os: macos-26
             artifact-name: luneblox-${{ needs.init.outputs.version }}-macos-aarch64
             cargo-target: aarch64-apple-darwin
 
