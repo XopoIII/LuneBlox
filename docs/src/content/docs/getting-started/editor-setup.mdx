@@ -20,9 +20,13 @@ The `@lune/*` libraries are built into the binary, so an editor cannot see them 
    ```
 
    ```text
-   Type definitions for Lune v0.11.0 have been set up successfully.
+   Type definitions for Lune v0.11.1 have been set up successfully.
    You may need to restart your editor for the changes to take effect.
+   Enum and warn are left out of .luaurc's globals: the Roblox types declare them.
    ```
+
+   The last line says what setup did with `globals`; see
+   [The alias and the globals in .luaurc](#the-alias-and-the-globals-in-luaurc).
 
 2. Restart the editor, or reload the language server.
 
@@ -35,7 +39,7 @@ The `@lune/*` libraries are built into the binary, so an editor cannot see them 
 One Luau module per library, under a directory named after the LuneBlox version:
 
 ```text
-~/.luneblox/.typedefs/0.11.0/
+~/.luneblox/.typedefs/0.11.1/
   fs.luau
   luau.luau
   net.luau
@@ -61,12 +65,13 @@ it.
 
 ### The alias and the globals in .luaurc
 
-Setup reads `.luaurc` in the current directory, creates it when it does not exist, and sets two keys:
+Setup reads `.luaurc` in the current directory, creates it when it does not exist, and sets the
+alias. In a project that turns the Roblox types off, it sets `globals` as well:
 
 ```json
 {
   "aliases": {
-    "lune": "~/.luneblox/.typedefs/0.11.0/"
+    "lune": "~/.luneblox/.typedefs/0.11.1/"
   },
   "globals": [
     "Enum",
@@ -75,9 +80,9 @@ Setup reads `.luaurc` in the current directory, creates it when it does not exis
 }
 ```
 
-Other keys and other aliases are kept, and so are the names already in `globals`; a name is added
-only once. A `globals` that is not a list is left as it is. The file is written back as indented
-JSON.
+Other keys and other aliases are kept, and so are the other names in `globals`; a name is added only
+once. A `globals` that is not a list is left as it is. The file is written back as indented JSON, its
+keys in the order they had.
 
 With the alias in place, `require("@lune/fs")` resolves to `fs.luau` in that directory for the
 language server. At run time `luneblox` ignores the alias and serves the built-in library.
@@ -87,6 +92,14 @@ Roblox's `Enum` and `warn`. The type checker takes a name listed there as a glob
 strict script can write `Enum.KeyCode.ButtonA` without an `Unknown global` error. That is as far as
 the typedefs go for `Enum`: they describe neither its enums nor their items, just as they do not for
 `require("@lune/roblox").Enum`.
+
+On the Roblox platform, luau-lsp's default, the Roblox types already declare both names with their
+types, and a name in `globals` would replace those with `any`: `local n: number = Enum.KeyCode.A`
+would stop being an error. So setup adds them only where `.vscode/settings.json` sets
+`"luau-lsp.platform.type": "standard"` or `"luau-lsp.types.roblox": false`, and everywhere else
+takes `Enum` and `warn` out of `globals` if they are there, removing the key when nothing is left in
+it. The settings are read line by line, so comments and trailing commas in them are fine, and a line
+commented out does not count. Setup prints which it did.
 
 <Aside type="caution" title=".luaurc must be plain JSON">
 Setup parses `.luaurc` as strict JSON. A file with comments or trailing commas fails with
@@ -143,7 +156,7 @@ Or set it for the whole project in `.luaurc`:
 {
   "languageMode": "strict",
   "aliases": {
-    "lune": "~/.luneblox/.typedefs/0.11.0/"
+    "lune": "~/.luneblox/.typedefs/0.11.1/"
   }
 }
 ```
