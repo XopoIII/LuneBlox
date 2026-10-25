@@ -159,7 +159,7 @@ jobs:
       # cargo-binstall fell back to building nextest from source on macOS aarch64, which
       # nextest refuses without --locked; install-action always fetches the prebuilt binary
       - name: Install nextest
-        uses: taiki-e/install-action@v2.87.27
+        uses: taiki-e/install-action@v2.87.31
         with:
           tool: cargo-nextest
 
@@ -168,7 +168,7 @@ jobs:
       # key keeps the two macOS targets, which share a runner image, out of each other's
       # cache.
       - name: Cache cargo artifacts
-        uses: Swatinem/rust-cache@v2.9.2
+        uses: Swatinem/rust-cache@v2.9.3
         with:
           key: ${{ matrix.cargo-target }}
 
