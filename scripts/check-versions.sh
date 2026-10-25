@@ -86,8 +86,9 @@ fi
 # The fast flag table, as the docs quote it
 PAGE="$DOCS/guides/fast-flags.mdx"
 CLIENT="$(sed -n 's/^\/\/ Luau fast flags as the Roblox client \([0-9.]*\) sets them.*/\1/p' "$FFLAGS")"
-TOTAL="$(grep -c '^    ("' "$FFLAGS" || true)"
-ENABLED="$(grep -c ', true),$' "$FFLAGS" || true)"
+# Entries rather than lines: rustfmt puts a table of one entry on one line
+TOTAL="$(grep -oE '\("[A-Za-z0-9_]+", (true|false)\)' "$FFLAGS" | wc -l | tr -d ' ')"
+ENABLED="$(grep -oE '\("[A-Za-z0-9_]+", true\)' "$FFLAGS" | wc -l | tr -d ' ')"
 for line in \
 	"Luau fast flags as the Roblox client $CLIENT sets them, limited to the" \
 	"flags Luau 0.$LUAU declares." \

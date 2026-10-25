@@ -28,7 +28,12 @@ libraries are those of 0.11.1.
     reads slower than the same code runs now
 - Three flags are new, all on, none of them changing what a script computes:
   - `LuauCodegenA64ForgLoopArray` (native code, ARM64). A generic `for` over a table walks its array
-    part in native code instead of calling out for each step
+    part in native code instead of calling out for each step. It is declared in the ARM64 backend,
+    which only an aarch64 build links, so it is the first flag in a second table,
+    `ROBLOX_AARCH64_FFLAGS`, that only aarch64 builds apply: on x86-64 Luau does not register it,
+    nothing runs that code, and setting it there printed `did not apply`. The generator puts every
+    flag of a `CodeGen/src/*A64*` source there; the x86-64 backend is linked on ARM64 too, so its
+    flags stay in the shared table
   - `LuauCodegenX64IntSpillRestore` (native code, x86-64). The register allocator no longer restores
     an integer from a stack slot that holds it as a double, a fix for code it generated wrong
   - `LuauBufferCage` (VM, buffers). Buffers are allocated through a cage allocator when the host sets

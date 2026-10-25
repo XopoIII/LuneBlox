@@ -9,7 +9,6 @@ pub(crate) const ROBLOX_FFLAGS: &[(&str, bool)] = &[
     ("LuauBufferCage", true),
     ("LuauCallFeedback", true),
     ("LuauCallLuauTm", true),
-    ("LuauCodegenA64ForgLoopArray", true),
     ("LuauCodegenNoLinearFastpcall", true),
     ("LuauCodegenNopPadding", true),
     ("LuauCodegenPropagateFallbackTags", false),
@@ -43,3 +42,10 @@ pub(crate) const ROBLOX_FFLAGS: &[(&str, bool)] = &[
     ("LuauTableRobustOom", true),
     ("LuauVirtualBcBuilder", true),
 ];
+
+// Declared in Luau's ARM64 native code backend, which only an aarch64 build links
+#[cfg(target_arch = "aarch64")]
+pub(crate) const ROBLOX_AARCH64_FFLAGS: &[(&str, bool)] = &[("LuauCodegenA64ForgLoopArray", true)];
+
+#[cfg(not(target_arch = "aarch64"))]
+pub(crate) const ROBLOX_AARCH64_FFLAGS: &[(&str, bool)] = &[];
