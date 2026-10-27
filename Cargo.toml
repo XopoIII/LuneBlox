@@ -54,6 +54,9 @@ opt-level = 3
 # the wrong value. Drop this once a Luau release carries a fix.
 luau0-src = { path = "vendor/luau0-src" }
 
+# Use rbx_binary with zstd 0.14 until upstream releases the security update.
+rbx_binary = { git = "https://github.com/XopoIII/rbx-dom", rev = "177c49cf6800159c5bba0eba578cf2da214c6093" }
+
 # Lints for all crates in the workspace
 #
 # 1. Error on all lints by default, then make cargo + clippy pedantic lints just warn
