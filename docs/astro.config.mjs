@@ -29,6 +29,7 @@ const sidebar = [
 			'guides/standalone-executables',
 			'guides/fast-flags',
 			'guides/keeping-luau-current',
+						'guides/ocale-conformance',
 		],
 	},
 	{

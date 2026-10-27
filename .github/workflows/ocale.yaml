@@ -1,0 +1,70 @@
+name: OCALE conformance
+
+on:
+  workflow_dispatch:
+  # Differential checks run against a real Roblox place, outside the untrusted PR path.
+  schedule:
+    - cron: "0 7 * * 0"
+
+permissions:
+  contents: read
+
+jobs:
+  conformance:
+    name: LuneBlox versus Roblox
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    # Forks do not have the dedicated test place or its credentials.
+    if: github.repository == 'XopoIII/LuneBlox'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7.0.1
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Tooling
+        uses: CompeyDev/setup-rokit@v0.2.1
+
+      - name: Cache cargo artifacts
+        uses: Swatinem/rust-cache@v2.9.3
+
+      - name: Build LuneBlox
+        run: cargo build --locked --bin luneblox
+
+      - name: Run locally
+        run: target/debug/luneblox run scripts/ocale/conformance.luau | tee local-ocale.log
+
+      - name: Install rocale-cli
+        run: |
+          curl --fail --location --retry 3 \
+            https://github.com/Roblox/rocale-cli/releases/download/v0.1.3/rocale-cli-linux-x86_64.zip \
+            --output rocale-cli.zip
+          echo "93b71143ecda25ab67c075843f4d82d283d600a25ea1ae27a7d70183bda1f1f  rocale-cli.zip" | sha256sum --check
+          unzip rocale-cli.zip -d rocale-cli
+          find rocale-cli -maxdepth 2 -type f -print
+
+      - name: Run in Roblox Open Cloud
+        env:
+          ROBLOX_API_KEY: ${{ secrets.ROBLOX_API_KEY }}
+        run: |
+          ROCALE=$(find rocale-cli -type f -name 'rocale-cli*' -print -quit)
+          "$ROCALE" run \
+            --universeId "${{ secrets.OCALE_UNIVERSE_ID }}" \
+            --placeId "${{ secrets.OCALE_PLACE_ID }}" \
+            --load.version 0 \
+            --script scripts/ocale/conformance.luau \
+            --timeout 300 | tee cloud-ocale.log
+
+      - name: Compare results
+        run: target/debug/luneblox run scripts/ocale/compare.luau local-ocale.log cloud-ocale.log
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: ocale-conformance-logs
+          path: |
+            local-ocale.log
+            cloud-ocale.log
+          retention-days: 14

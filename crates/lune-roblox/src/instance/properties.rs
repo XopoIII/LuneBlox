@@ -37,6 +37,18 @@ impl Instance {
     }
 
     /**
+        Removes a property for the instance, if it exists.
+    */
+    pub fn remove_property(&self, name: impl AsRef<str>) {
+        self.with_dom_mut(|dom| {
+            dom.get_by_ref_mut(self.dom_ref)
+                .expect("Failed to find instance in document")
+                .properties
+                .remove(&ustr(name.as_ref()));
+        });
+    }
+
+    /**
         Gets an attribute for the instance, if it exists.
 
         ### See Also

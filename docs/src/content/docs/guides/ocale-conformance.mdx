@@ -1,0 +1,57 @@
+---
+title: OCALE conformance
+description: Compare LuneBlox behavior with a real Roblox DataModel.
+---
+
+The OCALE conformance workflow runs the same deterministic Luau script in LuneBlox and in
+Roblox Open Cloud Luau Execution (OCALE), then compares their JSON results. It covers a
+small set of runtime and Roblox datatype behaviors where a real engine is the authoritative
+oracle. It supplements the regular test suite rather than replacing it.
+
+## One-time setup
+
+Create a dedicated test universe and place. Do not use a production game: the workflow only
+reads the last saved place version and executes a script, but test credentials should still
+have the smallest practical blast radius.
+
+Create a Roblox Open Cloud API key with only the `luau-execution-sessions:write` permission
+for that universe. No place-upload permission is needed. Add these repository secrets:
+
+- `ROBLOX_API_KEY`: the restricted Open Cloud API key.
+- `OCALE_UNIVERSE_ID`: the test universe ID.
+- `OCALE_PLACE_ID`: the test place ID.
+
+Save the place once before running the workflow. The command uses `--load.version 0`, which
+runs against the last saved version without uploading a replacement.
+
+## Running the workflow
+
+Run **OCALE conformance** manually with **Actions > Run workflow**. It also runs weekly. The
+workflow is restricted to `XopoIII/LuneBlox` and has no pull-request trigger, so untrusted
+fork code cannot request the Roblox credentials.
+
+To run the local half while developing:
+
+```sh
+cargo run --bin luneblox -- run scripts/ocale/conformance.luau > local-ocale.log
+```
+
+After producing `cloud-ocale.log` with `rocale-cli`, compare both results:
+
+```sh
+target/debug/luneblox run scripts/ocale/compare.luau local-ocale.log cloud-ocale.log
+```
+
+The comparator exits nonzero on structural differences and renders a detailed text diff.
+Failed workflow runs upload both logs as artifacts.
+
+## Adding checks
+
+Edit `scripts/ocale/conformance.luau`. Every check must be deterministic and must run in both
+environments without file, network, clock, locale, or instance-ID dependencies. Record only
+JSON-compatible values. Avoid engine behavior that is intentionally undocumented or known to
+vary by platform. A useful differential check should express a compatibility guarantee, not
+merely grow a list of unrelated examples.
+
+OCALE does not prove that LuneBlox should copy every engine behavior. When a difference is
+intentional, document it and remove or adjust that check rather than hiding the mismatch.
