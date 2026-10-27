@@ -8,6 +8,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## `0.11.3` - October 27th, 2026
+
+Roblox instance properties retired by the reflection database now read and write through their
+replacements, matching current Roblox behavior. A new optional OCALE workflow compares deterministic
+checks between LuneBlox and a real Roblox DataModel. This release also updates compression
+dependencies past four security advisories.
+
+### Added
+
+- Reverse property migrations from the Roblox reflection database. Reading or writing a legacy
+  property such as `BasePart.BrickColor`, `Decal.Texture` or `UICorner.CornerRadius` now converts to
+  or from its canonical replacement properties. Legacy values already stored in a document still
+  take precedence, and migrated values survive binary model round-trips
+- A manually dispatched and weekly OCALE conformance workflow. One Luau script runs unchanged in
+  LuneBlox and Roblox, and a comparator reports structural differences. The workflow requires a
+  dedicated test universe and repository secrets, never runs for untrusted pull requests, and reuses
+  the last saved place version instead of uploading a new one
+- Lute-based text diff and glob test helpers, with provenance and license retained. Model
+  deserialization tests now use glob discovery, and conformance mismatches print readable diffs
+
+### Security
+
+- `zstd` 0.14.3 and `zstd-safe` 8.2.0 replace all affected 0.13.x, 0.14.1 and 7.x copies
+  (RUSTSEC-2026-0391, RUSTSEC-2026-0398 and RUSTSEC-2026-0403)
+- `zstd-sys` 2.1.2 fixes a separate compression advisory (RUSTSEC-2026-0410)
+
 ## `0.11.2` - October 25th, 2026
 
 The Roblox client moved to 0.744 and turned `DebugCodegenOptSize` off, so native code gets back the

@@ -20,7 +20,7 @@ The `@lune/*` libraries are built into the binary, so an editor cannot see them 
    ```
 
    ```text
-   Type definitions for Lune v0.11.2 have been set up successfully.
+   Type definitions for Lune v0.11.3 have been set up successfully.
    You may need to restart your editor for the changes to take effect.
    Enum and warn are left out of .luaurc's globals: the Roblox types declare them.
    ```
@@ -39,7 +39,7 @@ The `@lune/*` libraries are built into the binary, so an editor cannot see them 
 One Luau module per library, under a directory named after the LuneBlox version:
 
 ```text
-~/.luneblox/.typedefs/0.11.2/
+~/.luneblox/.typedefs/0.11.3/
   fs.luau
   luau.luau
   net.luau
@@ -71,7 +71,7 @@ alias. In a project that turns the Roblox types off, it sets `globals` as well:
 ```json
 {
   "aliases": {
-    "lune": "~/.luneblox/.typedefs/0.11.2/"
+    "lune": "~/.luneblox/.typedefs/0.11.3/"
   },
   "globals": [
     "Enum",
@@ -156,7 +156,7 @@ Or set it for the whole project in `.luaurc`:
 {
   "languageMode": "strict",
   "aliases": {
-    "lune": "~/.luneblox/.typedefs/0.11.2/"
+    "lune": "~/.luneblox/.typedefs/0.11.3/"
   }
 }
 ```
