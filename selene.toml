@@ -18,6 +18,8 @@ exclude = [
 	# (`Enum`, `Font`, `PhysicalProperties`). They are `--!nocheck` for the same reason.
 	"scripts/font_enum_map.luau",
 	"scripts/physical_properties_enum_map.luau",
+	# Runs unchanged in LuneBlox and Roblox, so its Roblox-only branch uses engine globals.
+	"scripts/ocale/conformance.luau",
 ]
 
 [lints]

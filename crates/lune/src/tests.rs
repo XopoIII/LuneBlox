@@ -177,6 +177,9 @@ create_tests! {
 
 #[cfg(feature = "std-fs")]
 create_tests! {
+    helpers_difftext: "helpers/difftextTest",
+    helpers_glob: "helpers/globTest",
+
     fs_files: "fs/files",
     fs_copy: "fs/copy",
     fs_dirs: "fs/dirs",
@@ -293,6 +296,7 @@ create_tests! {
     roblox_instance_identity: "roblox/instance/identity",
     roblox_instance_new: "roblox/instance/new",
     roblox_instance_properties: "roblox/instance/properties",
+    roblox_instance_property_migrations: "roblox/instance/propertyMigrations",
     roblox_instance_tags: "roblox/instance/tags",
 
     roblox_instance_classes_data_model: "roblox/instance/classes/DataModel",

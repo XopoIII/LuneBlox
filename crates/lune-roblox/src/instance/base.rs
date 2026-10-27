@@ -18,8 +18,11 @@ use crate::{
 };
 
 use super::{
-    Instance, data_model, instance_to_lua, instances_to_lua, opt_instance_to_lua,
-    registry::InstanceRegistry, rekey_cache_after_transfer,
+    Instance, data_model, instance_to_lua, instances_to_lua,
+    migrations::{migrated_property_get, migrated_property_set},
+    opt_instance_to_lua,
+    registry::InstanceRegistry,
+    rekey_cache_after_transfer,
 };
 
 #[allow(clippy::too_many_lines)]
@@ -281,6 +284,8 @@ fn instance_property_get(
             } else {
                 Ok(LuaValue::dom_value_to_lua(lua, &prop)?)
             }
+        } else if let Some(prop) = migrated_property_get(&this, &info) {
+            Ok(LuaValue::dom_value_to_lua(lua, &prop)?)
         } else if let (Some(enum_name), Some(enum_value)) = (info.enum_name, info.enum_default) {
             let enum_item = EnumItem::from_enum_name_and_value(&enum_name, enum_value)
                 .ok_or_else(|| {
@@ -395,8 +400,12 @@ fn instance_property_set(
         } else if let Some(dom_type) = info.value_type {
             match prop_value.lua_to_dom_value(lua, Some(dom_type)) {
                 Ok(dom_value) => {
-                    this.set_property(prop_name, dom_value);
-                    Ok(())
+                    if let Some(migration) = info.migration {
+                        migrated_property_set(&this, &prop_name, migration, &dom_value)
+                    } else {
+                        this.set_property(prop_name, dom_value);
+                        Ok(())
+                    }
                 }
                 Err(e) => Err(e.into()),
             }
