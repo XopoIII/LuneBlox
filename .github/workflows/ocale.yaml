@@ -20,6 +20,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7.0.1
 
+      - name: Check OCALE configuration
+        env:
+          ROBLOX_API_KEY: ${{ secrets.ROBLOX_API_KEY }}
+          OCALE_UNIVERSE_ID: ${{ secrets.OCALE_UNIVERSE_ID }}
+          OCALE_PLACE_ID: ${{ secrets.OCALE_PLACE_ID }}
+        run: |
+          missing=0
+          for name in ROBLOX_API_KEY OCALE_UNIVERSE_ID OCALE_PLACE_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Required OCALE secret $name is not configured"
+              missing=1
+            fi
+          done
+          exit "$missing"
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
@@ -40,7 +55,7 @@ jobs:
           curl --fail --location --retry 3 \
             https://github.com/Roblox/rocale-cli/releases/download/v0.1.3/rocale-cli-linux-x86_64.zip \
             --output rocale-cli.zip
-          echo "93b71143ecda25ab67c075843f4d82d283d600a25ea1ae27a7d70183bda1f1f  rocale-cli.zip" | sha256sum --check
+          echo "93b71143ecda25ab67c075843f4d82d283d600a25ea1ae27a7d70183bda1f1f2  rocale-cli.zip" | sha256sum --check
           unzip rocale-cli.zip -d rocale-cli
           find rocale-cli -maxdepth 2 -type f -print
 

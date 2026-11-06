@@ -110,6 +110,8 @@ impl Build {
 
         let source_base_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
         let luau_source_dir = source_base_dir.join("luau");
+        // LuneBlox: cc metadata is disabled below; track vendored C++ edits explicitly.
+        println!("cargo:rerun-if-changed={}", luau_source_dir.display());
         let common_include_dir = luau_source_dir.join("Common").join("include");
         let vm_source_dir = luau_source_dir.join("VM").join("src");
         let vm_include_dir = luau_source_dir.join("VM").join("include");

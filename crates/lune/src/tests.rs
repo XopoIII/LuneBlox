@@ -196,6 +196,7 @@ create_tests! {
     luau_load: "luau/load",
     luau_options: "luau/options",
     luau_safeenv: "luau/safeenv",
+    luau_upvalue_codegen: "luau/upvalue_codegen",
 }
 
 #[cfg(feature = "std-net")]

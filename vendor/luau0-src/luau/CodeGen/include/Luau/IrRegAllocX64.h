@@ -99,6 +99,9 @@ struct IrRegAllocX64
 
     uint32_t currInstIdx = ~0u;
 
+    // LuneBlox: scoped spills may be skipped at runtime, so their restore locations stay lazy.
+    bool keepLazyLocations = false;
+
     std::array<bool, 16> freeGprMap;
     std::array<uint32_t, 16> gprInstUsers;
     std::array<bool, 16> freeXmmMap;

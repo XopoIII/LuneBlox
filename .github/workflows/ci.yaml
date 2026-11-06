@@ -188,6 +188,6 @@ jobs:
 
       - name: Test
         run: |
-          cargo nextest run --no-fail-fast \
+          cargo nextest run --workspace --no-fail-fast \
           --locked --all-features \
           --target ${{ matrix.cargo-target }}

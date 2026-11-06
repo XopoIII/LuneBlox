@@ -255,6 +255,11 @@ impl Document {
         }
 
         let dom_child_refs = self.dom.root().children().to_vec();
+        // An empty model has no handles with which to track or destroy its dom.
+        // Drop it here rather than registering a permanently unreachable root.
+        if dom_child_refs.is_empty() {
+            return Ok(Vec::new());
+        }
 
         let dom_id = dom_registry::register(self.dom);
         let root_child_instances = dom_child_refs
