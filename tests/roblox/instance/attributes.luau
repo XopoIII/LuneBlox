@@ -103,6 +103,40 @@ local folder = Instance.new("Folder")
 folder:SetAttribute("Foo", "Bar")
 assert(folder:GetAttribute("Foo") == "Bar")
 
+-- Number attributes use Float64, including whole numbers (upstream issue #426).
+-- Exercise the Float32 precision boundary, Int32 bounds and exact Lua integer range.
+local numbers = {
+	0,
+	1,
+	2 ^ 24 + 1,
+	522587921,
+	2 ^ 31 - 1,
+	2 ^ 31,
+	16917873935,
+	-(2 ^ 24 + 1),
+	-(2 ^ 31) - 1,
+	2 ^ 53 - 1,
+	-(2 ^ 53 - 1),
+	0.1,
+}
+for index, value in numbers do
+	local name = "Number" .. index
+	folder:SetAttribute(name, value)
+	assert(folder:GetAttribute(name) == value, "SetAttribute changed " .. name)
+	assert(folder:GetAttributes()[name] == value, "GetAttributes changed " .. name)
+end
+local numberClone = folder:Clone()
+for _, xml in { false, true } do
+	local restored = roblox.deserializeModel(roblox.serializeModel({ folder }, xml))[1]
+	for index, value in numbers do
+		local name = "Number" .. index
+		assert(numberClone:GetAttribute(name) == value, "Clone changed " .. name)
+		assert(restored:GetAttribute(name) == value, "Serialization changed " .. name)
+	end
+	restored:Destroy()
+end
+numberClone:Destroy()
+
 -- Setting attributes to nil should work
 
 folder:SetAttribute("Foo", nil)

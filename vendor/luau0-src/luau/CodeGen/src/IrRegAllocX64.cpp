@@ -417,7 +417,11 @@ void IrRegAllocX64::preserve(IrInst& inst)
             if (spill.valueKind != IrValueKind::Tvalue)
                 build.mov(luauRegTag(storeReg), 0);
 
-            function.materializeRestoreLocation(spill.instIdx);
+            // LuneBlox: a conditional spill store does not initialize the location on every path.
+            // Backport LuauCodegenScopedSpillKeepLazy from Luau 0.742, without its rollout flag:
+            // https://github.com/luau-lang/luau/commit/1e8f40d2e36c7f8c80aba9daf1c45c640a87f1c2
+            if (!keepLazyLocations)
+                function.materializeRestoreLocation(spill.instIdx);
         }
 
         inst.needsReload = true;
@@ -763,6 +767,10 @@ ScopedSpills::ScopedSpills(IrRegAllocX64& owner)
     : owner(owner)
 {
     startSpillId = owner.nextSpillId;
+
+    // LuneBlox: ScopedSpills restores the same registers before the conditional path rejoins.
+    CODEGEN_ASSERT(!owner.keepLazyLocations);
+    owner.keepLazyLocations = true;
 }
 
 ScopedSpills::~ScopedSpills()
@@ -790,6 +798,9 @@ ScopedSpills::~ScopedSpills()
             i++;
         }
     }
+
+    // LuneBlox: ordinary spills after this scope may materialize restore locations again.
+    owner.keepLazyLocations = false;
 }
 
 } // namespace X64

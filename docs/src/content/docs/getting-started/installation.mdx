@@ -29,14 +29,14 @@ Releases are published to GitHub only. Nothing goes to crates.io.
 Each [release](https://github.com/XopoIII/LuneBlox/releases/latest) carries one zip file per target,
 named `luneblox-<version>-<os>-<arch>.zip`:
 
-| Target | Archive for 0.11.3 |
+| Target | Archive for 0.11.4 |
 |---|---|
-| Linux x86_64 | `luneblox-0.11.3-linux-x86_64.zip` |
-| Linux aarch64 | `luneblox-0.11.3-linux-aarch64.zip` |
-| macOS x86_64 | `luneblox-0.11.3-macos-x86_64.zip` |
-| macOS aarch64 | `luneblox-0.11.3-macos-aarch64.zip` |
-| Windows x86_64 | `luneblox-0.11.3-windows-x86_64.zip` |
-| Windows aarch64 | `luneblox-0.11.3-windows-aarch64.zip` |
+| Linux x86_64 | `luneblox-0.11.4-linux-x86_64.zip` |
+| Linux aarch64 | `luneblox-0.11.4-linux-aarch64.zip` |
+| macOS x86_64 | `luneblox-0.11.4-macos-x86_64.zip` |
+| macOS aarch64 | `luneblox-0.11.4-macos-aarch64.zip` |
+| Windows x86_64 | `luneblox-0.11.4-windows-x86_64.zip` |
+| Windows aarch64 | `luneblox-0.11.4-windows-aarch64.zip` |
 
 The archive holds the binary, `luneblox` (`luneblox.exe` on Windows), and `LICENSE.txt`. Unzip it and
 put the binary in a directory on your `PATH`.
@@ -66,7 +66,7 @@ part of the build.
 2. Build the release binary:
 
    ```sh
-   cargo build --release
+   cargo build --release --locked
    ```
 
 3. The binary is `target/release/luneblox` (`luneblox.exe` on Windows). Copy it to a directory on
@@ -78,6 +78,18 @@ part of the build.
 The release profile optimizes the Rust code for size and builds Luau's C++ at `-O3`. A debug build
 (`cargo build`) works for development but is much slower at running scripts.
 </Aside>
+
+### C++ linker errors on Linux
+
+Luau is built with your C++ compiler and linked with its standard library. If the linker reports an
+undefined symbol such as `std::__cxx11::basic_string<...>::_M_create_plus`, check that the compiler,
+headers and the `libstdc++` selected by the linker belong to a compatible toolchain. Mixing versions
+can fail even after every Rust crate compiled successfully; upstream [issue #424](https://github.com/lune-org/lune/issues/424)
+contains this kind of failure with GCC 16.
+
+Use a consistent C/C++ toolchain, check any `CC`, `CXX`, `LIBRARY_PATH` and `RUSTFLAGS` overrides,
+and rebuild in a fresh Cargo target directory after correcting it. Alternatively, use the Linux
+binary from a GitHub release. Updating Cargo dependencies alone does not fix a C++ toolchain mismatch.
 
 ## Beside upstream Lune
 

@@ -210,3 +210,8 @@ pub fn remove(dom_id: DomId) {
 pub fn contains(dom_id: DomId) -> bool {
     lock().doms.contains_key(&dom_id)
 }
+
+#[cfg(test)]
+pub(crate) fn contains_root(root_ref: DomRef) -> bool {
+    lock().doms.values().any(|dom| dom.root_ref() == root_ref)
+}

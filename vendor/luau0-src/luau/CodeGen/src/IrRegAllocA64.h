@@ -64,7 +64,8 @@ struct IrRegAllocA64
     void setupExitSyncEntry(uint32_t blockIdx);
 
     // Spills all live registers that outlive current instruction; all allocated registers are assumed to be undefined
-    size_t spill(uint32_t index, std::initializer_list<RegisterA64> live = {});
+    // LuneBlox: conditional spills must not mark a lazy restore location initialized on every path.
+    size_t spill(uint32_t index, std::initializer_list<RegisterA64> live = {}, bool keepLazyLocations = false);
 
     // Restores registers starting from the offset returned by spill(); all spills will be restored to the original registers
     void restore(size_t start);
@@ -98,7 +99,8 @@ struct IrRegAllocA64
     void restore(const Spill& s, RegisterA64 reg);
 
     // Spills the selected register
-    void spill(Set& set, uint32_t index, uint32_t targetInstIdx);
+    // LuneBlox: propagate conditional spill bookkeeping to the selected register.
+    void spill(Set& set, uint32_t index, uint32_t targetInstIdx, bool keepLazyLocations);
 
     uint32_t findInstructionWithFurthestNextUse(Set& set) const;
 

@@ -8,6 +8,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## `0.11.4` - November 6th, 2026
+
+Numeric attributes now retain Roblox-compatible precision, empty model documents no longer leak
+unreachable DOMs, and the vendored code generator carries an upstream conditional-spill fix.
+Luau remains at 0.740 and mlua at 0.12.2.
+
+### Fixed
+
+- Numeric instance attributes use `Float64`, including whole numbers, as Roblox does. They no longer
+  narrow through `Int32` or `Float32`, which rounded `522587921` and wrapped `16917873935`. Regression
+  tests cover getters, cloning and binary/XML model round trips, including signed values through
+  the exact-integer limit of a Luau number ([upstream #426](https://github.com/lune-org/lune/issues/426))
+- Empty model deserialization no longer registers an unreachable DOM. The deferred cleanup added in
+  0.10.17 already covers nonempty models and places after Lua GC; an empty model has no returned
+  instance through which to track its DOM ([upstream #415](https://github.com/lune-org/lune/issues/415))
+- Backport Luau 0.742's conditional-spill bookkeeping fix into the vendored 0.740 code generator
+  ([upstream #425](https://github.com/lune-org/lune/issues/425),
+  [Luau sync #3038](https://github.com/luau-lang/luau/commit/1e8f40d2e36c7f8c80aba9daf1c45c640a87f1c2)).
+  Conditional barrier spills no longer mark lazy restore locations initialized on the path that
+  skips the store. Apply the paired x64/ARM64 allocator changes, preserve the earlier ARM64
+  far-constant fix, and add interpreter/native tests for mutable upvalues under register pressure.
+  The original Windows x64 report still requires validation on an AVX-capable host
+- Track vendored C++ source changes in Cargo so incremental builds actually rebuild Luau after
+  a codegen patch, rather than silently reusing the previous native library
+
+### Security
+
+- Replace the yanked `async-executor` 1.14.0 with the compatible 1.14.1 release
+
+### Documentation
+
+- Source-build instructions use the lockfile and explain how to diagnose Linux C++ standard-library
+  linker errors such as the one in [upstream #424](https://github.com/lune-org/lune/issues/424). No
+  dependency versions were changed for this toolchain-specific report
+
 ## `0.11.3` - October 27th, 2026
 
 Roblox instance properties retired by the reflection database now read and write through their

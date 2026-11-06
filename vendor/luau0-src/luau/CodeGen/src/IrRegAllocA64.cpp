@@ -159,7 +159,7 @@ RegisterA64 IrRegAllocA64::allocReg(KindA64 kind, uint32_t index)
         // Try to find and spill a register that is not used in the current instruction and has the furthest next use
         if (uint32_t furthestUseTarget = findInstructionWithFurthestNextUse(set); furthestUseTarget != kInvalidInstIdx)
         {
-            spill(set, index, furthestUseTarget);
+            spill(set, index, furthestUseTarget, /* keepLazyLocations */ false); // LuneBlox: unconditional spill.
             CODEGEN_ASSERT(set.free != 0);
         }
         else
@@ -191,7 +191,7 @@ RegisterA64 IrRegAllocA64::allocTemp(KindA64 kind)
         // Try to find and spill a register that is not used in the current instruction and has the furthest next use
         if (uint32_t furthestUseTarget = findInstructionWithFurthestNextUse(set); furthestUseTarget != kInvalidInstIdx)
         {
-            spill(set, currInstIdx, furthestUseTarget);
+            spill(set, currInstIdx, furthestUseTarget, /* keepLazyLocations */ false); // LuneBlox: unconditional spill.
             CODEGEN_ASSERT(set.free != 0);
         }
         else
@@ -417,7 +417,8 @@ void IrRegAllocA64::setupExitSyncEntry(uint32_t blockIdx)
     }
 }
 
-size_t IrRegAllocA64::spill(uint32_t index, std::initializer_list<RegisterA64> live)
+// LuneBlox: pass whether this entire spill/restore sequence can be skipped at runtime.
+size_t IrRegAllocA64::spill(uint32_t index, std::initializer_list<RegisterA64> live, bool keepLazyLocations)
 {
     static const KindA64 sets[] = {KindA64::x, KindA64::q};
 
@@ -463,7 +464,7 @@ size_t IrRegAllocA64::spill(uint32_t index, std::initializer_list<RegisterA64> l
             CODEGEN_ASSERT(targetInstIdx != kInvalidInstIdx);
             CODEGEN_ASSERT(function.instructions[targetInstIdx].regA64.index == reg);
 
-            spill(set, index, targetInstIdx);
+            spill(set, index, targetInstIdx, keepLazyLocations); // LuneBlox: preserve conditional scope.
 
             regs &= ~(1u << reg);
         }
@@ -596,7 +597,8 @@ void IrRegAllocA64::restore(const IrRegAllocA64::Spill& s, RegisterA64 reg)
     inst.regA64 = reg;
 }
 
-void IrRegAllocA64::spill(Set& set, uint32_t index, uint32_t targetInstIdx)
+// LuneBlox: conditional spills preserve lazy location state for the path that skips the store.
+void IrRegAllocA64::spill(Set& set, uint32_t index, uint32_t targetInstIdx, bool keepLazyLocations)
 {
     IrInst& def = function.instructions[targetInstIdx];
     int reg = def.regA64.index;
@@ -633,7 +635,11 @@ void IrRegAllocA64::spill(Set& set, uint32_t index, uint32_t targetInstIdx)
             if (loc.kind != IrValueKind::Tvalue)
                 build.str(wzr, mem(rBase, storeReg * sizeof(TValue) + offsetof(TValue, tt)));
 
-            function.materializeRestoreLocation(targetInstIdx);
+            // LuneBlox: a conditional spill store does not initialize the location on every path.
+            // Backport LuauCodegenScopedSpillKeepLazy from Luau 0.742, without its rollout flag:
+            // https://github.com/luau-lang/luau/commit/1e8f40d2e36c7f8c80aba9daf1c45c640a87f1c2
+            if (!keepLazyLocations)
+                function.materializeRestoreLocation(targetInstIdx);
         }
 
         // when checking if value has a restore operation to spill it, we only allow it in the same block

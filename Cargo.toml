@@ -47,11 +47,12 @@ lto = true
 opt-level = 3
 
 [patch.crates-io]
-# Luau's sources as luau0-src 0.22.0+luau740 ships them, with one fix to the ARM64 native code
-# generator (search the vendored tree for "LuneBlox:"). Luau 0.740's register allocator can plan
-# to reload a spilled value from a constant past K255, which no single ARM64 load reaches: an
-# asserting build of Luau (mlua's, so ours) stops the process there, and a release build loads
-# the wrong value. Drop this once a Luau release carries a fix.
+# Luau's sources as luau0-src 0.22.0+luau740 ships them, with scoped native codegen fixes
+# (search the vendored tree for "LuneBlox:"). The ARM64 allocator can plan to reload a
+# spilled value from a constant past K255, beyond a single load's reach. Conditional
+# barrier spills can also incorrectly mark lazy restore locations materialized even
+# when the spill branch does not run, corrupting upvalues on x64. Keep these patches
+# until a Luau release carries each fix; preserve them when updating the vendor.
 luau0-src = { path = "vendor/luau0-src" }
 
 # Use rbx_binary with zstd 0.14 until upstream releases the security update.

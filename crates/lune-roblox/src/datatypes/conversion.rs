@@ -137,7 +137,8 @@ impl LuaToDomValue for LuaValue {
         } else {
             match self {
                 LuaValue::Boolean(b) => Ok(DomValue::Bool(*b)),
-                LuaValue::Integer(i) => Ok(DomValue::Int32(*i as i32)),
+                // Without a reflected type, numbers are Float64 (not narrowed integers).
+                LuaValue::Integer(i) => Ok(DomValue::Float64(*i as f64)),
                 LuaValue::Number(n) => Ok(DomValue::Float64(*n)),
                 LuaValue::String(s) => Ok(DomValue::String(s.to_str()?.to_string())),
                 LuaValue::UserData(u) => u.lua_to_dom_value(lua, None),
