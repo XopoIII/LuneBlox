@@ -32,6 +32,17 @@ Luau remains at 0.740 and mlua at 0.12.2.
   The original Windows x64 report still requires validation on an AVX-capable host
 - Track vendored C++ source changes in Cargo so incremental builds actually rebuild Luau after
   a codegen patch, rather than silently reusing the previous native library
+- Correct the pinned `rocale-cli` installer SHA-256 digest, which was missing its final hex digit
+  and stopped the optional OCALE workflow before testing. Check required OCALE secrets before
+  building; missing configuration remains an explicit failure, not a skipped or passing comparison
+- Run CI tests across the whole workspace, including the Rust DOM lifetime regressions, rather
+  than only the default runtime package
+
+### Changed
+
+- Refresh fast flags against Roblox client 0.746.0.7461267. `LuauCodegenIntegerCompare` is now
+  explicitly disabled, matching the client; the other values and ARM64-only flags are unchanged.
+  The table has 39 flags, with 36 enabled, and Luau itself remains 0.740
 
 ### Security
 
