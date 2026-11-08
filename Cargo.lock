@@ -1526,7 +1526,7 @@ dependencies = [
 
 [[package]]
 name = "lune"
-version = "0.11.4"
+version = "0.11.5"
 dependencies = [
  "anyhow",
  "async-fs",

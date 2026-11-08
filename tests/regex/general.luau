@@ -12,7 +12,9 @@ assert(mtch.start == 1)
 assert(mtch.finish == 4)
 assert(mtch.len == 4)
 assert(mtch.text == "1337")
-assert(#mtch == mtch.len)
+-- The cast is for the linter: `#` here is the match's own `__len`, which the extern's
+-- table shape cannot tell it about.
+assert(#(mtch :: any) == mtch.len)
 
 re = regex.new([[([0-9]+) (\d+) \D+ \d+ (\d)]])
 local captures = re:captures("1337 125600 wow! 1984 0")

@@ -8,7 +8,7 @@ local luau = require("@lune/luau")
 for _, count in { 10, 11, 13, 32 } do
 	for _, typed in { false, true } do
 		for _, optimizationLevel in { 1, 2 } do
-			local names = {}
+			local names: { string } = {}
 			local zeros = {}
 			for index = 0, count - 1 do
 				table.insert(names, `u{index}`)

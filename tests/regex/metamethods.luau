@@ -5,7 +5,9 @@ local regex = require("@lune/regex")
 
 local re = regex.new("[0-9]+")
 assert(tostring(re) == "[0-9]+")
-assert(typeof(re) == "Regex")
+-- The cast keeps the solver from deciding this comparison itself and refining `re` away: an
+-- extern's typeof tag is not a compile-time singleton, so the check belongs to the runtime.
+assert((typeof(re) :: string) == "Regex")
 
 local mtch = re:find("1337 wow")
 assert(tostring(mtch) == "1337")

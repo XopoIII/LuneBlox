@@ -8,6 +8,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## `0.11.5` - November 8th, 2026
+
+A maintenance release. The runtime, its API and its behaviour are those of 0.11.4; the repository's
+own type gate moves to the XopoIII/luau-lsp fork and its Luau sources gain the annotations the
+fork's Luau 0.745 solver asks for. Nothing a script or test does at runtime changes.
+
+### Changed
+
+- **The repository's analyzer is XopoIII/luau-lsp 1.70.1-xopoiii.1**, the fork, from JohnnyMorganz/luau-lsp 1.70.1. It reads Luau 0.745, from 0.740, and carries the fork's fixes ahead of the stable release: `analyze` reports each module's errors once instead of repeating a dependency's, no longer warns about watcher registration it never uses, and `EnumItem.EnumType` is the item's own enum.
+- **The Luau scripts, tests and `.lune` examples are annotated for the 0.745 solver**: decoded JSON is given its shape at the binding (`generate_roblox_fflags`, `generate_enum_legacy_names`), sort comparators name their parameters, header maps cast to the typedefs' `HttpHeaderMap`/`HttpQueryMap`, `pcall`s that no longer unify overloads are wrapped or cast, the deque helper's metatable return is cast, a `typeof` assertion that let the solver refine a value to nil is cut off from refinement, and `tonumber` results are captured and nil-checked before comparison. All of it erases at runtime.
+
 ## `0.11.4` - November 6th, 2026
 
 Numeric attributes now retain Roblox-compatible precision, empty model documents no longer leak

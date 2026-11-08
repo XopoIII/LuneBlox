@@ -8,7 +8,7 @@ local response = net.request({
 	url = "https://httpbingo.org/gzip",
 	headers = {
 		["Accept-Encoding"] = "gzip",
-	} :: { [string]: string },
+	} :: net.HttpHeaderMap,
 })
 
 assert(
@@ -35,7 +35,7 @@ local response2 = net.request({
 	url = "https://httpbingo.org/gzip",
 	headers = {
 		["Accept-Encoding"] = "gzip",
-	} :: { [string]: string },
+	} :: net.HttpHeaderMap,
 	options = { decompress = false },
 })
 

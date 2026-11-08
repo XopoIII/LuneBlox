@@ -173,7 +173,7 @@ local apiResult = net.request({
 	method = "PATCH",
 	headers = {
 		["Content-Type"] = "application/json",
-	} :: { [string]: string },
+	} :: net.HttpHeaderMap,
 	body = serde.encode("json", {
 		title = "foo",
 		body = "bar",

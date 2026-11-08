@@ -13,7 +13,7 @@ local QUERY: { [string]: string } = {
 
 local response = net.request({
 	url = "https://httpbingo.org/anything",
-	query = QUERY,
+	query = QUERY :: net.HttpQueryMap,
 })
 
 assert(
@@ -38,7 +38,7 @@ assert(args ~= nil, "Response body did not contain an args table")
 -- multiple values of the same name, so we just grab the first
 
 for key, value in QUERY do
-	local received = args[key][1]
+	local received = (args :: { [string]: { string } })[key][1]
 	if received == nil then
 		error(string.format("Response body did not contain query parameter '%s'", key))
 	elseif typeof(received) ~= typeof(value) then

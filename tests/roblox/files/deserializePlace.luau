@@ -17,6 +17,6 @@ for _, placeDir in placeDirs do
 	assert(placeBinary.ClassName == "DataModel")
 	assert(placeXml.ClassName == "DataModel")
 
-	assert(placeBinary:IsA("ServiceProvider"))
-	assert(placeXml:IsA("ServiceProvider"))
+	assert((placeBinary :: any):IsA("ServiceProvider"))
+	assert((placeXml :: any):IsA("ServiceProvider"))
 end

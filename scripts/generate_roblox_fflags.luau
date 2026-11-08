@@ -84,19 +84,22 @@ local function scan(dir: string, relative: string)
 end
 scan(luauDir :: string, "")
 
-local settings = serde.decode("json", net.request(SETTINGS_URL).body).applicationSettings
+local settings =
+	serde.decode("json", net.request(SETTINGS_URL).body).applicationSettings :: { [string]: string }
 local clientVersion = serde.decode("json", net.request(VERSION_URL).body).version
 
-local flags = {}
+local flags: { { name: string, enabled: boolean } } = {}
 for key, value in settings do
 	local name = string.match(key, "^D?FFlag(.+)$")
 	if name and declared[name] and (value == "True" or value == "False") then
 		table.insert(flags, { name = name, enabled = value == "True" })
 	end
 end
-table.sort(flags, function(a, b)
+local function byName(a: { name: string, enabled: boolean }, b: { name: string, enabled: boolean })
 	return a.name < b.name
-end)
+end
+
+table.sort(flags, byName)
 
 local enabledCount = 0
 local contents = ""

@@ -19,8 +19,8 @@ local clonedChild = child:Clone()
 assert(clonedChild ~= child)
 assert(clonedChild.Parent == nil)
 
-local clonedObjValue1 = clonedChild[objValue1.Name]
-local clonedObjValue2 = clonedChild[objValue2.Name]
+local clonedObjValue1 = (clonedChild :: any)[objValue1.Name]
+local clonedObjValue2 = (clonedChild :: any)[objValue2.Name]
 
 assert(clonedObjValue1 ~= objValue1)
 assert(clonedObjValue2 ~= objValue2)

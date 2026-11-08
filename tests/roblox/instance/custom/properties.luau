@@ -35,7 +35,7 @@ local _ = part.PassingPartTest
 
 -- Any number of args passed & returned should work
 
-local counters = {}
+local counters: { [string]: number } = {}
 roblox.implementProperty("Instance", "Counter", function(instance)
 	local value = counters[instance:GetDebugId()] or 0
 	value += 1
@@ -57,8 +57,9 @@ assert(inst.Counter == 13, "implementProperty callback should return proper valu
 
 -- Properties implemented by Lune should take precedence
 
-roblox.implementProperty("Instance", "Parent", function()
+roblox.implementProperty("Instance", "Parent", function(_instance: any)
 	error("unreachable")
+	return nil :: any
 end)
 local _ = inst.Parent
 local _ = part.Parent

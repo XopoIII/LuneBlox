@@ -1,6 +1,6 @@
 --!strict
 -- utf8.graphemes is a Roblox addition that luau-lsp's standard platform does not declare
-local graphemes = (utf8 :: any).graphemes
+local graphemes = (utf8 :: any).graphemes :: (string, number?, number?) -> () -> (number, number)
 
 local function collect(s: string, i: number?, j: number?): { string }
 	local result = {}
@@ -42,7 +42,7 @@ same(collect("a\r\nb"), { "a", "\r\n", "b" })
 -- Positions are bytes in the whole string, and i and j narrow it as string.sub does
 
 local s = `a{accented}b`
-local positions = {}
+local positions: { string } = {}
 for first, last in graphemes(s) do
 	table.insert(positions, `{first}-{last}`)
 end

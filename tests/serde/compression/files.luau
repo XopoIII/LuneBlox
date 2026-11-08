@@ -107,8 +107,15 @@ for _, test in TESTS do
 
 	-- Compression
 	if TEST_COMPRESS then
-		testOperation("Compress", serde.compress, test.Format, source, target)
-		testOperation("Compress", serde.compress, test.Format, buffer.fromstring(source), target)
+		-- Wrapped to the operation's two parameters: `serde.compress` also takes an optional
+		-- level, and the new solver no longer accepts the longer signature where the shorter one
+		-- is asked for.
+		testOperation("Compress", function(format, data)
+			return serde.compress(format, data)
+		end, test.Format, source, target)
+		testOperation("Compress", function(format, data)
+			return serde.compress(format, data)
+		end, test.Format, buffer.fromstring(source), target)
 	end
 
 	-- Decompression

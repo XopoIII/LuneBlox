@@ -24,7 +24,7 @@ function dequeLib.new<T>(initValue: T?): Deque<T>
 		self._values[self._head] = initValue
 	end
 
-	return setmetatable(self, deque)
+	return setmetatable(self :: any, deque) :: any
 end
 
 function deque.pushfront<T>(self: Deque<T>, value: T)

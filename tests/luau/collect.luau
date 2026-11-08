@@ -3,7 +3,7 @@ local luau = require("@lune/luau")
 
 assert(type(luau.collect) == "function", "expected `luau.collect` to be a function")
 
-local garbage: { { number } }? = table.create(100000)
+local garbage = table.create(100000) :: { { number } }
 for index = 1, 100000 do
 	(garbage :: { { number } })[index] = { index }
 end

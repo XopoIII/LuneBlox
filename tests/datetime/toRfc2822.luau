@@ -40,7 +40,7 @@ assert(string.match(year, "^%d%d%d%d$"), "Year must be a 4-digit number")
 
 -- Validate date
 local dayNum = tonumber(date)
-assert(dayNum >= 1 and dayNum <= 31, "Date must be between 1 and 31")
+assert(dayNum ~= nil and dayNum >= 1 and dayNum <= 31, "Date must be between 1 and 31")
 
 -- Validate time
 local hour, minute, second = time:match("^(%d%d):(%d%d):(%d%d)$")
@@ -48,15 +48,12 @@ if not hour or not minute or not second then
 	error("Failed to extract time components from RFC 2822 date string")
 end
 
-assert(hour and tonumber(hour) >= 0 and tonumber(hour) < 24, "Hour must be between 0 and 23")
-assert(
-	minute and tonumber(minute) >= 0 and tonumber(minute) < 60,
-	"Minute must be between 0 and 59"
-)
-assert(
-	second and tonumber(second) >= 0 and tonumber(second) < 60,
-	"Second must be between 0 and 59"
-)
+local hourNum = tonumber(hour)
+assert(hourNum ~= nil and hourNum >= 0 and hourNum < 24, "Hour must be between 0 and 23")
+local minuteNum = tonumber(minute)
+assert(minuteNum ~= nil and minuteNum >= 0 and minuteNum < 60, "Minute must be between 0 and 59")
+local secondNum = tonumber(second)
+assert(secondNum ~= nil and secondNum >= 0 and secondNum < 60, "Second must be between 0 and 59")
 
 -- Validate timezone
 local tzHour, tzMinute = timezone:match("^([+-]%d%d)(%d%d)$")
@@ -64,11 +61,13 @@ if not tzHour or not tzMinute then
 	error("Failed to extract timezone components from RFC 2822 date string")
 end
 
+local tzHourNum = tonumber(tzHour)
 assert(
-	tzHour and tonumber(tzHour) >= -14 and tonumber(tzHour) <= 14,
+	tzHourNum ~= nil and tzHourNum >= -14 and tzHourNum <= 14,
 	"Timezone hour offset must be between -14 and +14"
 )
+local tzMinuteNum = tonumber(tzMinute)
 assert(
-	tzMinute and tonumber(tzMinute) >= 0 and tonumber(tzMinute) < 60,
+	tzMinuteNum ~= nil and tzMinuteNum >= 0 and tzMinuteNum < 60,
 	"Timezone minute offset must be between 0 and 59"
 )

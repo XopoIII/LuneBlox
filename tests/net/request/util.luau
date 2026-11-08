@@ -5,11 +5,14 @@ local task = require("@lune/task")
 
 local util = {}
 
-function util.pass(method, url, message)
-	local success, response = pcall(net.request, {
-		method = method,
-		url = url,
-	})
+function util.pass(method: net.HttpMethod, url: string, message: string)
+	local success, response = pcall(
+		net.request,
+		{
+			method = method,
+			url = url,
+		} :: net.FetchParams
+	)
 	if not success then
 		error(`{message} errored!\nError message: {tostring(response)}`)
 	elseif not response.ok then
@@ -23,11 +26,14 @@ function util.pass(method, url, message)
 	end
 end
 
-function util.fail(method, url, message)
-	local success, response = pcall(net.request, {
-		method = method,
-		url = url,
-	})
+function util.fail(method: net.HttpMethod, url: string, message: string)
+	local success, response = pcall(
+		net.request,
+		{
+			method = method,
+			url = url,
+		} :: net.FetchParams
+	)
 	if not success then
 		error(`{message} errored!\nError message: {tostring(response)}`)
 	elseif response.ok then

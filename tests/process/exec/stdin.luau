@@ -25,7 +25,7 @@ if DISABLE_WINDOWS_TESTS and process.os == "windows" then
 	process.exit(0)
 end
 
-local options = { stdio = { stdin = expected } }
+local options: process.ExecOptions = { stdio = { stdin = expected } }
 local result = if process.os == "windows"
 	then process.exec("powershell", {
 		"-NonInteractive",
