@@ -19,7 +19,7 @@
 </div>
 
 LuneBlox is [Lune](https://github.com/lune-org/lune) with the [Luau](https://luau-lang.org) underneath
-changed, so that code tested or measured here behaves like the code players run.
+changed, bringing standalone tests and measurements closer to the code players run.
 
 ```sh
 luneblox run script.luau
@@ -29,26 +29,26 @@ luneblox build script.luau  # a standalone executable, carrying the same Luau an
 
 ## Why LuneBlox
 
-Lune 0.10.5 runs Luau 0.709. Roblox runs 0.740 (September 2026), and on top of the version it runs
+Lune 0.10.5 runs Luau 0.709. Roblox had reached 0.740 in September 2026, and on top of the version it runs
 Luau with its own set of Luau's fast flags -- Luau ships new compiler and VM work behind flags that
 default to off, and Roblox turns them on remotely. A benchmark or a test run on Lune measures a VM no
 game runs.
 
-LuneBlox closes both gaps:
+LuneBlox narrows both gaps:
 
-| | Lune 0.10.5 | LuneBlox 0.11.4 |
+| | Lune 0.10.5 | LuneBlox 0.11.5 |
 |---|---|---|
-| Luau | 0.709 | 0.740, the version Roblox runs |
+| Luau | 0.709 | 0.740 with backported codegen fixes |
 | Luau's fast flags | Luau's defaults | set as the live Roblox client sets them (`crates/lune/src/rt/roblox_fflags.rs`) |
 | Luau's C++ built with | `-Os` (the workspace's size profile reached it) | `-O3` |
-| `_VERSION` | `Lune 0.10.5+709` | `LuneBlox 0.11.4+740` |
+| `_VERSION` | `Lune 0.10.5+709` | `LuneBlox 0.11.5+740` |
 
 ## Performance
 
 Measured on an Apple M1, median of three runs, on one Luau networking library's generated modules:
 interpreted code -- what most Roblox clients run -- is 39 to 57% faster to encode and decode, and
 modules that Lune's Luau left interpreted even when natively compiled now compile. Native code is
-built with the flags the live Roblox client sets, so native timings here are what Roblox gets. Roblox
+built with flags matched to the live Roblox client; timings still depend on VM version and host. Roblox
 set `DebugCodegenOptSize`, which skips a native optimisation, until client 0.744 turned it off; since
 0.11.2 LuneBlox has it off too, and those modules' native fires and decodes run 13 to 38% faster.
 

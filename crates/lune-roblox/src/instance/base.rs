@@ -188,7 +188,9 @@ pub fn add_methods<M: LuaUserDataMethods<Instance>>(m: &mut M) {
                 this.remove_attribute(attribute_name);
                 Ok(())
             } else {
-                match lua_value.lua_to_dom_value(lua, None) {
+                // Attribute strings use the byte-preserving wire type; names remain UTF-8.
+                let variant_type = lua_value.is_string().then_some(DomType::BinaryString);
+                match lua_value.lua_to_dom_value(lua, variant_type) {
                     Ok(dom_value) => {
                         ensure_valid_attribute_value(&dom_value)?;
                         this.set_attribute(attribute_name, dom_value);

@@ -8,6 +8,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## `0.11.5` - November 11th, 2026
+
+Binary attribute strings now survive without UTF-8 decoding, and runtime, documentation and CI
+dependencies have been refreshed. Luau remains at patched 0.740 and mlua at 0.12.2.
+
+### Fixed
+
+- Preserve every byte in string attributes, including NUL, invalid UTF-8 and compiled Luau bytecode.
+  Convert attribute values to `BinaryString` rather than text; attribute names still require UTF-8.
+  Regression tests cover all 256 byte values, getters, cloning, deletion and binary/XML model round
+  trips ([upstream #330](https://github.com/lune-org/lune/issues/330),
+  [upstream #428](https://github.com/lune-org/lune/pull/428)). This is an independent implementation
+  of the reported fix: the proposed upstream name-only change does not fix value conversion.
+
+### Security
+
+- Update zip from 9.0.2 to 9.5.1, including the fix for the critical dual-header parser differential
+  [GHSA-m665-v7pm-7grj](https://github.com/advisories/GHSA-m665-v7pm-7grj) (fixed upstream in 9.0.5).
+  Keep the existing rbx_binary/zstd security patch
+
+### Changed
+
+- Update all compatible Cargo dependencies and adopt saphyr 0.3.3, parking_lot 0.13 and rustyline 19.
+  Refresh the lockfile, including zip 9.5.1, toml 1.2.1 and tokio 1.54.1
+- Update Astro to 7.4.10, Starlight to 0.42.10 and postcss-selector-parser to 7.2.0; refresh the npm
+  lockfile. Other documentation libraries and pinned developer tools are already at their latest
+  stable releases. The bootstrap LuneBlox tool now uses the last published release, 0.11.4
+- Update CI installer and GitHub release actions to their latest stable releases
+- Preserve the patched Luau vendor directory: the latest stable mlua-sys still requires luau0-src
+  0.22, so the newer 0.23 / Luau 0.745 cannot be substituted safely. Preserve the rbx_binary security
+  patch too; the latest crates.io release still depends on the older zstd series
+
+### Upstream review
+
+- Review all 20 issues and PRs created or updated from October 1 through November 11, 2026 in
+  [lune-org/lune](https://github.com/lune-org/lune). Of these, nine were newly opened in the window
+- Already covered: EnumItem identity (#420), coverage (#421), Enum lookups (#422/#423), CFrame
+  rotations (#409/#419), numeric attributes (#426/#427), native conditional spills (#425), and
+  source-build guidance (#424). Do not merge those changes a second time
+- Older reports updated in the window (#128, #199, #264, #291, #321, #347, #357, #412, #416) add no
+  new applicable upstream patch. Keep the existing implementations and regression coverage rather
+  than replacing them with closed-report suggestions
+
+### Documentation
+
+- Describe Luau 0.740 as the supported patched version, not a claim about the current Roblox
+  version, and document the binding constraint and all vendor codegen patches
+
 ## `0.11.4` - November 6th, 2026
 
 Numeric attributes now retain Roblox-compatible precision, empty model documents no longer leak
