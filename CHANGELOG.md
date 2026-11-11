@@ -22,6 +22,12 @@ dependencies have been refreshed. Luau remains at patched 0.740 and mlua at 0.12
   [upstream #428](https://github.com/lune-org/lune/pull/428)). This is an independent implementation
   of the reported fix: the proposed upstream name-only change does not fix value conversion.
 
+### Security
+
+- Update zip from 9.0.2 to 9.5.1, including the fix for the critical dual-header parser differential
+  [GHSA-m665-v7pm-7grj](https://github.com/advisories/GHSA-m665-v7pm-7grj) (fixed upstream in 9.0.5).
+  Keep the existing rbx_binary/zstd security patch
+
 ### Changed
 
 - Update all compatible Cargo dependencies and adopt saphyr 0.3.3, parking_lot 0.13 and rustyline 19.
