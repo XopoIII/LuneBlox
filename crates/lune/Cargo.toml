@@ -1,6 +1,6 @@
 [package]
 name = "lune"
-version = "0.11.4"
+version = "0.11.5"
 edition = "2024"
 license = "MPL-2.0"
 repository = "https://github.com/XopoIII/LuneBlox"
@@ -76,7 +76,7 @@ lune-utils = { version = "0.3.5", path = "../lune-utils" }
 ### CLI
 
 clap = { optional = true, version = "4.6", features = ["derive"] }
-rustyline = { optional = true, version = "18.0" }
+rustyline = { optional = true, version = "19.0" }
 zip = { optional = true, version = "9.0", default-features = false, features = [
 	"bzip2",
 	"deflate",

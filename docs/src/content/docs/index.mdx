@@ -1,9 +1,9 @@
 ---
 title: LuneBlox
-description: A standalone Luau runtime that runs the Luau version Roblox runs, with the fast flags the live Roblox client sets.
+description: A standalone Luau runtime with patched Luau and fast flags matched to the live Roblox client.
 template: splash
 hero:
-  tagline: A standalone Luau runtime that runs Luau the way Roblox runs it. Code tested or measured here behaves like the code players run.
+  tagline: A standalone Luau runtime that runs Luau the way Roblox runs it. Standalone tests and measurements closer to the code players run.
   image:
     file: ../../assets/logo.png
     alt: LuneBlox
@@ -38,13 +38,13 @@ luneblox build script.luau  # a standalone executable, carrying the same Luau an
 
 ## What it changes
 
-Lune 0.10.5 runs Luau 0.709. Roblox runs 0.740, and runs it with its own set of Luau's fast flags:
+Lune 0.10.5 runs Luau 0.709. LuneBlox uses patched 0.740 and Roblox's set of Luau fast flags:
 Luau ships new compiler and VM work behind flags that default to off, and Roblox turns them on
 remotely. A benchmark or a test run on Lune measures a VM no game runs.
 
 | | Lune 0.10.5 | LuneBlox |
 |---|---|---|
-| Luau | 0.709 | 0.740, the version Roblox runs |
+| Luau | 0.709 | 0.740 with backported codegen fixes |
 | Luau's fast flags | Luau's defaults | set as the live Roblox client sets them |
 | Luau's C++ built with | `-Os` | `-O3` |
 | `_VERSION` | `Lune 0.10.5+709` | `LuneBlox <version>+740` |

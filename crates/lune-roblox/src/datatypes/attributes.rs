@@ -40,7 +40,8 @@ pub fn ensure_valid_attribute_name(name: impl AsRef<str>) -> LuaResult<()> {
 pub fn ensure_valid_attribute_value(value: &DomValue) -> LuaResult<()> {
     let is_valid = matches!(
         value.ty(),
-        DomType::Bool
+        DomType::BinaryString
+            | DomType::Bool
             | DomType::BrickColor
             | DomType::CFrame
             | DomType::Color3

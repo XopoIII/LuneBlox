@@ -137,6 +137,42 @@ for _, xml in { false, true } do
 end
 numberClone:Destroy()
 
+-- Attribute values are byte strings, not necessarily UTF-8 (upstream #330 and #428).
+local bytes = {}
+for byte = 0, 255 do
+	table.insert(bytes, string.char(byte))
+end
+local byteValues = {
+	"",
+	"plain text",
+	"embedded" .. string.char(0) .. "nul",
+	table.concat(bytes),
+	require("@lune/luau").compile("return 42"),
+}
+for index, value in byteValues do
+	local name = "Bytes" .. index
+	folder:SetAttribute(name, value)
+	assert(folder:GetAttribute(name) == value)
+	assert(folder:GetAttributes()[name] == value)
+end
+local byteClone = folder:Clone()
+for _, xml in { false, true } do
+	local restored = roblox.deserializeModel(roblox.serializeModel({ folder }, xml))[1]
+	for index, value in byteValues do
+		local name = "Bytes" .. index
+		assert(byteClone:GetAttribute(name) == value, "Clone changed " .. name)
+		assert(restored:GetAttribute(name) == value, "Serialization changed " .. name)
+		assert(restored:GetAttributes()[name] == value)
+	end
+	restored:Destroy()
+end
+byteClone:Destroy()
+folder:SetAttribute("Bytes4", nil)
+assert(folder:GetAttribute("Bytes4") == nil)
+assert(not pcall(function()
+	folder:SetAttribute(string.char(255), "valid value")
+end), "Non-UTF-8 attribute names must still be rejected")
+
 -- Setting attributes to nil should work
 
 folder:SetAttribute("Foo", nil)

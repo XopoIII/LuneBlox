@@ -19,5 +19,5 @@ console = "0.16"
 dunce = "1.0"
 os_str_bytes = { version = "7.2", features = ["conversions"] }
 path-clean = "1.0"
-parking_lot = "0.12.5"
+parking_lot = "0.13"
 semver = "1.0"

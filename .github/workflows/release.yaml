@@ -110,7 +110,7 @@ jobs:
         run: ./scripts/unpack-releases.sh "./releases"
 
       - name: Create release
-        uses: softprops/action-gh-release@v3.0.3
+        uses: softprops/action-gh-release@v3.0.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

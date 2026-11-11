@@ -160,7 +160,7 @@ jobs:
       # cargo-binstall fell back to building nextest from source on macOS aarch64, which
       # nextest refuses without --locked; install-action always fetches the prebuilt binary
       - name: Install nextest
-        uses: taiki-e/install-action@v2.87.31
+        uses: taiki-e/install-action@v2.90.3
         with:
           tool: cargo-nextest
 

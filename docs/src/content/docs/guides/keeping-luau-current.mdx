@@ -6,7 +6,7 @@ description: A maintainer's guide to moving LuneBlox to a new Luau release - the
 import { Aside, Steps } from '@astrojs/starlight/components';
 
 This page is for people who maintain LuneBlox. Its whole purpose is to run the Luau that Roblox runs,
-so when Roblox moves to a new Luau release, LuneBlox follows.
+so when Roblox moves to a new Luau release, LuneBlox follows once compatible bindings are available.
 
 ## The three pieces
 
@@ -17,6 +17,11 @@ Luau reaches the binary through three things in the repository. All three move t
 LuneBlox uses [mlua](https://github.com/mlua-rs/mlua) for its Luau bindings. `mlua-sys` is the crate
 that pins which Luau is built: mlua 0.12.2 asks for `mlua-sys` 0.13, which asks for `luau0-src` 0.22
 and so Luau 0.740. Every crate in the workspace names the same mlua version.
+
+As of November 11, 2026, the newest stable `mlua-sys` still requires `luau0-src` 0.22.
+The newer 0.23 crate carries Luau 0.745 but does not satisfy that requirement. Do not force a
+source-only update past the bindings constraint: keep the patched 0.740 build until compatible
+bindings and the full test matrix have been validated.
 
 When Roblox is ahead of the newest mlua release, `Cargo.toml` patches `mlua-sys` to the commit on
 mlua's main branch that carries the new Luau, until a release does:
@@ -55,8 +60,9 @@ List the fixes with:
 grep -rn "LuneBlox:" vendor/luau0-src
 ```
 
-Today there is one, in `luau/CodeGen/src/IrRegAllocA64.cpp`: the ARM64 register allocator no longer
-plans to reload a spilled value from a constant past K255.
+The patches include the ARM64 far-constant spill fix and the paired x64/ARM64 conditional-spill
+bookkeeping fix. Preserve every marked patch when replacing the vendor directory, not just the
+first one in the search output.
 
 <Aside title="Why fixes are needed at all">
 mlua builds Luau without `NDEBUG`, so Luau's assertions are live. A code generation bug that Roblox's
@@ -124,7 +130,7 @@ print(_VERSION)
 EOF
 ```
 
-It should print the new Luau number after the `+`, such as `LuneBlox 0.11.4+740`.
+It should print the new Luau number after the `+`, such as `LuneBlox 0.11.5+740`.
 
 The regression test for each carried fix must still pass. For the ARM64 fix it is
 `tests/luau/codegen_far_constant.luau`, registered in `crates/lune/src/tests.rs`. A Luau test that is
