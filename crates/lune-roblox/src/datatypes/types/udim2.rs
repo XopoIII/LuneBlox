@@ -53,8 +53,8 @@ impl LuaExportsTable for UDim2 {
         let udim2_new = |lua: &Lua, args: LuaMultiValue| {
             if let Ok((x, y)) = ArgsUDims::from_lua_multi(args.clone(), lua) {
                 Ok(UDim2 {
-                    x: x.map(|x| *x).unwrap_or_default(),
-                    y: y.map(|y| *y).unwrap_or_default(),
+                    x: x.map_or(UDim::default(), |x| *x),
+                    y: y.map_or(UDim::default(), |y| *y),
                 })
             } else if let Ok((sx, ox, sy, oy)) = ArgsNums::from_lua_multi(args, lua) {
                 Ok(UDim2 {

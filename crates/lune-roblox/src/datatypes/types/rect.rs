@@ -45,8 +45,8 @@ impl LuaExportsTable for Rect {
         let rect_new = |lua: &Lua, args: LuaMultiValue| {
             if let Ok((min, max)) = ArgsVector2s::from_lua_multi(args.clone(), lua) {
                 Ok(Rect::new(
-                    min.map(|m| *m).unwrap_or_default().0,
-                    max.map(|m| *m).unwrap_or_default().0,
+                    min.map_or(Vector2::default(), |m| *m).0,
+                    max.map_or(Vector2::default(), |m| *m).0,
                 ))
             } else if let Ok((x0, y0, x1, y1)) = ArgsNums::from_lua_multi(args, lua) {
                 let min = Vec2::new(x0.unwrap_or_default(), y0.unwrap_or_default());

@@ -1680,7 +1680,6 @@ dependencies = [
  "async-process",
  "blocking",
  "bstr",
- "bytes",
  "directories",
  "futures-lite",
  "futures-util",

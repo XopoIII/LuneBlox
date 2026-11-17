@@ -20,7 +20,6 @@ directories = "6.0"
 pin-project = "1.1"
 
 bstr = "1.13"
-bytes = "1.12.1"
 
 async-channel = "2.5"
 async-lock = "3.4"
