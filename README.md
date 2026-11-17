@@ -36,12 +36,12 @@ game runs.
 
 LuneBlox narrows both gaps:
 
-| | Lune 0.10.5 | LuneBlox 0.12.0 |
+| | Lune 0.10.5 | LuneBlox 0.12.1 |
 |---|---|---|
 | Luau | 0.709 | 0.740 with backported codegen fixes |
 | Luau's fast flags | Luau's defaults | set as the live Roblox client sets them (`crates/lune/src/rt/roblox_fflags.rs`) |
 | Luau's C++ built with | `-Os` (the workspace's size profile reached it) | `-O3` |
-| `_VERSION` | `Lune 0.10.5+709` | `LuneBlox 0.12.0+747` |
+| `_VERSION` | `Lune 0.10.5+709` | `LuneBlox 0.12.1+747` |
 
 ## Performance
 
