@@ -18,8 +18,6 @@ members = [
     "crates/lune-utils",
     "crates/mlua-luau-scheduler",
 ]
-# Third-party sources patched in below; not ours to lint or format
-exclude = ["vendor"]
 
 # Profile for building the release binary, with the following options set:
 #
@@ -47,16 +45,16 @@ lto = true
 opt-level = 3
 
 [patch.crates-io]
-# Luau's sources as luau0-src 0.22.0+luau740 ships them, with scoped native codegen fixes
-# (search the vendored tree for "LuneBlox:"). The ARM64 allocator can plan to reload a
-# spilled value from a constant past K255, beyond a single load's reach. Conditional
-# barrier spills can also incorrectly mark lazy restore locations materialized even
-# when the spill branch does not run, corrupting upvalues on x64. Keep these patches
-# until a Luau release carries each fix; preserve them when updating the vendor.
-luau0-src = { path = "vendor/luau0-src" }
-
-# Use rbx_binary with zstd 0.14 until upstream releases the security update.
-rbx_binary = { git = "https://github.com/XopoIII/rbx-dom", rev = "177c49cf6800159c5bba0eba578cf2da214c6093" }
+# Luau's sources are the crate mlua-sys pins, unpatched: the ARM64 far-constant fix that the
+# vendored copy carried since 0.10.12 is upstream in Luau 0.747, behind
+# LuauCodegenA64ReloadLargeConstOffset, and the conditional-spill bookkeeping landed in 0.742.
+# The vendor directory comes back only if a fix has to be carried again; the guide to keeping
+# Luau current says how.
+# mlua's own "Bump Luau to 0.747": Luau 0.747 drops the 64-bit integer API, so both the
+# bindings (mlua-sys) and the crate that uses them (mlua) have to move together, and the
+# commit carries both. Pinned to the commit rather than to a branch, and dropped for the
+# release that has it, as the guide to keeping Luau current says.
+mlua = { git = "https://github.com/mlua-rs/mlua", rev = "01b48a402fffa83c1429b4a49cfd55c6caaa5939" }
 
 # Lints for all crates in the workspace
 #

@@ -6,8 +6,10 @@
 #   the LuneBlox version   crates/lune/Cargo.toml is the source. README.md and the docs print it -
 #                          in `_VERSION`, in the names of the release archives, in the typedefs
 #                          directory - and CHANGELOG.md names it in its newest release.
-#   the Luau version       vendor/luau0-src/Cargo.toml is the source (`+luau740`). README.md and the
-#                          docs print it, and the fast flag table is generated against it.
+#   the Luau version       Cargo.lock's `luau0-src` is the source (`+luau747`); the vendored copy the
+#                          project used to carry is gone, and a fix that has to be carried brings it
+#                          back (see the guide to keeping Luau current). README.md and the docs print
+#                          it, and the fast flag table is generated against it.
 #   the mlua version       every crate names its own, and they must be the same one.
 #
 # The docs also quote the fast flag table's header and its generator's output, which go stale each
@@ -26,7 +28,7 @@ DOCS=docs/src/content/docs
 FFLAGS=crates/lune/src/rt/roblox_fflags.rs
 
 VERSION="$(sed -n 's/^version = "\([^"]*\)"$/\1/p' crates/lune/Cargo.toml | head -1)"
-LUAU="$(sed -n 's/^version = "[^"]*+luau\([0-9]*\)"$/\1/p' vendor/luau0-src/Cargo.toml | head -1)"
+LUAU="$(sed -n '/^name = "luau0-src"$/,/^$/p' Cargo.lock | sed -n 's/^version = "[^"]*+luau\([0-9]*\)"$/\1/p' | head -1)"
 
 status=0
 

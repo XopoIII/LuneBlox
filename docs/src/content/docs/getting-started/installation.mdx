@@ -29,14 +29,14 @@ Releases are published to GitHub only. Nothing goes to crates.io.
 Each [release](https://github.com/XopoIII/LuneBlox/releases/latest) carries one zip file per target,
 named `luneblox-<version>-<os>-<arch>.zip`:
 
-| Target | Archive for 0.11.5 |
+| Target | Archive for 0.12.0 |
 |---|---|
-| Linux x86_64 | `luneblox-0.11.5-linux-x86_64.zip` |
-| Linux aarch64 | `luneblox-0.11.5-linux-aarch64.zip` |
-| macOS x86_64 | `luneblox-0.11.5-macos-x86_64.zip` |
-| macOS aarch64 | `luneblox-0.11.5-macos-aarch64.zip` |
-| Windows x86_64 | `luneblox-0.11.5-windows-x86_64.zip` |
-| Windows aarch64 | `luneblox-0.11.5-windows-aarch64.zip` |
+| Linux x86_64 | `luneblox-0.12.0-linux-x86_64.zip` |
+| Linux aarch64 | `luneblox-0.12.0-linux-aarch64.zip` |
+| macOS x86_64 | `luneblox-0.12.0-macos-x86_64.zip` |
+| macOS aarch64 | `luneblox-0.12.0-macos-aarch64.zip` |
+| Windows x86_64 | `luneblox-0.12.0-windows-x86_64.zip` |
+| Windows aarch64 | `luneblox-0.12.0-windows-aarch64.zip` |
 
 The archive holds the binary, `luneblox` (`luneblox.exe` on Windows), and `LICENSE.txt`. Unzip it and
 put the binary in a directory on your `PATH`.
@@ -55,8 +55,7 @@ part of the build.
 
 <Steps>
 
-1. Clone the repository. The build uses the copy of Luau's sources in `vendor/luau0-src`, so a
-   checkout of the whole repository is required.
+1. Clone the repository and build it from the checkout.
 
    ```sh
    git clone https://github.com/XopoIII/LuneBlox.git
