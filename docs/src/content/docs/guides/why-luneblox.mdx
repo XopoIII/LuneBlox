@@ -18,12 +18,12 @@ A benchmark or a test run on Lune therefore measures a VM that no game runs.
 
 ## What LuneBlox changes
 
-| | Lune 0.10.5 | LuneBlox 0.11.5 |
+| | Lune 0.10.5 | LuneBlox 0.12.0 |
 |---|---|---|
-| Luau | 0.709 | 0.740 with backported codegen fixes |
+| Luau | 0.709 | 0.747 |
 | Luau's fast flags | Luau's defaults | set as the live Roblox client sets them |
 | Luau's C++ built with | `-Os` | `-O3` |
-| `_VERSION` | `Lune 0.10.5+709` | `LuneBlox 0.11.5+740` |
+| `_VERSION` | `Lune 0.10.5+709` | `LuneBlox 0.12.0+747` |
 
 ### The Luau version
 
@@ -32,7 +32,7 @@ bug report can say which Luau it ran on:
 
 ```luau
 --!strict
-print(_VERSION) --> LuneBlox 0.11.5+740
+print(_VERSION) --> LuneBlox 0.12.0+747
 ```
 
 [Keeping Luau current](/LuneBlox/guides/keeping-luau-current/) describes how the version is moved.
@@ -104,8 +104,9 @@ reload a spilled value from a constant past K255, which no single ARM64 load rea
 on, loading a function with more than 256 constants as native code stopped the process; without them,
 the function would load the wrong value.
 
-Fixes like this one are carried in a copy of Luau's sources in the repository (`vendor/luau0-src`),
-each marked with a `LuneBlox:` comment, until a Luau release has them.
+A fix like that one is carried in a copy of Luau's sources in the repository (`vendor/luau0-src`),
+marked with a `LuneBlox:` comment, until a Luau release has it. Luau 0.747 has both fixes that had
+been carried, so 0.12.0 keeps no copy and takes Luau from crates.io as `mlua-sys` pins it.
 
 ## What stays the same
 

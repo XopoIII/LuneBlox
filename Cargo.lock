@@ -1538,14 +1538,16 @@ dependencies = [
 
 [[package]]
 name = "luau0-src"
-version = "0.22.0+luau740"
+version = "0.24.0+luau747"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "806b0b204f3f41d45c983a039fd337395ba73eb03035e99c3fc99f1cf3ece865"
 dependencies = [
  "cc",
 ]
 
 [[package]]
 name = "lune"
-version = "0.11.5"
+version = "0.12.0"
 dependencies = [
  "anyhow",
  "async-fs",
@@ -1811,6 +1813,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "maybe-dangling"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "59dbb09ed53f8e4f314e353dc6c1853ae5b4c480a668a422657804a544ea9f65"
+
+[[package]]
 name = "md-5"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1839,14 +1847,14 @@ dependencies = [
 [[package]]
 name = "mlua"
 version = "0.12.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a7ae6b65bf54b7fdd4cf5b6f44f60862350ebf3fe3779b3a9cc005e7fa14f81"
+source = "git+https://github.com/mlua-rs/mlua?rev=01b48a402fffa83c1429b4a49cfd55c6caaa5939#01b48a402fffa83c1429b4a49cfd55c6caaa5939"
 dependencies = [
  "bstr",
  "either",
  "erased-serde",
  "futures-util",
  "libc",
+ "maybe-dangling",
  "mlua-sys",
  "num-traits",
  "parking_lot 0.12.5",
@@ -1873,9 +1881,8 @@ dependencies = [
 
 [[package]]
 name = "mlua-sys"
-version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1631cda17bd6486410ab751d91f5fd4484f441589278cdad879eb3afc721a285"
+version = "0.14.0"
+source = "git+https://github.com/mlua-rs/mlua?rev=01b48a402fffa83c1429b4a49cfd55c6caaa5939#01b48a402fffa83c1429b4a49cfd55c6caaa5939"
 dependencies = [
  "cc",
  "cfg-if 1.0.5",
@@ -2955,7 +2962,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.4.3",
+ "getrandom 0.3.4",
  "once_cell",
  "rustix",
  "windows-sys 0.61.2",

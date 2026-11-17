@@ -89,13 +89,14 @@ mod tests {
         }
     }
 
-    // `LuauCallFeedback` is in the table with this value, so setting it changes nothing.
+    // `LuauEmitCallFeedback` is in the table with this value, so setting it changes nothing.
+    // Luau 0.747 renamed the flag that carried it, `LuauCallFeedback`, to this.
     #[test]
     fn a_flag_luau_does_not_register_is_reported() {
-        assert!(ROBLOX_FFLAGS.contains(&("LuauCallFeedback", true)));
+        assert!(ROBLOX_FFLAGS.contains(&("LuauEmitCallFeedback", true)));
         assert_eq!(
             set_fflags(&[
-                ("LuauCallFeedback", true),
+                ("LuauEmitCallFeedback", true),
                 ("LuneBloxNoSuchFlag", true),
                 // Declared in Luau's Ast/src/PrettyPrinter.cpp, which the runtime does not link
                 ("LuauPrettyPrintVisualizeIndexerAccess", true),

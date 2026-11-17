@@ -8,6 +8,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## `0.12.0` - November 17th, 2026
+
+Luau moves from patched 0.740 to 0.747, the release the Roblox client 0.747.0.7471481 runs, and the
+patched vendored copy of Luau's sources goes with it: every fix it carried is upstream. mlua moves
+with Luau through its own commit, pinned until a release carries it.
+
+### Changed
+
+- **Luau 0.747.** `_VERSION` prints `LuneBlox 0.12.0+747`. It is the first release with the buffer's
+  vector reads and writes, `buffer.readvectorf32x2`/`x3` and `buffer.writevectorf32x2`/`x3`, which
+  move two or three `f32` in one instruction. The Roblox client gates them behind
+  `DebugLuauBufferVectorLibrary` and has not turned it on, so they are absent here too, exactly as
+  they are absent in a running game; the fast flag table carries the client's value as it stands.
+- **mlua and mlua-sys come from mlua commit `01b48a402fffa83c1429b4a49cfd55c6caaa5939`.** Luau 0.747
+  drops the 64-bit integer API (`lua_pushinteger64`, `luaL_checkinteger64` and the rest of it), so
+  the bindings and the crate that uses them move together, and the released `mlua-sys` still asks for
+  Luau 0.740. `[patch.crates-io]` pins that commit, `deny.toml` allows the repository, and the patch
+  goes when a release carries it.
+- **The vendored Luau is removed.** Every `LuneBlox:` fix is upstream now: the conditional-spill
+  bookkeeping landed in Luau 0.742, and the ARM64 far-constant reload is 0.747's own, behind
+  `LuauCodegenA64ReloadLargeConstOffset`, which the Roblox client sets. `vendor/luau0-src` and the
+  `luau0-src` patch are gone, so Luau comes from crates.io as `mlua-sys` pins it, and
+  `scripts/check-versions.sh` reads the Luau version out of `Cargo.lock`. The guide to keeping Luau
+  current keeps the procedure for carrying a fix again, and `tests/luau/codegen_far_constant.luau`
+  passes against the upstream reload path.
+- **The fast flag table is regenerated** against Roblox client 0.747.0.7471481 and Luau 0.747: 43
+  flags, 42 of them enabled, three of those in the ARM64 code generator's own table.
+
+### Removed
+
+- **`crates/lune/tests/fflag_effect.rs`.** It proved that applying the table reaches the compiler
+  through `LuauCompileNoFoldVectorEqW`, the one flag whose effect a script could print. Luau 0.747
+  retired that flag — comparing all four components at compile time is no longer what the compiler
+  does — so the script prints the same answer with the table off, and the test had nothing left to
+  compare. The table's own tests still prove that every flag applies.
+
+### Validation
+
+`cargo test --workspace --all-features` passes on an M-series Mac: 206 tests in `lune`, 67 in the
+Roblox datatypes, and every other crate green, with no flag of the table failing to apply. `_VERSION`
+prints `LuneBlox 0.12.0+747`. The ARM64 codegen regression test passes against upstream's reload
+path; x86-64 codegen is compiled here and run by CI.
+
 ## `0.11.5` - November 11th, 2026
 
 Binary attribute strings now survive without UTF-8 decoding, and runtime, documentation and CI
