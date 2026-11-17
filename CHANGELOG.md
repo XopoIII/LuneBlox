@@ -36,6 +36,15 @@ with Luau through its own commit, pinned until a release carries it.
 - **The fast flag table is regenerated** against Roblox client 0.747.0.7471481 and Luau 0.747: 43
   flags, 42 of them enabled, three of those in the ARM64 code generator's own table.
 
+### Fixed
+
+- **CI and the release build can fetch their dependencies again.** The workspace pinned a fork of
+  `rbx-dom` that carried `zstd` 0.14 ahead of the advisory fix, and the fork is no longer on
+  GitHub, so every job that touched the dependency graph failed while cloning it and `main`'s CI has
+  been red since. `zstd` 0.13.5 carries the fix for RUSTSEC-2026-0391, which `cargo deny` now takes
+  from crates.io, so the `rbx_binary` pin is gone, `deny.toml` no longer allows the repository, and
+  the gate and the six-archive release build can run again.
+
 ### Removed
 
 - **`crates/lune/tests/fflag_effect.rs`.** It proved that applying the table reaches the compiler
