@@ -23,16 +23,22 @@ members = [
 #
 # 1. Optimize for size
 # 2. Automatically strip symbols from the binary
-# 3. Enable link-time optimization
 #
 # Note that we could abort instead of panicking to cut down on size
 # even more, but because we use the filesystem & some other APIs we
 # need the panic unwinding to properly handle usage of said APIs
 #
+# Link-time optimization is off, and the 6.5% it costs (16.6 MB against 15.6 MB on an M-series Mac)
+# buys Luau's fast flags: rustc links with --gc-sections under LTO, which drops a Luau object whose
+# only exported thing is a flag's registration, and the runtime then reports that flag as one it
+# could not apply. Luau 0.747's Bytecode/src/BytecodeGraph.cpp is such an object, and with LTO on
+# every run of the released binary began with "warning: Luau fast flag `LuauInlinerNamecallSelfFromMove`
+# did not apply" (0.12.0). Without it every flag in the table registers, which is what the table is
+# for, and the debug build always did.
 [profile.release]
 opt-level = "z"
 strip = true
-lto = true
+lto = false
 
 # Luau itself is built for speed, not size
 #

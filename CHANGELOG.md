@@ -8,6 +8,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## `0.12.1` - November 17th, 2026
+
+A release build applied every flag of the fast flag table but one, and said so on every run. It does
+now.
+
+### Fixed
+
+- **No warning at startup in a release build.** 0.12.0's released binary began every run with
+  `warning: Luau fast flag `LuauInlinerNamecallSelfFromMove` did not apply`. The flag is declared in
+  Luau 0.747's new `Bytecode/src/BytecodeGraph.cpp`, and rustc links with `--gc-sections` under
+  link-time optimization, which drops an object whose only exported thing is a flag's registration;
+  the table then found a flag the runtime had never registered. The release profile no longer asks
+  for LTO, which costs 6.5% of the binary (16.6 MB against 15.6 MB on an M-series Mac) and registers
+  every flag, as the debug build always did. `lto = false` in `Cargo.toml` says why.
+
+### Validation
+
+`cargo run --release -- run -` prints `LuneBlox 0.12.1+747` and nothing else. The suite and the gate
+are green.
+
 ## `0.12.0` - November 17th, 2026
 
 Luau moves from patched 0.740 to 0.747, the release the Roblox client 0.747.0.7471481 runs, and the
